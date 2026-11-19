@@ -312,6 +312,15 @@ Either way, use caret constraints in `pubspec.yaml` and commit `pubspec.lock`.
 
 Decisions already listed as pending in `DECISIONS.md` (image thumbnails, username policy, Supabase region) remain pending.
 
+### Owner decisions recorded after delivery
+
+On 2026-11-19 the product owner answered two of these, and both are logged in `docs/DECISIONS.md`:
+
+- **D1:** start on the installed Flutter 3.38.3 (option a), not the recommended per-project pin. The "Resolved on 3.38.3" versions therefore apply.
+- **D3:** use the placeholder `com.example.worlds` for now. A real application ID is required before any release build.
+
+The other ten decisions remain open.
+
 ## Proposed sequence
 
 Each checkpoint ends with format, analyze, tests, a progress update and a stop for approval, as `AGENTS.md` requires.

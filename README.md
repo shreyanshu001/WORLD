@@ -41,6 +41,19 @@ A creator publishes a World at a public location. A second user discovers it on 
 
 That complete journey is the release gate.
 
+## Development
+
+The Flutter app lives at the repository root: `lib/`, `test/` and `android/`. Android is the only platform enabled. It was created with Flutter 3.38.3.
+
+```sh
+flutter pub get
+flutter analyze
+flutter test
+flutter run
+```
+
+The app is currently a scaffold. The folder structure from [`docs/TECHNICAL_ARCHITECTURE.md`](docs/TECHNICAL_ARCHITECTURE.md) exists, but no features are implemented. See [`docs/PROGRESS.md`](docs/PROGRESS.md) for status.
+
 ## Principles
 
 - Build the smallest complete loop, not a collection of disconnected screens.
