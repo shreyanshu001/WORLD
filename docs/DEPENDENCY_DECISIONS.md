@@ -43,8 +43,9 @@ Installed toolchain: Flutter 3.38.3 / Dart 3.10.1. Current stable is Flutter 3.5
 
 ### Version policy (decision D1 in the audit)
 
-- If the project stays on Flutter 3.38.3, use the "Resolved" column. That exact set is verified.
-- If the project pins a newer Flutter, which the audit recommends, target the "Latest" column and repeat the spike as the first step of Checkpoint 1. Record the resulting `pubspec.lock` versions here.
+**Decided 2026-11-19:** the product owner chose to start on the installed Flutter 3.38.3 (`docs/DECISIONS.md`, D-008). The "Resolved" column therefore applies; that exact set is verified. The packages themselves are still proposals until approved, and none has been added to `pubspec.yaml` yet.
+
+If the project later moves to a newer Flutter, target the "Latest" column, repeat the spike before changing anything else, and record the resulting `pubspec.lock` versions here.
 
 ### Build requirement
 
