@@ -1,10 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:worlds/app/config/env.dart';
 import 'package:worlds/app/startup_gate.dart';
 import 'package:worlds/core/widgets/loading_view.dart';
+import 'package:worlds/features/auth/application/auth_providers.dart';
+import 'package:worlds/features/profile/application/profile_providers.dart';
+
+import '../support/fakes.dart';
 
 void main() {
   final key = ['sb', 'publishable', 'example'].join('_');
@@ -12,6 +17,12 @@ void main() {
     supabaseUrl: 'https://example.supabase.co',
     supabasePublishableKey: key,
   );
+
+  // The app behind the gate reads Supabase-backed repositories; replace them.
+  List<Override> fakeRepositories() => [
+    authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
+    profileRepositoryProvider.overrideWithValue(FakeProfileRepository()),
+  ];
 
   testWidgets('shows loading, then the app, when startup succeeds', (
     tester,
@@ -23,6 +34,7 @@ void main() {
         env: validEnv,
         initializeSupabase: ({required url, required publishableKey}) =>
             started.future,
+        overrides: fakeRepositories(),
       ),
     );
     expect(find.byType(LoadingView), findsOneWidget);
@@ -65,6 +77,7 @@ void main() {
           attempts++;
           if (attempts == 1) throw StateError('boom');
         },
+        overrides: fakeRepositories(),
       ),
     );
     await tester.pumpAndSettle();

@@ -1,0 +1,8 @@
+targets:
+  $default:
+    builders:
+      json_serializable:
+        options:
+          # Database columns are snake_case; Dart fields are camelCase.
+          field_rename: snake
+          explicit_to_json: true

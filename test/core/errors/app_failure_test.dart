@@ -14,6 +14,13 @@ void main() {
     AppFailure.uploadFailed(),
     AppFailure.rateLimited(),
     AppFailure.offline(),
+    AppFailure.invalidCredentials(),
+    AppFailure.accountExists(),
+    AppFailure.weakPassword(),
+    AppFailure.emailNotConfirmed(),
+    AppFailure.emailNotAllowed(),
+    AppFailure.signUpDisabled(),
+    AppFailure.usernameTaken(),
     AppFailure.unexpected(),
   ];
 
@@ -37,6 +44,18 @@ void main() {
         reason: failure.userMessage,
       );
     }
+  });
+
+  test('any other error gets the generic message', () {
+    expect(
+      messageForError(StateError('bug')),
+      'Something went wrong. Try again.',
+    );
+    expect(messageForError(null), 'Something went wrong. Try again.');
+    expect(
+      messageForError(const AppFailure.locked()),
+      const AppFailure.locked().userMessage,
+    );
   });
 
   test('failures of the same kind are equal', () {

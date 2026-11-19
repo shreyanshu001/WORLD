@@ -109,7 +109,9 @@ After the owner completed the Supabase MCP sign-in, the project was inspected wi
 
 The project is a clean slate, so the first migration can enable PostGIS and every schema object can come from committed migrations.
 
-Still **not verified**, because the project-scoped connection exposes no tool for them: region, plan, Postgres version and Auth settings such as email confirmation. The owner can read these from the Supabase dashboard.
+Still **not verified**, because the project-scoped connection exposes no tool for them: region, plan and Auth settings such as email confirmation. The owner can read these from the Supabase dashboard.
+
+**Postgres version: 17.12**, verified on 2026-11-20 from `current_setting('server_version')` during Checkpoint 2.
 
 Platform facts that affect the plan (E16, retrieved 2026-11-19):
 
