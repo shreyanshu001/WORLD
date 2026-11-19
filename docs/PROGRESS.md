@@ -3,11 +3,13 @@
 **Phase:** Pre-implementation  
 **Current checkpoint:** 0 — Repository reconnaissance  
 **Product direction:** Approved  
+**Documentation handoff:** Published to GitHub  
 **App implementation:** Not started
 
 | Checkpoint | Status | Evidence |
 |---|---|---|
-| 0. Repository audit | Not started | — |
+| Documentation handoff | Complete | README, AGENTS.md and 12 supporting files committed to main |
+| 0. Repository audit | Not started | Requires actual Flutter source/toolchain inspection |
 | 1. Project foundation | Not started | — |
 | 2. Backend and identity | Not started | — |
 | 3. Explore map | Not started | — |
@@ -17,9 +19,9 @@
 | 7. Beta and pilot | Not started | — |
 
 ## Current blockers
-- Repository is currently an empty GitHub repository; Flutter project has not yet been pushed.
-- Repository audit against actual local Flutter codebase is required.
-- Supabase project ownership/configuration is required.
+- GitHub repository exists and contains the product/engineering handoff; the Flutter application source has not yet been pushed.
+- Checkpoint 0 audit must be run against the actual local Flutter codebase and toolchain.
+- Supabase project ownership/configuration is required before backend implementation.
 - Map package and tile provider must be selected after compatibility and terms review.
 
 ## Update protocol
