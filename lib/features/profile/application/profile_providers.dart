@@ -62,28 +62,33 @@ class EditProfileController extends AsyncNotifier<void> {
       return false;
     }
 
-    state = const AsyncLoading();
-    final result = await AsyncValue.guard(
-      () => ref
-          .read(profileRepositoryProvider)
-          .updateProfile(
-            userId: user.id,
-            username: ProfileRules.normalizeUsername(username),
-            displayName: ProfileRules.blankToNull(displayName),
-            bio: ProfileRules.blankToNull(bio),
-          ),
-    );
-    if (!result.hasError) {
-      // The username has been changed deliberately; any sign-up notice is
-      // no longer relevant.
-      ref.read(requestedUsernameProvider.notifier).clear();
-      ref.invalidate(ownProfileProvider);
-    }
-    if (ref.mounted) {
+    // Stay alive until the save finishes, even if the screen closes, so the
+    // profile is always refreshed after a successful save.
+    final keepAlive = ref.keepAlive();
+    try {
+      state = const AsyncLoading();
+      final result = await AsyncValue.guard(
+        () => ref
+            .read(profileRepositoryProvider)
+            .updateProfile(
+              userId: user.id,
+              username: ProfileRules.normalizeUsername(username),
+              displayName: ProfileRules.blankToNull(displayName),
+              bio: ProfileRules.blankToNull(bio),
+            ),
+      );
+      if (!result.hasError) {
+        // The username has been changed deliberately; any sign-up notice is
+        // no longer relevant.
+        ref.read(requestedUsernameProvider.notifier).clear();
+        ref.invalidate(ownProfileProvider);
+      }
       state = result.hasError
           ? AsyncError(result.error!, result.stackTrace!)
           : const AsyncData(null);
+      return !result.hasError;
+    } finally {
+      keepAlive.close();
     }
-    return !result.hasError;
   }
 }

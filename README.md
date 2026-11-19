@@ -65,7 +65,9 @@ Generated files (`*.freezed.dart`, `*.g.dart`) are committed. Regenerate them wh
 
 Gradle is pinned to Java 21 by `android/gradle/gradle-daemon-jvm.properties`, so a JDK 21 must be installed (Android Studio ships one).
 
-The app currently has its foundation only: startup and configuration checks, theme, the four-tab shell and shared state views. No product features are implemented yet. See [`docs/PROGRESS.md`](docs/PROGRESS.md) for status.
+The app currently has its foundation plus email/password accounts and profiles. No World features are implemented yet. See [`docs/PROGRESS.md`](docs/PROGRESS.md) for status.
+
+Before testing sign-up, read the email-confirmation note in [`supabase/README.md`](supabase/README.md): with the project's current settings, sign-up only works for addresses on the Supabase project team.
 
 ## Principles
 

@@ -38,10 +38,11 @@ class SignInController extends AsyncNotifier<void> {
 
   Future<void> submit({required String email, required String password}) async {
     state = const AsyncLoading();
+    // Signing in to an existing account: no sign-up notice applies.
+    ref.read(requestedUsernameProvider.notifier).clear();
+    final auth = ref.read(authRepositoryProvider);
     final result = await AsyncValue.guard(
-      () => ref
-          .read(authRepositoryProvider)
-          .signIn(email: email.trim(), password: password),
+      () => auth.signIn(email: email.trim(), password: password),
     );
     if (ref.mounted) state = result;
   }
@@ -64,16 +65,27 @@ class RegisterController extends AsyncNotifier<SignUpOutcome?> {
   }) async {
     state = const AsyncLoading();
     final requested = ProfileRules.normalizeUsername(username);
+    // Read everything up front: a successful sign-up navigates away and
+    // disposes this controller before signUp returns.
+    final profiles = ref.read(profileRepositoryProvider);
+    final auth = ref.read(authRepositoryProvider);
+    final pendingNotice = ref.read(requestedUsernameProvider.notifier);
+
     final result = await AsyncValue.guard(() async {
-      final available = await ref
-          .read(profileRepositoryProvider)
-          .isUsernameAvailable(requested);
+      final available = await profiles.isUsernameAvailable(requested);
       if (!available) throw const AppFailure.usernameTaken();
-      ref.read(requestedUsernameProvider.notifier).set(requested);
-      return ref
-          .read(authRepositoryProvider)
-          .signUp(email: email.trim(), password: password, username: requested);
+      // Set before signing up, because the profile screen can appear before
+      // signUp returns.
+      pendingNotice.set(requested);
+      return auth.signUp(
+        email: email.trim(),
+        password: password,
+        username: requested,
+      );
     });
+
+    // Only a sign-up that ends signed in may leave a notice behind.
+    if (result.value != SignUpOutcome.signedIn) pendingNotice.clear();
     if (ref.mounted) state = result;
   }
 }
@@ -90,9 +102,10 @@ class SignOutController extends AsyncNotifier<void> {
 
   Future<void> signOut() async {
     state = const AsyncLoading();
-    final result = await AsyncValue.guard(
-      () => ref.read(authRepositoryProvider).signOut(),
-    );
+    final auth = ref.read(authRepositoryProvider);
+    final pendingNotice = ref.read(requestedUsernameProvider.notifier);
+    final result = await AsyncValue.guard(auth.signOut);
+    pendingNotice.clear();
     if (ref.mounted) state = result;
   }
 }

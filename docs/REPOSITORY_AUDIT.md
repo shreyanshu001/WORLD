@@ -342,7 +342,7 @@ On 2026-11-19 the product owner answered two of these, and both are logged in `d
 - **D1:** start on the installed Flutter 3.38.3 (option a), not the recommended per-project pin. The "Resolved on 3.38.3" versions therefore apply.
 - **D3:** use the placeholder `com.example.worlds` for now. A real application ID is required before any release build.
 
-The other ten decisions remain open.
+Later on 2026-11-20, D2, D9 and D11 were adopted on recommendation when the owner said to proceed with Checkpoint 1, and D6–D8 were overtaken by the owner's Checkpoint 2 decisions (`docs/DECISIONS.md`, D-010 to D-015). D4, D5 and D10 remain open; D12 is an owner action.
 
 ## Proposed sequence
 

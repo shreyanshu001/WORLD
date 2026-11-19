@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:worlds/core/errors/app_failure.dart';
 import 'package:worlds/features/auth/domain/auth_repository.dart';
+import 'package:worlds/features/auth/domain/auth_user.dart';
 import 'package:worlds/features/auth/presentation/register_screen.dart';
 
 import '../../support/fakes.dart';
@@ -92,6 +93,58 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.widgetWithText(FilledButton, 'Sign in'), findsOneWidget);
   });
+
+  testWidgets(
+    'a failed sign-up followed by signing in to another account shows no '
+    'username notice',
+    (tester) async {
+      auth.addAccount(
+        'alice@example.com',
+        'password-a',
+        const AuthUser(id: 'alice-id', email: 'alice@example.com'),
+      );
+      await openRegister(tester);
+
+      auth.nextError = const AppFailure.emailNotAllowed();
+      await register(tester, username: 'carol');
+      expect(find.byType(RegisterScreen), findsOneWidget);
+
+      await tester.tap(
+        find.widgetWithText(TextButton, 'Already have an account? Sign in'),
+      );
+      await tester.pumpAndSettle();
+      await enterField(tester, 'Email', 'alice@example.com');
+      await enterField(tester, 'Password', 'password-a');
+      await tapFilledButton(tester, 'Sign in');
+
+      expect(find.text('@alice'), findsOneWidget);
+      expect(find.textContaining('was taken'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'a sign-up waiting for email confirmation leaves no username notice',
+    (tester) async {
+      auth
+        ..signUpOutcome = SignUpOutcome.confirmationRequired
+        ..addAccount(
+          'alice@example.com',
+          'password-a',
+          const AuthUser(id: 'alice-id', email: 'alice@example.com'),
+        );
+      await openRegister(tester);
+
+      await register(tester, username: 'carol');
+      await tester.tap(find.widgetWithText(FilledButton, 'Go to sign in'));
+      await tester.pumpAndSettle();
+      await enterField(tester, 'Email', 'alice@example.com');
+      await enterField(tester, 'Password', 'password-a');
+      await tapFilledButton(tester, 'Sign in');
+
+      expect(find.text('@alice'), findsOneWidget);
+      expect(find.textContaining('was taken'), findsNothing);
+    },
+  );
 
   testWidgets('a granted username shows no notice', (tester) async {
     auth

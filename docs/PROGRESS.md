@@ -25,7 +25,7 @@
 - The Checkpoint 2 gate is a security review by the owner.
 - Checkpoint 3 needs product-owner approval to start, plus decisions D4 (map package), D5 (tile provider) and gap G3 (how far signed-out users can go) from `docs/REPOSITORY_AUDIT.md`.
 - The application ID is the placeholder `com.example.worlds`. It must be replaced before any release build.
-- Supabase region, plan and Auth settings are unverified (Postgres 17.12 is verified).
+- Supabase region and plan are unverified. Verified: Postgres 17.12; sign-up enabled; email confirmation **on** (`mailer_autoconfirm: false` from the public auth settings).
 
 ## Checkpoint 0 record
 
@@ -77,7 +77,7 @@ Only the scaffold part of Checkpoint 1 is done. It was created at the product ow
 ## Checkpoint 1 record
 
 - **Date:** 2026-11-20
-- **Branch:** `checkpoint-1-app-foundation` (local only, not pushed). Commit: recorded in the commit that follows this entry.
+- **Branch:** `checkpoint-1-app-foundation` (local only, not pushed). Commit: `d598dbc`.
 - **Summary:** App foundation on top of the scaffold. Startup validates build-time configuration and initialises Supabase with the publishable key, showing a loading screen and then either the app or an error screen (with retry when retrying can help). Material 3 light and dark themes, a `go_router` shell with four tabs that each keep their own stack, placeholder screens that say plainly they are not built yet, shared loading/empty/error views, and the typed `AppFailure` model from the architecture document.
 - **Files:**
   - `lib/main.dart`, `lib/app/app.dart`, `lib/app/startup_gate.dart`, `lib/app/bootstrap.dart`, `lib/app/app_shell.dart`.
@@ -110,7 +110,7 @@ Only the scaffold part of Checkpoint 1 is done. It was created at the product ow
 ## Checkpoint 2 record
 
 - **Date:** 2026-11-20
-- **Branch:** `checkpoint-2-backend-identity` (local only, not pushed). Commit: the commit that adds this entry.
+- **Branch:** `checkpoint-2-backend-identity` (local only, not pushed). Commits: `19e6874`, plus a follow-up fix and these notes.
 - **Started:** at the owner's instruction to continue implementation, with Checkpoint 1's device test deferred. Owner decisions: apply migrations to the remote project through the MCP connection (D-015) and choose usernames at sign-up (D-014).
 - **Database changes, applied to the development project:**
   - `supabase/migrations/20261119190312_enable_postgis.sql` — PostGIS in the `extensions` schema.
@@ -132,7 +132,9 @@ Only the scaffold part of Checkpoint 1 is done. It was created at the product ow
 - **Tests and results:**
   - `dart format --output=none --set-exit-if-changed .` — 53 files, 0 changed.
   - `flutter analyze` — no issues.
-  - `flutter test --timeout 60s` — 99 of 99 passed. These caught two bugs, both fixed: pages opened with `push` were not left after sign-in, because go_router's redirect only sees the page underneath; and a test awaited a fake timer outside the test clock.
+  - `flutter test --timeout 60s` — 101 of 101 passed. These caught two bugs, both fixed: pages opened with `push` were not left after sign-in, because go_router's redirect only sees the page underneath; and a test awaited a fake timer outside the test clock.
+  - Follow-up fix found in review: after a failed or unconfirmed sign-up, signing in to another account could show "X was taken" for that account. The requested username is now kept only when sign-up ends signed in, and cleared on sign-in and sign-out; two regression tests added. The profile save now stays alive until it finishes, so the profile always refreshes.
+  - Real Data API, anonymous requests with the publishable key: listing profiles returned HTTP 200 with an empty list; a missing single row returned HTTP 406 `PGRST116`; an edit returned HTTP 401 `42501`. All three match the app's error mapping. The public auth settings show sign-up enabled and email confirmation on.
   - `flutter build apk --debug --dart-define-from-file=.env` — passed; `INTERNET` is still the only permission.
 - **Manual device verification:** Deferred by the owner.
 - **Not verified:**
