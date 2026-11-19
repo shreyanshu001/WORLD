@@ -90,6 +90,27 @@ Tested on a copy of the repository outside the working tree (E14):
 - **PostGIS enabled, region, plan:** **Not verified.**
 - **Environment/secrets handling:** `.env.example` holds two empty variables, `SUPABASE_URL` and `SUPABASE_ANON_KEY`. `.gitignore` excludes `.env` and `.env.*`. No `.env` file exists. A scan of the repository for JWTs, Supabase keys, private keys and passwords found nothing (E17). No secret values were read or copied during this audit.
 
+### Project inspection after delivery
+
+After the owner completed the Supabase MCP sign-in, the project was inspected with read-only listing tools only (E21). Nothing was changed. These results supersede the matching "Not verified" entries above.
+
+| Item | Finding |
+| --- | --- |
+| Project reachable | Yes; the project URL resolves for the reference in `.mcp.json` |
+| `public` schema | Empty: no tables |
+| Migrations applied | None |
+| Auth users | 0 |
+| Storage buckets | 0 |
+| Edge functions | None |
+| Security advisor | No findings |
+| PostGIS | **Available (3.3.7) but not installed** |
+| Installed extensions | `pgcrypto` 1.3, `uuid-ossp` 1.1, `pg_stat_statements` 1.11, `supabase_vault` 0.3.2, `plpgsql` |
+| Available, not installed | `pgtap` 1.3.3, `pg_trgm` 1.6, `citext` 1.6, `unaccent` 1.1, `pg_cron` 1.6.4 |
+
+The project is a clean slate, so the first migration can enable PostGIS and every schema object can come from committed migrations.
+
+Still **not verified**, because the project-scoped connection exposes no tool for them: region, plan, Postgres version and Auth settings such as email confirmation. The owner can read these from the Supabase dashboard.
+
 Platform facts that affect the plan (E16, retrieved 2026-11-19):
 
 - **API keys are changing.** Supabase states it "is deprecating the `anon` and `service_role` keys by the end of 2026" in favour of publishable keys (`sb_publishable_...`) and secret keys (`sb_secret_...`). `supabase_flutter` 2.18.3 accepts `publishableKey` and marks `anonKey` deprecated. The variable `SUPABASE_ANON_KEY` in `.env.example` should become `SUPABASE_PUBLISHABLE_KEY`.
@@ -417,6 +438,7 @@ Nothing here was run inside the repository except E1 and E17. Spike projects liv
 | E17 | `grep` across the repository for JWT, Supabase key, private-key and password patterns: no matches |
 | E18 | Second spike: `flutter pub add maplibre geolocator`; `flutter analyze`; `flutter build apk --debug`; `maplibre_android` 0.3.5 `android/build.gradle` |
 | E19 | User-level `gradle.properties` (JDK path and memory settings only); `Win32_ComputerSystem` for RAM; registry `LongPathsEnabled`; free disk space |
+| E21 | Supabase MCP tools `get_project_url`, `list_tables` (schemas `public`, `auth`, `storage`), `list_extensions`, `list_migrations`, `list_edge_functions` and `get_advisors` (security), run once each after the owner's sign-in. No write-capable tool was used. |
 | E20 | Gradle Java compatibility table, `https://docs.gradle.org/current/userguide/compatibility.html`, retrieved 2026-11-19: Java 21 is supported for running Gradle from 8.5 |
 
 ## Approval

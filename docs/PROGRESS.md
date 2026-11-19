@@ -23,7 +23,7 @@
 - The rest of Checkpoint 1 (dependencies, theme, router, app shell, Supabase initialisation) needs product-owner approval to start.
 - Ten decisions are still open in `docs/REPOSITORY_AUDIT.md`. Four of them gate the rest of Checkpoint 1: D2 (Gradle JDK), D9 (publishable-key rename), D11 (commit generated code) and D12 (Android licenses). D1 and D3 were answered on 2026-11-19 and are logged in `docs/DECISIONS.md`.
 - The application ID is the placeholder `com.example.worlds`. It must be replaced before any release build.
-- A Supabase project exists but has not been inspected: the Supabase MCP sign-in must be completed by the owner from a regular terminal.
+- The Supabase project has been inspected read-only and is empty: no tables, migrations, users, buckets or functions. PostGIS is available but not installed. Region, plan, Postgres version and Auth settings are still unverified.
 - Map package and tile provider are recommended in the audit but not yet approved.
 
 ## Checkpoint 0 record
@@ -37,7 +37,7 @@
 - **Known issues:**
   - Installed Flutter 3.38.3 is one year behind current stable 3.50.0; 11 of 17 recommended packages resolve below their latest release.
   - A user-level Gradle setting forces JDK 20, which breaks the MapLibre plugin build. A project-level fix is verified and planned for Checkpoint 1.
-  - The Supabase project's region, plan, PostGIS state, auth settings and existing schema are not verified.
+  - The Supabase project's region, plan, Postgres version and auth settings are not verified. Its schema and extensions were inspected after delivery; see "Project inspection after delivery" in the audit.
   - No Supabase CLI, Docker or `psql` is installed. Whether the Supabase CLI runs through `npx` on this machine is not verified.
   - Android SDK licenses are not all accepted.
   - Four gaps between the specification documents (G1–G4 in the audit) need product decisions.
