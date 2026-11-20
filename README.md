@@ -21,19 +21,19 @@ The MVP is an Android-first Flutter application. It does not require AR, backgro
 | Creation | Any signed-in user can create |
 | Initial platform | Android-first |
 | Backend | Supabase + PostgreSQL + PostGIS |
-| Maps | MapLibre behind an adapter; validate package and tile-provider terms before selection |
+| Maps | `maplibre_gl` behind `MapAdapter`; OpenFreeMap pilot tiles, with provider terms and reliability rechecked before public launch |
 | Location | Foreground only |
 | AR | Out of MVP |
 | Initial launch | Small, seeded geographic pilot |
 
 ## Start here
 
-1. Read [`docs/PRODUCT_SPEC.md`](docs/PRODUCT_SPEC.md).
-2. Read [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md).
-3. Read [`docs/TECHNICAL_ARCHITECTURE.md`](docs/TECHNICAL_ARCHITECTURE.md).
-4. Read [`docs/DATABASE.md`](docs/DATABASE.md).
-5. Give the coding agent [`AGENTS.md`](AGENTS.md).
-6. Complete Checkpoint 0 before making broad code changes.
+1. Give the coding agent [`AGENTS.md`](AGENTS.md) and require it to read every document in `docs/`.
+2. For product behavior, use [`docs/USER_JOURNEYS.md`](docs/USER_JOURNEYS.md).
+3. For screens and interaction, use [`docs/UI_UX_SPECIFICATION.md`](docs/UI_UX_SPECIFICATION.md).
+4. For measurable completion gates, use [`docs/FEATURE_ACCEPTANCE_CRITERIA.md`](docs/FEATURE_ACCEPTANCE_CRITERIA.md).
+5. For architecture, schema and scope, use `TECHNICAL_ARCHITECTURE.md`, `DATABASE.md`, `PRODUCT_SPEC.md` and `IMPLEMENTATION_PLAN.md`.
+6. Check [`docs/PROGRESS.md`](docs/PROGRESS.md) before starting; Checkpoints 0–3 are already implemented and merged. Do not repeat the initial audit.
 
 ## MVP definition
 
@@ -67,7 +67,7 @@ Generated files (`*.freezed.dart`, `*.g.dart`) are committed. Regenerate them wh
 
 Gradle is pinned to Java 21 by `android/gradle/gradle-daemon-jvm.properties`, so a JDK 21 must be installed (Android Studio ships one).
 
-The app currently has its foundation, email/password accounts and profiles, and the Explore map of nearby published Worlds. Creating and playing Worlds are not implemented yet. See [`docs/PROGRESS.md`](docs/PROGRESS.md) for status.
+The app currently has its foundation, email/password accounts and profiles, and the Explore map of nearby published Worlds. World details/creation and playing are not implemented yet. The Explore real-device visual verification gate remains open. See [`docs/PROGRESS.md`](docs/PROGRESS.md) for status.
 
 Before testing sign-up, read the email-confirmation note in [`supabase/README.md`](supabase/README.md): with the project's current settings, sign-up only works for addresses on the Supabase project team.
 
