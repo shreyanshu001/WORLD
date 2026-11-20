@@ -3,7 +3,7 @@
 You are implementing WORLDS. These rules are mandatory.
 
 ## Source of truth
-Read README.md and all documents in docs/ before implementation. If they conflict, stop and report the conflict.
+Read README.md and **all** documents in docs/ before implementation. In particular, use `docs/USER_JOURNEYS.md` for end-to-end behavior, `docs/UI_UX_SPECIFICATION.md` for screen/interaction/accessibility requirements, and `docs/FEATURE_ACCEPTANCE_CRITERIA.md` for measurable completion gates. `docs/PROGRESS.md` and the merged code are the current implementation baseline; older planning documents may describe work that is already complete. If documents or code conflict, stop, identify the exact conflict and propose a correction before proceeding. Never blindly replay a completed checkpoint.
 
 ## Locked product direction
 - Map-first discovery.
@@ -15,7 +15,7 @@ Read README.md and all documents in docs/ before implementation. If they conflic
 - No AR, AI generation, chat, followers, feed, payments or monetization in MVP.
 
 ## Before coding
-Complete Checkpoint 0 in docs/IMPLEMENTATION_PLAN.md. Inspect the actual repository, SDK, conventions, Android configuration, dependencies, existing backend and design system. Do not assume versions or overwrite existing work.
+Checkpoint 0 (repository audit), Checkpoint 1 (foundation), Checkpoint 2 (identity/profile) and Checkpoint 3 (Explore map) are already implemented and merged into `main`. Do not redo them. First inspect the current `main` tree and `docs/PROGRESS.md`, verify the working tree and latest tests locally, then propose the next approved checkpoint. The immediate product work is Checkpoint 4 (World details and creator), but do not begin it until the product owner explicitly approves it and resolves the listed gate decisions. Do not assume versions or overwrite existing work.
 
 ## Engineering rules
 - Feature-first architecture with presentation, application, domain and data boundaries.
@@ -30,6 +30,9 @@ Complete Checkpoint 0 in docs/IMPLEMENTATION_PLAN.md. Inspect the actual reposit
 - Do not use public OSM tile servers as production infrastructure without checking their policy.
 - Never add background location permission.
 - Implement loading, empty, error, permission-denied and retry states.
+- Do not invent a brand system or perform a wholesale visual redesign. The living-atlas/field-journal direction in `docs/UI_UX_SPECIFICATION.md` is proposed, not approved; keep existing Material 3 behavior until the owner approves visual tokens.
+- Do not present placeholders, fake data, local-only persistence or inert buttons as completed product functionality.
+- Preserve existing passing tests and add regression tests for every behavior change.
 - No scope expansion without product-owner approval.
 - Avoid unrelated refactors.
 
@@ -55,5 +58,5 @@ At each checkpoint:
 ### Decisions needed
 ### Next checkpoint proposal
 
-## First task
-Repository reconnaissance only. Do not implement app features. Complete the audit in Checkpoint 0 and return the evidence-based report.
+## Current task
+Review the latest merged implementation against the three UX/product documents and the open gates in `docs/PROGRESS.md`. Do not start a new feature until the owner approves Checkpoint 4. Return the required checkpoint report with exact evidence.
