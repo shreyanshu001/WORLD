@@ -104,6 +104,7 @@ void main() {
       'PGRST116': AppFailure.notFound(),
       'P0002': AppFailure.notFound(),
       'WR429': AppFailure.rateLimited(),
+      'WR403': AppFailure.locked(),
       'XX000': AppFailure.unexpected(),
     };
 

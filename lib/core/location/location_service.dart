@@ -1,5 +1,15 @@
 import 'package:worlds/shared/models/geo_point.dart';
 
+/// One position reading and how far off it may be.
+class LocationFix {
+  const LocationFix({required this.point, required this.accuracyMeters});
+
+  final GeoPoint point;
+
+  /// Radius, in metres, within which the true position probably lies.
+  final double accuracyMeters;
+}
+
 /// Whether the app may read the device's location in the foreground.
 enum LocationPermissionStatus {
   granted,
@@ -25,6 +35,10 @@ abstract interface class LocationService {
   /// One fresh position. Throws `AppFailure.locationUnavailable` if none
   /// arrives within [timeLimit], or `AppFailure.permissionDenied`.
   Future<GeoPoint> currentPosition({required Duration timeLimit});
+
+  /// One fresh, high-accuracy reading with its uncertainty, for unlocking a
+  /// World. Throws like [currentPosition].
+  Future<LocationFix> currentFix({required Duration timeLimit});
 
   Future<void> openAppSettings();
 

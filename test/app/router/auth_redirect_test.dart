@@ -35,6 +35,14 @@ void main() {
       }
     });
 
+    test('signed-out players are sent to sign in, then back to the World', () {
+      expect(
+        authRedirect(signedIn: false, uri: uri('/play/abc')),
+        AppRoutes.signInFrom('/explore/worlds/abc'),
+      );
+      expect(authRedirect(signedIn: true, uri: uri('/play/abc')), isNull);
+    });
+
     test('World details stay open to everyone', () {
       expect(
         authRedirect(signedIn: false, uri: uri('/explore/worlds/abc')),

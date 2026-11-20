@@ -144,6 +144,7 @@ class FakeLocationService implements LocationService {
   LocationPermissionStatus permission = LocationPermissionStatus.denied;
   LocationPermissionStatus requestResult = LocationPermissionStatus.granted;
   GeoPoint position = const GeoPoint(latitude: 51.51, longitude: -0.13);
+  double accuracyMeters = 8;
   Object? positionError;
 
   int serviceChecks = 0;
@@ -181,6 +182,13 @@ class FakeLocationService implements LocationService {
     positionReads++;
     if (positionError case final error?) throw error;
     return position;
+  }
+
+  @override
+  Future<LocationFix> currentFix({required Duration timeLimit}) async {
+    positionReads++;
+    if (positionError case final error?) throw error;
+    return LocationFix(point: position, accuracyMeters: accuracyMeters);
   }
 
   @override

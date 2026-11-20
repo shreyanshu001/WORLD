@@ -75,6 +75,8 @@ AppFailure _fromPostgrest(PostgrestException exception) =>
       'P0002' => const AppFailure.notFound(),
       // The app's own code for a creation limit.
       'WR429' => const AppFailure.rateLimited(),
+      // The app's own code for playing a World that is not unlocked.
+      'WR403' => const AppFailure.locked(),
       _ => const AppFailure.unexpected(),
     };
 
