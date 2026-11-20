@@ -21,14 +21,14 @@
 ## Current blockers
 
 - On-device: the app has been installed and launched on the owner's phone and runs without crashing, but its screen has not been seen. Sign-up through real Supabase Auth, sign-in, sign-out, session restore and the map are untested on a device.
-- Sign-up with email confirmation on (Supabase's default) only works for project team members' addresses until custom SMTP is set up. For development, turn off *Confirm email* in the dashboard (see `supabase/README.md`).
+- Email confirmation was turned off in the dashboard by the owner on 2026-11-20 for development, so new accounts are signed in at once and any address can register, including ones the user does not own. Before the pilot: set up custom SMTP and turn confirmation back on (see `supabase/README.md`).
 - The Checkpoint 2 gate is a security review by the owner.
 - The Checkpoint 2 security review has not been explicitly given.
 - Checkpoint 3's map package and tile provider were adopted on recommendation when the owner said "continue" (D-016, D-017); the owner has not chosen them explicitly.
 - The pilot area, and so the Explore default centre, is undecided (D-021).
 - Checkpoint 4 needs product-owner approval to start, and gap G1 (unlisted Worlds by direct link) decided.
 - The application ID is the placeholder `com.example.worlds`. It must be replaced before any release build.
-- Supabase region and plan are unverified. Verified: Postgres 17.12; sign-up enabled; email confirmation **on** (`mailer_autoconfirm: false` from the public auth settings).
+- Supabase region and plan are unverified. Verified: Postgres 17.12; sign-up enabled; email confirmation **off** since 2026-11-20 (`mailer_autoconfirm: true` from the public auth settings; it was `false` before).
 
 ## Checkpoint 0 record
 
