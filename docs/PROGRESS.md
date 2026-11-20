@@ -1,14 +1,14 @@
 # WORLDS — Implementation progress
 
-**Phase:** Discovery  
-**Current checkpoint:** 3 — Explore map (implemented; real-device map verification is its gate)  
+**Phase:** MVP implementation  
+**Current checkpoint:** 3 merged; Checkpoint 4 proposed next (requires owner approval)  
 **Product direction:** Approved  
-**Documentation handoff:** Published to GitHub  
+**Documentation handoff:** Core product, journey, UX and acceptance specifications published to GitHub  
 **App implementation:** Foundation, email/password accounts and profiles, and the Explore map of nearby published Worlds; no World creation or playing yet
 
 | Checkpoint | Status | Evidence |
 |---|---|---|
-| Documentation handoff | Complete | README, AGENTS.md and 12 supporting files committed to main |
+| Documentation handoff | Complete | Product/technical docs plus `UI_UX_SPECIFICATION.md`, `USER_JOURNEYS.md`, `FEATURE_ACCEPTANCE_CRITERIA.md` |
 | 0. Repository audit | Audit delivered. Owner answered D1 and D3 and asked for the scaffold; ten decisions remain open | `docs/REPOSITORY_AUDIT.md`, commit `f1b92f1`, 2026-11-19 |
 | 1. Project foundation | Implemented; device test deferred by owner; continued to Checkpoint 2 at owner's request | See "Checkpoint 1 record" below |
 | 2. Backend and identity | Implemented; device test and security review pending | See "Checkpoint 2 record" below |
@@ -198,3 +198,43 @@ Only the scaffold part of Checkpoint 1 is done. It was created at the product ow
 
 ## Update protocol
 For each checkpoint record date, commit SHA, summary, tests and results, manual device verification, known issues and approval status. Never mark a checkpoint complete without evidence.
+
+
+## Documentation and repository review — 2026-11-20
+
+### New product-direction documents
+- `docs/UI_UX_SPECIFICATION.md` — current screen behavior, proposed visual direction, navigation, accessibility, motion and screen-state requirements.
+- `docs/USER_JOURNEYS.md` — anonymous discovery, location, identity, create/publish, unlock/play, save and report journeys.
+- `docs/FEATURE_ACCEPTANCE_CRITERIA.md` — global definition of done and measurable acceptance criteria for Checkpoints 0–7.
+
+The new docs were written against the merged implementation, not the original greenfield assumptions. The “living atlas / field journal” visual direction is explicitly a proposal and is not an owner-approved brand decision.
+
+### Current repository review
+Reviewed the latest `main` tree, recent commit history, Checkpoint 3 merge/PR, app feature tree, theme, app shell, Explore screen and messages, preview/list, Saved/Create/Profile screens, package manifest, test tree, Supabase migration tree and the latest Checkpoint 3 progress record.
+
+Confirmed from repository evidence:
+- Checkpoints 0–3 are merged into `main`; latest merge commit: `832babf7bbea33909efa4983c6a245ac1a0431cb`.
+- Current stack includes Flutter/Dart, Riverpod 3, go_router, Supabase Flutter, MapLibre `maplibre_gl` 0.27.1 and geolocator 14.1.2.
+- Existing implementation has auth/profile, Explore map/list, title search, category filters, nearby PostGIS RPC, selected marker preview, foreground one-shot location flow and explicit location explanation.
+- The four-tab shell exists. Saved and Create remain honest placeholders for signed-in users; profile is implemented.
+- Three SQL migrations exist for PostGIS, profiles and Worlds. Database test files exist for profiles and Worlds.
+- Latest recorded Flutter suite: 138 passing tests; latest recorded analyzer: no issues; latest recorded debug APK build: passed. These are historical results from the checkpoint report, not a fresh execution in this review.
+
+### Important gaps and risks found
+1. **Real-device Explore verification remains open.** The app was installed/launched, but the actual screen was not successfully inspected. Map tiles, attribution placement, markers, camera gestures and the location flow are not visually verified.
+2. **Checkpoint 1/2 device gates remain open.** Real Supabase sign-up/sign-in/session restore/profile edit/sign-out need device verification; owner security review is pending.
+3. **Create and World details are not implemented.** The current Create tab is a placeholder. World preview is only a map summary; there is no complete details/editor/publish path.
+4. **Player and persisted progress are not implemented.** The core MVP creator-to-explorer loop is not complete.
+5. **Saved is not implemented for signed-in users.** The current tab intentionally states that it is not built.
+6. **Brand/design system is not settled.** Theme seed `#1F6F5B` is explicitly a placeholder. Current Material 3 styling is functional baseline, not a polished final visual identity.
+7. **Operational decisions remain.** Pilot area/default centre, final Android application ID, Supabase region/plan and email confirmation/SMTP setup remain unresolved. Map tile provider has no SLA.
+8. **Nearby result pagination is not implemented.** The current request is capped at 50 results, so dense areas may omit farther Worlds.
+
+### Immediate next actions (recommended order)
+1. Owner performs/approves the pending physical-device and security checks recorded above.
+2. Owner confirms the pilot area/default map centre and the open Checkpoint 4 decisions (including direct-link visibility for unlisted Worlds).
+3. Owner approves Checkpoint 4.
+4. Implement World details and the complete creator flow in small reviewable increments, using the new journeys and acceptance criteria. Do not start the player before a real published World can be created and fetched by a second account.
+5. Before public pilot, complete the creator-to-explorer-to-completion loop, saved/reporting requirements, operations and beta gates.
+
+**Review scope limitation:** this was a GitHub source/document review. No local checkout was available in this session, so no Flutter command was executed here and no physical device was controlled. The 138-test/analyzer/build results are reported from the repository's latest progress record only.
