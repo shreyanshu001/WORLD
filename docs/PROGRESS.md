@@ -1,10 +1,10 @@
 # WORLDS — Implementation progress
 
 **Phase:** MVP implementation  
-**Current checkpoint:** 3 merged; Checkpoint 4 proposed next (requires owner approval)  
+**Current checkpoint:** 4 (World details and creator) in progress, approved by the owner on 2026-11-20  
 **Product direction:** Approved  
 **Documentation handoff:** Core product, journey, UX and acceptance specifications published to GitHub  
-**App implementation:** Foundation, email/password accounts and profiles, and the Explore map of nearby published Worlds; no World creation or playing yet
+**App implementation:** Foundation, accounts and profiles, the Explore map, World details and the World creator. Playing Worlds is not built yet. The Checkpoint 4 database migration is written but **not yet applied** to the development project.
 
 | Checkpoint | Status | Evidence |
 |---|---|---|
@@ -13,7 +13,7 @@
 | 1. Project foundation | Implemented; device test deferred by owner; continued to Checkpoint 2 at owner's request | See "Checkpoint 1 record" below |
 | 2. Backend and identity | Implemented; device test and security review pending | See "Checkpoint 2 record" below |
 | 3. Explore map | Implemented; real-device map check pending | See "Checkpoint 3 record" below |
-| 4. World details and creator | Not started | — |
+| 4. World details and creator | App implemented (4A–4F); database migration not yet applied; 4G (two-account check) and device check pending | See "Checkpoint 4 record" below |
 | 5. Experience player | Not started | — |
 | 6. Saved/profile/moderation | Not started | — |
 | 7. Beta and pilot | Not started | — |
@@ -26,7 +26,8 @@
 - The Checkpoint 2 security review has not been explicitly given.
 - Checkpoint 3's map package and tile provider were adopted on recommendation when the owner said "continue" (D-016, D-017); the owner has not chosen them explicitly.
 - The pilot area, and so the Explore default centre, is undecided (D-021).
-- Checkpoint 4 needs product-owner approval to start, and gap G1 (unlisted Worlds by direct link) decided.
+- The Checkpoint 4 migration `20261120090000_create_world_authoring.sql` is not applied. The Supabase connection now asks for approval before SQL that changes data, and this editor declines that prompt automatically, so the owner has to run the prepared SQL in the Supabase SQL editor (see the Checkpoint 4 record). Until then, creating and publishing fail against the real backend.
+- Gap G1 (unlisted Worlds by direct link) is still open; the creator does not offer "unlisted" (D-029).
 - The application ID is the placeholder `com.example.worlds`. It must be replaced before any release build.
 - Supabase region and plan are unverified. Verified: Postgres 17.12; sign-up enabled; email confirmation **off** since 2026-11-20 (`mailer_autoconfirm: true` from the public auth settings; it was `false` before).
 
@@ -195,6 +196,51 @@ Only the scaffold part of Checkpoint 1 is done. It was created at the product ow
   - Seed script rehearsed in a rolled-back run with a test account: it inserted 8 Worlds (7 published, 1 draft); a signed-out nearby search returned 6, without the draft or the World 6 km away.
   - The nearby call with exactly the app's payload (five keys, two of them null) returned HTTP 200.
 - **Approval status:** Pending.
+
+## Checkpoint 4 record
+
+- **Date:** 2026-11-20
+- **Branch:** `checkpoint-4-world-creator`, from `main` at `11e17f0` (Checkpoints 0–3 merged by PRs #1–#4). Commits: `078211f` (email-setting note carried over), `1c70075` (4A: details and migration), `581fb0c` (4B–4F: creator), plus these records.
+- **Started:** the owner approved Checkpoint 4 with a written brief (stages 4A–4G) and asked for work to continue without questions unless genuinely blocked. Restrictive defaults were taken where the documents conflict or are silent and reported in the baseline: D-023 to D-029. Backend hosting stays on Supabase Cloud (owner, D-030).
+- **Baseline before coding:** `dart format` 82 files, 0 changed; `flutter analyze` no issues; `flutter test` 138 of 138. Database: the three earlier migrations only; tables `profiles` and `worlds`; no storage bucket; one profile, no Worlds.
+
+### Database (written; not yet applied, see "Not applied" below)
+- `supabase/migrations/20261120090000_create_world_authoring.sql`:
+  - `worlds.location` may be empty for drafts; `cover_asset_id` references `world_assets`.
+  - `world_assets`, `world_content_blocks` (deferred unique position), `private.world_question_secrets` (no API access), all with row level security; clients have no write grants.
+  - Private `world-media` bucket (5 MB; JPEG, PNG, WebP) with upload, read and delete policies on `storage.objects`.
+  - Functions `save_world`, `get_world_draft`, `publish_world`, `unpublish_world`, `delete_world`, `register_world_asset`, `forget_world_asset` (signed-in only) and `get_world_details` (everyone). See `docs/DATABASE.md`.
+- `supabase/tests/world_authoring_test.sql`: about 70 checks covering grants and row level security, bucket settings, answer normalisation (case, spaces, Unicode compatibility forms), signed-out refusal, create and idempotent retry, answers hashed and never returned, rejected content (an `answer` key in a block, a part not allowed in the category, unknown keys, lengths, 31 parts, a bad latitude), publish problems, idempotent publish, published Worlds staying complete, discovery and details without content or answers, another user unable to read, save, unpublish, delete or hijack block ids, unpublish, forward-only story choices, reorder, removal, category rules, asset registration (owner, folder, type and size), storage upload policy, covers public only while published, hidden and deleted Worlds, the daily creation limit and table constraints.
+- **Not applied:** the Supabase connection now asks for confirmation before SQL that changes data, and this editor declines that prompt automatically (it was declined twice, and the owner confirmed no prompt appeared). Three files were prepared for the owner to paste into the Supabase SQL editor: a rolled-back dry run of the migration with all three test files, the migration plus its migration-history row, and the tests on their own. No dry-run result has been reported yet, so **no database test result exists for this checkpoint**.
+
+### App
+- **4A, World details** (`lib/features/worlds/presentation/world_details_screen.dart`): cover or category panel, title, category, creator, description, unlock radius with a Locked panel (distance from the user only when they shared a location), part count, creator status (Draft, Unpublished, Published, Hidden). Actions only where they work: "Show on map" (focuses the World on Explore) and, for the creator, "Edit World". No Start, Unlock, Save, Share or Report yet. Loading, not-available and error-with-retry states. Opened from the Explore preview card and from each list row.
+- **4B, Create tab** (`create_screen.dart`): the creator's Worlds grouped as Drafts, Published and Hidden by moderation, a first-World empty state, loading and retry. "New World" opens the editor with an app-chosen id.
+- **4C, Details and place:** title, description and optional cover; place picker with a centre pin, the unlock radius drawn at true size, a 25–150 m slider with a GPS-accuracy note, "Use my location" with an explanation before Android's prompt (no location read otherwise), and the public-place safety note.
+- **4D, Content:** typed editors for text, image, choice (2–4 options leading only to later parts), question (answer field that clears once stored), artwork and ending; only the parts the category allows; reorder by drag or Move up/Move down; incomplete parts marked.
+- **4E, Saving and images:** every step saves the whole World before moving on; unsaved-changes guard on leaving; save errors shown with retry. Photos from the system picker, resized, checked by their bytes, uploaded under a fixed id so a retry completes the same upload; replaced images are released.
+- **4F, Review and publish:** problems with Fix links, an explorer preview that follows choices (shared renderer for the future player), a required public-place confirmation, Publish (saves first; a retry after a timeout cannot publish twice), Unpublish, "View on map", Delete World.
+- Dependency added: `image_picker` 1.2.3 (D-028). Architecture tests keep it in `lib/core/media` and forbid photo, storage and camera permissions.
+
+### Tests and results
+- `dart format --output=none --set-exit-if-changed .` — 129 files, 0 changed.
+- `flutter analyze` — no issues.
+- `flutter test --timeout 60s` — 211 of 211 passed (73 new: details screen, creator flows end to end with fakes, editor controller, publishing rules, draft codec, media and utility helpers, error mapping, routes, architecture). The tests caught three layout bugs before any device saw them: the editor's bottom bar overflowing on a 411 dp phone, details actions laid out below the screen, and the preview's bottom bar taking the whole body height.
+- `flutter build apk --debug --dart-define-from-file=.env` — passed. Permissions in the built APK: INTERNET, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, and AndroidX's app-internal `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. No background location, storage, media or camera permission.
+
+### Manual device verification
+None for this checkpoint. Nothing in Checkpoint 4 has been seen on a phone, and creating Worlds cannot work on a device until the migration is applied.
+
+### Known issues
+- The migration is not applied, so there is no database test evidence and stage 4G (publish with account A, find and open it with account B) has not started.
+- The server checks an uploaded file's declared type, extension, owner and size, but does not decode the image; a mislabelled file would be stored but fail to display. Server-side decoding would need an Edge Function.
+- Files of deleted Worlds, and files whose release fails, stay in storage; there is no scheduled clean-up yet.
+- No thumbnails: images are resized on the phone to 2,048 px only.
+- Unlisted Worlds (G1) and the play-account decision (D-022) remain open.
+- The visual design is still the Material 3 baseline; the "living atlas" direction is not approved.
+
+### Approval status
+Pending: the database steps and 4G must be completed, and the owner's device check done, before Checkpoint 4 can be called complete.
 
 ## Update protocol
 For each checkpoint record date, commit SHA, summary, tests and results, manual device verification, known issues and approval status. Never mark a checkpoint complete without evidence.

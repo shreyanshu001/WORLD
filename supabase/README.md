@@ -25,6 +25,8 @@ The development project is reached through the Supabase MCP server in `.mcp.json
 5. **Rename the file** to the version Supabase recorded (MCP `list_migrations`), so a later `supabase db push` from the CLI sees no drift.
 6. Run the security and performance advisors (MCP `get_advisors`) and record the result in `docs/PROGRESS.md`.
 
+**Since Checkpoint 4:** the Supabase MCP server asks for confirmation before SQL that changes data, and the VS Code extension used here declines that prompt without showing it. Steps 2 to 4 are therefore run by the owner in the Supabase SQL editor, from files the agent prepares: a rolled-back dry run of the migration with every test file, the migration plus its `supabase_migrations.schema_migrations` row (version and name from the file, statement equal to the file's contents), and the tests alone. Read-only checks (`list_migrations`, advisors, `select` queries) still run through MCP.
+
 Never fix the schema with ad-hoc SQL; write a forward migration.
 
 ### Tests
@@ -38,6 +40,7 @@ Run them in the Supabase SQL editor or with MCP `execute_sql`, one file per run 
 
 - `tests/profiles_test.sql` — profiles, sign-up bootstrap, RLS.
 - `tests/worlds_test.sql` — worlds RLS and `get_nearby_worlds` (filters, clamps, search, validation).
+- `tests/world_authoring_test.sql` — Checkpoint 4: saving, publishing, answer secrecy, assets, storage policies and World details.
 
 ### Development seed data
 

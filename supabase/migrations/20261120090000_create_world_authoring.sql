@@ -12,7 +12,7 @@
 --                         in Checkpoint 5, so content stays behind the unlock step.
 --   private.world_question_secrets  nobody; only these functions
 --
--- Limits (docs/DECISIONS.md, D-023 to D-025): 30 blocks per World; images of
+-- Limits (docs/DECISIONS.md, D-023): 30 blocks per World; images of
 -- at most 5 MB as JPEG, PNG or WebP; 40 images per World; 20 new Worlds per
 -- account per day.
 
