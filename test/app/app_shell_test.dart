@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:worlds/features/auth/domain/auth_user.dart';
+import 'package:worlds/features/explore/presentation/explore_screen.dart';
 
 import '../support/fakes.dart';
 import '../support/pump_app.dart';
@@ -15,7 +16,7 @@ void main() {
   testWidgets('opens on Explore and shows four destinations', (tester) async {
     await pumpWorldsApp(tester, auth: FakeAuthRepository());
 
-    expect(find.text('Explore is not built yet'), findsOneWidget);
+    expect(find.byType(ExploreScreen), findsOneWidget);
     expect(find.byType(NavigationDestination), findsNWidgets(tabs.length));
     expect(selectedIndex(tester), 0);
   });
@@ -36,7 +37,7 @@ void main() {
     }
 
     await tapTab(tester, 'Explore');
-    expect(find.text('Explore is not built yet'), findsOneWidget);
+    expect(find.byType(ExploreScreen), findsOneWidget);
   });
 
   testWidgets('signed in, each tab shows its own content', (tester) async {

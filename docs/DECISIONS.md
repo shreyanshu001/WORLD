@@ -23,9 +23,18 @@ Checkpoint 2 decisions:
 - **D-014 Usernames chosen at sign-up:** product-owner decision, 2026-11-20. 3–20 characters of lower-case letters, digits and underscores, unique, stored lower-case. If the requested name is invalid or taken when the account is created, sign-up still succeeds with a generated `user_` name the user can change. Alternative rejected: generated names for everyone.
 - **D-015 Remote Supabase project as the development database, changed through the MCP connection:** product-owner decision, 2026-11-20. Migrations are dry-run with their tests, applied from the committed file's exact contents, then renamed to the version Supabase records. The MCP connection stays write-capable by the owner's choice; ad-hoc schema changes through it remain forbidden. See `supabase/README.md`.
 
+Checkpoint 3 decisions. The owner said "continue" without choosing, so the first four were adopted on the audit's recommendation (2026-11-20); the rest are implementation choices recorded for review.
+
+- **D-016 Map package `maplibre_gl` 0.27.1:** wrapped behind `MapAdapter` in `lib/core/maps`; a test fails if it is imported anywhere else. Alternative deferred: the newer `maplibre` package (floating native version, much less use). Audit decision D4.
+- **D-017 OpenFreeMap tiles for development and pilot:** free, commercial use allowed, no key, no SLA. Stadia Maps Starter ($20/month) remains the pre-approved fallback, switchable through `MAP_STYLE_URL` and `MAP_ATTRIBUTION`. Map tile requests go to this third party, which sees the device's IP address and the areas being viewed. Audit decision D5.
+- **D-018 Title search is part of the nearby query:** `get_nearby_worlds` takes an optional `search_text` (case-insensitive, `%` and `_` literal). Resolves audit gap G2.
+- **D-019 Browsing needs no account:** the nearby query is callable signed out. Whether unlocking and playing need an account is still open for Checkpoint 5 (rest of audit gap G3).
+- **D-020 World text limits (proposed):** title 3–80 characters, trimmed; description at most 2,000 characters. Not specified in the documents; change by a forward migration if the product needs other limits.
+- **D-021 Location is read only when the user taps "find Worlds near me":** even if permission was granted earlier. One reading with a 15-second limit; MapLibre's own location layer stays off because it tracks continuously. Before that, Explore opens at `EXPLORE_DEFAULT_CENTER` if set, otherwise zoomed out. **The pilot area, and so the default centre, is undecided.**
+
 ## Pending; require evidence and rationale
-- Map package/version after SDK audit. Recommendation recorded in `docs/REPOSITORY_AUDIT.md` (D4); not yet approved.
-- Production tile provider and its terms. Recommendation recorded in `docs/REPOSITORY_AUDIT.md` (D5); not yet approved.
+- Pilot area, and the Explore default centre that goes with it (D-021).
+- Whether unlocking and playing a World needs an account (audit gap G3, Checkpoint 5).
 - Dependency versions for later checkpoints (Flutter/Dart settled by D-008; Checkpoint 1 packages recorded in `docs/DEPENDENCY_DECISIONS.md`).
 - Final application ID (placeholder in use, see D-009).
 - Supabase region/configuration.

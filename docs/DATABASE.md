@@ -11,6 +11,10 @@ PostgreSQL + PostGIS. All schema changes must be committed migrations.
   - Clients may update only `username`, `display_name` and `bio`, on their own row. `avatar_path` stays server-managed until storage ownership rules exist.
   - A trigger on `auth.users` creates the profile at sign-up. It uses the requested username if valid and free, otherwise a generated `user_` name; it never fails sign-up over the username.
 - **worlds**: `id uuid PK`, creator_id FK, title, description, cover_asset_id, category check (story/puzzle/art/experience), `location geography(point,4326)`, unlock_radius_meters default 50 check 25–150, visibility public/unlisted, status draft/published/hidden/deleted, published_at, timestamps.
+  Implemented in Checkpoint 3 (`supabase/migrations/20261120050626_create_worlds.sql`), read-only for clients so far:
+  - `creator_id` references `profiles`. Title 3–80 characters, trimmed; description at most 2,000 (proposed limits, D-020). A published World must have `published_at`.
+  - One select policy: published public Worlds for everyone, plus creators' own non-deleted Worlds. Unlisted Worlds are not readable yet (gap G1, Checkpoint 4).
+  - `cover_asset_id` has no foreign key until `world_assets` exists (Checkpoint 4).
 - **world_assets**: id, world_id, owner_id, unique storage_path, mime_type, size_bytes, created_at.
 - **world_content_blocks**: id, world_id, block_type, position, schema_version, content jsonb, timestamps; unique(world_id, position). Never put question answers in content.
 - **world_question_secrets**: block_id PK/FK, answer_hash, normalization_version. No direct client SELECT; only trusted validation function can access.
@@ -23,7 +27,10 @@ PostgreSQL + PostGIS. All schema changes must be committed migrations.
 GIST worlds.location; B-tree worlds(status,visibility,category); B-tree worlds(creator_id,created_at desc); unique world/position; primary keys for progress, visits and saves. Add others only with query-plan evidence.
 
 ## Nearby RPC
-`get_nearby_worlds(user_lat,user_lon,radius_meters,category_filter,limit,offset)`:
+`get_nearby_worlds(user_lat,user_lon,radius_meters,category_filter,search_text,page_size,page_offset)`:
+
+Implemented in Checkpoint 3 (`supabase/migrations/20261120050626_create_worlds.sql`). `limit` and `offset` became `page_size` and `page_offset` because they are SQL reserved words, and `search_text` was added for the MVP's title search (docs/DECISIONS.md, D-018). Clamps: radius 100–25,000 m (default 5,000), page size 1–100 (default 50), offset 0–1,000. Bad coordinates or an unknown category raise SQLSTATE 22023. Returns id, title, category, latitude, longitude, distance_meters, creator_username and creator_display_name. Callable signed out.
+
 - Validate lat -90..90 and lon -180..180.
 - Clamp radius and page size server-side.
 - Build point with `ST_SetSRID(ST_MakePoint(user_lon,user_lat),4326)::geography`.

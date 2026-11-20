@@ -34,7 +34,14 @@ Never fix the schema with ad-hoc SQL; write a forward migration.
 - **Pass:** the error message is exactly `WORLDS_TESTS_PASSED <file>: <n> checks`.
 - **Fail:** any other message, which names the failed check.
 
-Run them in the Supabase SQL editor or with MCP `execute_sql`. They can move to pgTAP and `supabase test db` once the CLI and Docker are available.
+Run them in the Supabase SQL editor or with MCP `execute_sql`, one file per run (each ends by raising, so a second file in the same statement never runs). They can move to pgTAP and `supabase test db` once the CLI and Docker are available.
+
+- `tests/profiles_test.sql` — profiles, sign-up bootstrap, RLS.
+- `tests/worlds_test.sql` — worlds RLS and `get_nearby_worlds` (filters, clamps, search, validation).
+
+### Development seed data
+
+`seed/dev_worlds.sql` places a few `[dev]` Worlds around a point you choose, owned by an existing account, so the Explore map has something to show before World creation exists. It is not a migration. Run it only on the development project, after editing its three marked values; it includes the one-line clean-up.
 
 ### Auth email (manual dashboard settings)
 

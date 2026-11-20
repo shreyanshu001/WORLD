@@ -2,16 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:worlds/app/app.dart';
+import 'package:worlds/core/location/location_providers.dart';
+import 'package:worlds/core/maps/map_providers.dart';
 import 'package:worlds/features/auth/application/auth_providers.dart';
+import 'package:worlds/features/explore/application/explore_controller.dart';
 import 'package:worlds/features/profile/application/profile_providers.dart';
+import 'package:worlds/features/worlds/application/world_providers.dart';
+import 'package:worlds/shared/models/geo_point.dart';
 
+import 'explore_fakes.dart';
 import 'fakes.dart';
 
-/// Pumps the whole app with in-memory repositories.
+/// Pumps the whole app with in-memory repositories, a fake map and a fake
+/// location service.
 Future<void> pumpWorldsApp(
   WidgetTester tester, {
   required FakeAuthRepository auth,
   FakeProfileRepository? profiles,
+  FakeWorldRepository? worlds,
+  FakeLocationService? location,
+  FakeMapAdapter? map,
+  GeoPoint? exploreDefaultCenter,
+
+  /// Set false when something keeps animating (such as a search held open).
+  bool settle = true,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -20,12 +34,40 @@ Future<void> pumpWorldsApp(
         profileRepositoryProvider.overrideWithValue(
           profiles ?? FakeProfileRepository(),
         ),
+        worldRepositoryProvider.overrideWithValue(
+          worlds ?? FakeWorldRepository(),
+        ),
+        locationServiceProvider.overrideWithValue(
+          location ?? FakeLocationService(),
+        ),
+        mapAdapterProvider.overrideWithValue(map ?? FakeMapAdapter()),
+        exploreDefaultCenterProvider.overrideWithValue(exploreDefaultCenter),
       ],
       retry: noAutomaticRetry,
       child: const WorldsApp(),
     ),
   );
-  await tester.pumpAndSettle();
+  if (settle) {
+    await tester.pumpAndSettle();
+  } else {
+    await tester.pump();
+    await tester.pump();
+  }
+}
+
+/// Moves the app through the real lifecycle sequence to the background and
+/// back, as when the user visits system settings.
+void leaveAndReturnToApp(WidgetTester tester) {
+  for (final state in const [
+    AppLifecycleState.inactive,
+    AppLifecycleState.hidden,
+    AppLifecycleState.paused,
+    AppLifecycleState.hidden,
+    AppLifecycleState.inactive,
+    AppLifecycleState.resumed,
+  ]) {
+    tester.binding.handleAppLifecycleStateChanged(state);
+  }
 }
 
 /// Taps a bottom-navigation destination.

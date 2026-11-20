@@ -5,7 +5,9 @@ import 'package:worlds/app/app.dart';
 import 'package:worlds/app/bootstrap.dart';
 import 'package:worlds/app/config/env.dart';
 import 'package:worlds/app/theme/app_theme.dart';
+import 'package:worlds/core/maps/map_providers.dart';
 import 'package:worlds/core/widgets/error_view.dart';
+import 'package:worlds/features/explore/application/explore_controller.dart';
 import 'package:worlds/core/widgets/loading_view.dart';
 
 /// Runs [bootstrap] and shows the app only once startup has succeeded.
@@ -54,7 +56,13 @@ class _StartupGateState extends State<StartupGate> {
         }
         return switch (snapshot.data) {
           StartupReady() => ProviderScope(
-            overrides: widget.overrides,
+            overrides: [
+              mapStyleProvider.overrideWithValue(widget.env.mapStyle),
+              exploreDefaultCenterProvider.overrideWithValue(
+                widget.env.exploreCenter,
+              ),
+              ...widget.overrides,
+            ],
             retry: noAutomaticRetry,
             child: const WorldsApp(),
           ),

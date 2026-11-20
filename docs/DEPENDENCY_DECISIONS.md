@@ -64,6 +64,8 @@ Added on 2026-11-20 with the owner's go-ahead for Checkpoint 1. Versions are fro
 | `mocktail` (dev) | 1.0.5 | Tests | Still unused: tests so far use hand-written fakes. Remove if still unused at Checkpoint 4 |
 | `http` | 1.6.0 | Network errors | Added in Checkpoint 2 as a direct dependency (already present transitively) to recognise `ClientException` |
 | `flutter_lints` (dev) | 6.0.0 | Lints | |
+| `maplibre_gl` | 0.27.1 | Maps | Added in Checkpoint 3 (D-016). Bundles MapLibre Native Android 13.5.0; needs Java 21 to build. Used only in `lib/core/maps` |
+| `geolocator` | 14.1.2 | Location | Added in Checkpoint 3. Its location foreground service is removed from the manifest. Used only in `lib/core/location` |
 
 `flutter pub add` without a version picked `flutter_riverpod` 2.6.1 on this SDK, so the constraint is set explicitly to `^3.3.2`. `json_annotation`, `freezed` and `json_serializable` are pinned to the versions verified together in the Checkpoint 0 spike; newer `freezed` 3.2.5 and `json_serializable` 6.14.1 also resolve but were not verified.
 
