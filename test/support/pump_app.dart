@@ -5,12 +5,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:worlds/app/app.dart';
 import 'package:worlds/core/location/location_providers.dart';
 import 'package:worlds/core/maps/map_providers.dart';
+import 'package:worlds/core/media/media_providers.dart';
+import 'package:worlds/features/world_creation/application/authoring_providers.dart';
 import 'package:worlds/features/auth/application/auth_providers.dart';
 import 'package:worlds/features/explore/application/explore_controller.dart';
 import 'package:worlds/features/profile/application/profile_providers.dart';
 import 'package:worlds/features/worlds/application/world_providers.dart';
 import 'package:worlds/shared/models/geo_point.dart';
 
+import 'creation_fakes.dart';
 import 'explore_fakes.dart';
 import 'fakes.dart';
 
@@ -24,6 +27,8 @@ Future<void> pumpWorldsApp(
   FakeLocationService? location,
   FakeMapAdapter? map,
   FakeWorldMediaRepository? media,
+  FakeWorldAuthoringRepository? authoring,
+  FakeImagePickerService? picker,
   GeoPoint? exploreDefaultCenter,
   List<Override> extraOverrides = const [],
 
@@ -42,6 +47,12 @@ Future<void> pumpWorldsApp(
         ),
         worldMediaRepositoryProvider.overrideWithValue(
           media ?? FakeWorldMediaRepository(),
+        ),
+        worldAuthoringRepositoryProvider.overrideWithValue(
+          authoring ?? FakeWorldAuthoringRepository(),
+        ),
+        imagePickerServiceProvider.overrideWithValue(
+          picker ?? FakeImagePickerService(),
         ),
         ...extraOverrides,
         locationServiceProvider.overrideWithValue(

@@ -125,7 +125,7 @@ void main() {
     await tester.pumpAndSettle();
     await signIn(tester, 'alice@example.com', 'password-a');
 
-    expect(find.text('Create is not built yet'), findsOneWidget);
+    expect(find.text('Create your first World'), findsOneWidget);
   });
 
   testWidgets('an existing session is restored at launch', (tester) async {

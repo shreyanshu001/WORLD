@@ -36,6 +36,9 @@ sealed class AppFailure with _$AppFailure implements Exception {
   /// A media upload did not complete.
   const factory AppFailure.uploadFailed() = UploadFailedFailure;
 
+  /// The chosen image is not a supported type or is too large.
+  const factory AppFailure.imageNotSupported() = ImageNotSupportedFailure;
+
   /// Too many attempts in a short time.
   const factory AppFailure.rateLimited() = RateLimitedFailure;
 
@@ -82,6 +85,8 @@ extension AppFailureMessage on AppFailure {
     InvalidContentFailure() =>
       "Some of the content isn't valid. Review it and try again.",
     UploadFailedFailure() => 'The upload failed. Try again.',
+    ImageNotSupportedFailure() =>
+      'Choose a JPEG, PNG or WebP image smaller than 5 MB.',
     RateLimitedFailure() => 'Too many attempts. Wait a moment and try again.',
     OfflineFailure() => "You're offline. Check your connection and try again.",
     InvalidCredentialsFailure() => 'Incorrect email or password.',

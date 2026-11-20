@@ -15,6 +15,7 @@ class MapViewConfig {
     this.userLocation,
     this.cameraRequest,
     this.onMapTapped,
+    this.areas = const [],
   });
 
   /// Used once, when the map is created.
@@ -36,6 +37,9 @@ class MapViewConfig {
   final ValueChanged<MapCamera> onUserCameraIdle;
 
   final VoidCallback? onMapTapped;
+
+  /// Areas drawn under the markers.
+  final List<MapArea> areas;
 }
 
 /// The app's only way to show a map. Implementations wrap one map SDK, so

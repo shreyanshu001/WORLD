@@ -216,6 +216,8 @@ class _FakeMap extends StatelessWidget {
       child: Column(
         children: [
           if (config.userLocation != null) const Text('user location shown'),
+          for (final area in config.areas)
+            Text('area ${area.radiusMeters.round()} m'),
           for (final marker in config.markers)
             TextButton(
               key: ValueKey('marker-${marker.id}'),

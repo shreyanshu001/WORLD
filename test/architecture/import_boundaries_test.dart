@@ -62,6 +62,16 @@ void main() {
     );
   });
 
+  test('image_picker is imported only in lib/core/media', () {
+    expect(
+      violations(
+        package: 'package:image_picker/',
+        allowedIn: (path) => path.startsWith('lib/core/media/'),
+      ),
+      isEmpty,
+    );
+  });
+
   test(
     'supabase_flutter is imported only by startup, network and data code',
     () {
@@ -86,6 +96,7 @@ void main() {
       'package:maplibre_gl/',
       'package:geolocator/',
       'package:http/',
+      'package:image_picker/',
     ];
     final offenders = [
       for (final source in sources)

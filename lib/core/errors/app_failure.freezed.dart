@@ -55,7 +55,7 @@ extension AppFailurePatterns on AppFailure {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( UnauthenticatedFailure value)?  unauthenticated,TResult Function( PermissionDeniedFailure value)?  permissionDenied,TResult Function( LocationUnavailableFailure value)?  locationUnavailable,TResult Function( LocationInaccurateFailure value)?  locationInaccurate,TResult Function( NotFoundFailure value)?  notFound,TResult Function( UnpublishedFailure value)?  unpublished,TResult Function( LockedFailure value)?  locked,TResult Function( InvalidContentFailure value)?  invalidContent,TResult Function( UploadFailedFailure value)?  uploadFailed,TResult Function( RateLimitedFailure value)?  rateLimited,TResult Function( OfflineFailure value)?  offline,TResult Function( InvalidCredentialsFailure value)?  invalidCredentials,TResult Function( AccountExistsFailure value)?  accountExists,TResult Function( WeakPasswordFailure value)?  weakPassword,TResult Function( EmailNotConfirmedFailure value)?  emailNotConfirmed,TResult Function( EmailNotAllowedFailure value)?  emailNotAllowed,TResult Function( SignUpDisabledFailure value)?  signUpDisabled,TResult Function( UsernameTakenFailure value)?  usernameTaken,TResult Function( UnexpectedFailure value)?  unexpected,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( UnauthenticatedFailure value)?  unauthenticated,TResult Function( PermissionDeniedFailure value)?  permissionDenied,TResult Function( LocationUnavailableFailure value)?  locationUnavailable,TResult Function( LocationInaccurateFailure value)?  locationInaccurate,TResult Function( NotFoundFailure value)?  notFound,TResult Function( UnpublishedFailure value)?  unpublished,TResult Function( LockedFailure value)?  locked,TResult Function( InvalidContentFailure value)?  invalidContent,TResult Function( UploadFailedFailure value)?  uploadFailed,TResult Function( ImageNotSupportedFailure value)?  imageNotSupported,TResult Function( RateLimitedFailure value)?  rateLimited,TResult Function( OfflineFailure value)?  offline,TResult Function( InvalidCredentialsFailure value)?  invalidCredentials,TResult Function( AccountExistsFailure value)?  accountExists,TResult Function( WeakPasswordFailure value)?  weakPassword,TResult Function( EmailNotConfirmedFailure value)?  emailNotConfirmed,TResult Function( EmailNotAllowedFailure value)?  emailNotAllowed,TResult Function( SignUpDisabledFailure value)?  signUpDisabled,TResult Function( UsernameTakenFailure value)?  usernameTaken,TResult Function( UnexpectedFailure value)?  unexpected,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case UnauthenticatedFailure() when unauthenticated != null:
@@ -67,7 +67,8 @@ return notFound(_that);case UnpublishedFailure() when unpublished != null:
 return unpublished(_that);case LockedFailure() when locked != null:
 return locked(_that);case InvalidContentFailure() when invalidContent != null:
 return invalidContent(_that);case UploadFailedFailure() when uploadFailed != null:
-return uploadFailed(_that);case RateLimitedFailure() when rateLimited != null:
+return uploadFailed(_that);case ImageNotSupportedFailure() when imageNotSupported != null:
+return imageNotSupported(_that);case RateLimitedFailure() when rateLimited != null:
 return rateLimited(_that);case OfflineFailure() when offline != null:
 return offline(_that);case InvalidCredentialsFailure() when invalidCredentials != null:
 return invalidCredentials(_that);case AccountExistsFailure() when accountExists != null:
@@ -95,7 +96,7 @@ return unexpected(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( UnauthenticatedFailure value)  unauthenticated,required TResult Function( PermissionDeniedFailure value)  permissionDenied,required TResult Function( LocationUnavailableFailure value)  locationUnavailable,required TResult Function( LocationInaccurateFailure value)  locationInaccurate,required TResult Function( NotFoundFailure value)  notFound,required TResult Function( UnpublishedFailure value)  unpublished,required TResult Function( LockedFailure value)  locked,required TResult Function( InvalidContentFailure value)  invalidContent,required TResult Function( UploadFailedFailure value)  uploadFailed,required TResult Function( RateLimitedFailure value)  rateLimited,required TResult Function( OfflineFailure value)  offline,required TResult Function( InvalidCredentialsFailure value)  invalidCredentials,required TResult Function( AccountExistsFailure value)  accountExists,required TResult Function( WeakPasswordFailure value)  weakPassword,required TResult Function( EmailNotConfirmedFailure value)  emailNotConfirmed,required TResult Function( EmailNotAllowedFailure value)  emailNotAllowed,required TResult Function( SignUpDisabledFailure value)  signUpDisabled,required TResult Function( UsernameTakenFailure value)  usernameTaken,required TResult Function( UnexpectedFailure value)  unexpected,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( UnauthenticatedFailure value)  unauthenticated,required TResult Function( PermissionDeniedFailure value)  permissionDenied,required TResult Function( LocationUnavailableFailure value)  locationUnavailable,required TResult Function( LocationInaccurateFailure value)  locationInaccurate,required TResult Function( NotFoundFailure value)  notFound,required TResult Function( UnpublishedFailure value)  unpublished,required TResult Function( LockedFailure value)  locked,required TResult Function( InvalidContentFailure value)  invalidContent,required TResult Function( UploadFailedFailure value)  uploadFailed,required TResult Function( ImageNotSupportedFailure value)  imageNotSupported,required TResult Function( RateLimitedFailure value)  rateLimited,required TResult Function( OfflineFailure value)  offline,required TResult Function( InvalidCredentialsFailure value)  invalidCredentials,required TResult Function( AccountExistsFailure value)  accountExists,required TResult Function( WeakPasswordFailure value)  weakPassword,required TResult Function( EmailNotConfirmedFailure value)  emailNotConfirmed,required TResult Function( EmailNotAllowedFailure value)  emailNotAllowed,required TResult Function( SignUpDisabledFailure value)  signUpDisabled,required TResult Function( UsernameTakenFailure value)  usernameTaken,required TResult Function( UnexpectedFailure value)  unexpected,}){
 final _that = this;
 switch (_that) {
 case UnauthenticatedFailure():
@@ -107,7 +108,8 @@ return notFound(_that);case UnpublishedFailure():
 return unpublished(_that);case LockedFailure():
 return locked(_that);case InvalidContentFailure():
 return invalidContent(_that);case UploadFailedFailure():
-return uploadFailed(_that);case RateLimitedFailure():
+return uploadFailed(_that);case ImageNotSupportedFailure():
+return imageNotSupported(_that);case RateLimitedFailure():
 return rateLimited(_that);case OfflineFailure():
 return offline(_that);case InvalidCredentialsFailure():
 return invalidCredentials(_that);case AccountExistsFailure():
@@ -131,7 +133,7 @@ return unexpected(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( UnauthenticatedFailure value)?  unauthenticated,TResult? Function( PermissionDeniedFailure value)?  permissionDenied,TResult? Function( LocationUnavailableFailure value)?  locationUnavailable,TResult? Function( LocationInaccurateFailure value)?  locationInaccurate,TResult? Function( NotFoundFailure value)?  notFound,TResult? Function( UnpublishedFailure value)?  unpublished,TResult? Function( LockedFailure value)?  locked,TResult? Function( InvalidContentFailure value)?  invalidContent,TResult? Function( UploadFailedFailure value)?  uploadFailed,TResult? Function( RateLimitedFailure value)?  rateLimited,TResult? Function( OfflineFailure value)?  offline,TResult? Function( InvalidCredentialsFailure value)?  invalidCredentials,TResult? Function( AccountExistsFailure value)?  accountExists,TResult? Function( WeakPasswordFailure value)?  weakPassword,TResult? Function( EmailNotConfirmedFailure value)?  emailNotConfirmed,TResult? Function( EmailNotAllowedFailure value)?  emailNotAllowed,TResult? Function( SignUpDisabledFailure value)?  signUpDisabled,TResult? Function( UsernameTakenFailure value)?  usernameTaken,TResult? Function( UnexpectedFailure value)?  unexpected,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( UnauthenticatedFailure value)?  unauthenticated,TResult? Function( PermissionDeniedFailure value)?  permissionDenied,TResult? Function( LocationUnavailableFailure value)?  locationUnavailable,TResult? Function( LocationInaccurateFailure value)?  locationInaccurate,TResult? Function( NotFoundFailure value)?  notFound,TResult? Function( UnpublishedFailure value)?  unpublished,TResult? Function( LockedFailure value)?  locked,TResult? Function( InvalidContentFailure value)?  invalidContent,TResult? Function( UploadFailedFailure value)?  uploadFailed,TResult? Function( ImageNotSupportedFailure value)?  imageNotSupported,TResult? Function( RateLimitedFailure value)?  rateLimited,TResult? Function( OfflineFailure value)?  offline,TResult? Function( InvalidCredentialsFailure value)?  invalidCredentials,TResult? Function( AccountExistsFailure value)?  accountExists,TResult? Function( WeakPasswordFailure value)?  weakPassword,TResult? Function( EmailNotConfirmedFailure value)?  emailNotConfirmed,TResult? Function( EmailNotAllowedFailure value)?  emailNotAllowed,TResult? Function( SignUpDisabledFailure value)?  signUpDisabled,TResult? Function( UsernameTakenFailure value)?  usernameTaken,TResult? Function( UnexpectedFailure value)?  unexpected,}){
 final _that = this;
 switch (_that) {
 case UnauthenticatedFailure() when unauthenticated != null:
@@ -143,7 +145,8 @@ return notFound(_that);case UnpublishedFailure() when unpublished != null:
 return unpublished(_that);case LockedFailure() when locked != null:
 return locked(_that);case InvalidContentFailure() when invalidContent != null:
 return invalidContent(_that);case UploadFailedFailure() when uploadFailed != null:
-return uploadFailed(_that);case RateLimitedFailure() when rateLimited != null:
+return uploadFailed(_that);case ImageNotSupportedFailure() when imageNotSupported != null:
+return imageNotSupported(_that);case RateLimitedFailure() when rateLimited != null:
 return rateLimited(_that);case OfflineFailure() when offline != null:
 return offline(_that);case InvalidCredentialsFailure() when invalidCredentials != null:
 return invalidCredentials(_that);case AccountExistsFailure() when accountExists != null:
@@ -170,7 +173,7 @@ return unexpected(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  unauthenticated,TResult Function()?  permissionDenied,TResult Function()?  locationUnavailable,TResult Function()?  locationInaccurate,TResult Function()?  notFound,TResult Function()?  unpublished,TResult Function()?  locked,TResult Function()?  invalidContent,TResult Function()?  uploadFailed,TResult Function()?  rateLimited,TResult Function()?  offline,TResult Function()?  invalidCredentials,TResult Function()?  accountExists,TResult Function()?  weakPassword,TResult Function()?  emailNotConfirmed,TResult Function()?  emailNotAllowed,TResult Function()?  signUpDisabled,TResult Function()?  usernameTaken,TResult Function()?  unexpected,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  unauthenticated,TResult Function()?  permissionDenied,TResult Function()?  locationUnavailable,TResult Function()?  locationInaccurate,TResult Function()?  notFound,TResult Function()?  unpublished,TResult Function()?  locked,TResult Function()?  invalidContent,TResult Function()?  uploadFailed,TResult Function()?  imageNotSupported,TResult Function()?  rateLimited,TResult Function()?  offline,TResult Function()?  invalidCredentials,TResult Function()?  accountExists,TResult Function()?  weakPassword,TResult Function()?  emailNotConfirmed,TResult Function()?  emailNotAllowed,TResult Function()?  signUpDisabled,TResult Function()?  usernameTaken,TResult Function()?  unexpected,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case UnauthenticatedFailure() when unauthenticated != null:
 return unauthenticated();case PermissionDeniedFailure() when permissionDenied != null:
@@ -181,7 +184,8 @@ return notFound();case UnpublishedFailure() when unpublished != null:
 return unpublished();case LockedFailure() when locked != null:
 return locked();case InvalidContentFailure() when invalidContent != null:
 return invalidContent();case UploadFailedFailure() when uploadFailed != null:
-return uploadFailed();case RateLimitedFailure() when rateLimited != null:
+return uploadFailed();case ImageNotSupportedFailure() when imageNotSupported != null:
+return imageNotSupported();case RateLimitedFailure() when rateLimited != null:
 return rateLimited();case OfflineFailure() when offline != null:
 return offline();case InvalidCredentialsFailure() when invalidCredentials != null:
 return invalidCredentials();case AccountExistsFailure() when accountExists != null:
@@ -209,7 +213,7 @@ return unexpected();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  unauthenticated,required TResult Function()  permissionDenied,required TResult Function()  locationUnavailable,required TResult Function()  locationInaccurate,required TResult Function()  notFound,required TResult Function()  unpublished,required TResult Function()  locked,required TResult Function()  invalidContent,required TResult Function()  uploadFailed,required TResult Function()  rateLimited,required TResult Function()  offline,required TResult Function()  invalidCredentials,required TResult Function()  accountExists,required TResult Function()  weakPassword,required TResult Function()  emailNotConfirmed,required TResult Function()  emailNotAllowed,required TResult Function()  signUpDisabled,required TResult Function()  usernameTaken,required TResult Function()  unexpected,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  unauthenticated,required TResult Function()  permissionDenied,required TResult Function()  locationUnavailable,required TResult Function()  locationInaccurate,required TResult Function()  notFound,required TResult Function()  unpublished,required TResult Function()  locked,required TResult Function()  invalidContent,required TResult Function()  uploadFailed,required TResult Function()  imageNotSupported,required TResult Function()  rateLimited,required TResult Function()  offline,required TResult Function()  invalidCredentials,required TResult Function()  accountExists,required TResult Function()  weakPassword,required TResult Function()  emailNotConfirmed,required TResult Function()  emailNotAllowed,required TResult Function()  signUpDisabled,required TResult Function()  usernameTaken,required TResult Function()  unexpected,}) {final _that = this;
 switch (_that) {
 case UnauthenticatedFailure():
 return unauthenticated();case PermissionDeniedFailure():
@@ -220,7 +224,8 @@ return notFound();case UnpublishedFailure():
 return unpublished();case LockedFailure():
 return locked();case InvalidContentFailure():
 return invalidContent();case UploadFailedFailure():
-return uploadFailed();case RateLimitedFailure():
+return uploadFailed();case ImageNotSupportedFailure():
+return imageNotSupported();case RateLimitedFailure():
 return rateLimited();case OfflineFailure():
 return offline();case InvalidCredentialsFailure():
 return invalidCredentials();case AccountExistsFailure():
@@ -244,7 +249,7 @@ return unexpected();}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  unauthenticated,TResult? Function()?  permissionDenied,TResult? Function()?  locationUnavailable,TResult? Function()?  locationInaccurate,TResult? Function()?  notFound,TResult? Function()?  unpublished,TResult? Function()?  locked,TResult? Function()?  invalidContent,TResult? Function()?  uploadFailed,TResult? Function()?  rateLimited,TResult? Function()?  offline,TResult? Function()?  invalidCredentials,TResult? Function()?  accountExists,TResult? Function()?  weakPassword,TResult? Function()?  emailNotConfirmed,TResult? Function()?  emailNotAllowed,TResult? Function()?  signUpDisabled,TResult? Function()?  usernameTaken,TResult? Function()?  unexpected,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  unauthenticated,TResult? Function()?  permissionDenied,TResult? Function()?  locationUnavailable,TResult? Function()?  locationInaccurate,TResult? Function()?  notFound,TResult? Function()?  unpublished,TResult? Function()?  locked,TResult? Function()?  invalidContent,TResult? Function()?  uploadFailed,TResult? Function()?  imageNotSupported,TResult? Function()?  rateLimited,TResult? Function()?  offline,TResult? Function()?  invalidCredentials,TResult? Function()?  accountExists,TResult? Function()?  weakPassword,TResult? Function()?  emailNotConfirmed,TResult? Function()?  emailNotAllowed,TResult? Function()?  signUpDisabled,TResult? Function()?  usernameTaken,TResult? Function()?  unexpected,}) {final _that = this;
 switch (_that) {
 case UnauthenticatedFailure() when unauthenticated != null:
 return unauthenticated();case PermissionDeniedFailure() when permissionDenied != null:
@@ -255,7 +260,8 @@ return notFound();case UnpublishedFailure() when unpublished != null:
 return unpublished();case LockedFailure() when locked != null:
 return locked();case InvalidContentFailure() when invalidContent != null:
 return invalidContent();case UploadFailedFailure() when uploadFailed != null:
-return uploadFailed();case RateLimitedFailure() when rateLimited != null:
+return uploadFailed();case ImageNotSupportedFailure() when imageNotSupported != null:
+return imageNotSupported();case RateLimitedFailure() when rateLimited != null:
 return rateLimited();case OfflineFailure() when offline != null:
 return offline();case InvalidCredentialsFailure() when invalidCredentials != null:
 return invalidCredentials();case AccountExistsFailure() when accountExists != null:
@@ -553,6 +559,38 @@ int get hashCode => runtimeType.hashCode;
 @override
 String toString() {
   return 'AppFailure.uploadFailed()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class ImageNotSupportedFailure implements AppFailure {
+  const ImageNotSupportedFailure();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ImageNotSupportedFailure);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'AppFailure.imageNotSupported()';
 }
 
 

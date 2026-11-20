@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:worlds/app/router/app_routes.dart';
 import 'package:worlds/core/maps/map_adapter.dart';
+import 'package:worlds/core/widgets/location_explanation_dialog.dart';
 import 'package:worlds/core/maps/map_providers.dart';
 import 'package:worlds/core/maps/map_types.dart';
 import 'package:worlds/features/explore/application/explore_controller.dart';
@@ -165,29 +166,15 @@ Future<void> _findWorldsNearMe(
 ) async {
   if (await controller.shouldExplainLocation()) {
     if (!context.mounted) return;
-    final agreed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        icon: const Icon(Icons.my_location),
-        title: const Text('Find Worlds near you'),
-        content: const Text(
+    final agreed = await confirmLocationUse(
+      context,
+      title: 'Find Worlds near you',
+      message:
           'WORLDS uses your location only when you tap this button, to show '
           'Worlds around you. It is not tracked in the background and is '
           'never shown to other people.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Not now'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Continue'),
-          ),
-        ],
-      ),
     );
-    if (agreed != true) return;
+    if (!agreed) return;
   }
   await controller.locate();
 }

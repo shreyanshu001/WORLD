@@ -11,6 +11,7 @@ import 'package:worlds/features/profile/presentation/edit_profile_screen.dart';
 import 'package:worlds/features/profile/presentation/profile_screen.dart';
 import 'package:worlds/features/saved/presentation/saved_screen.dart';
 import 'package:worlds/features/world_creation/presentation/create_screen.dart';
+import 'package:worlds/features/world_creation/presentation/world_editor_screen.dart';
 import 'package:worlds/features/worlds/presentation/world_details_screen.dart';
 import 'package:worlds/shared/models/geo_point.dart';
 
@@ -71,6 +72,36 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: AppRoutes.create,
                 builder: (context, state) => const CreateScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'new',
+                    // The id is chosen before the editor opens, so a rebuild
+                    // keeps editing the same new World.
+                    redirect: (context, state) =>
+                        state.uri.queryParameters['id'] == null
+                        ? AppRoutes.create
+                        : null,
+                    builder: (context, state) {
+                      final id = state.uri.queryParameters['id']!;
+                      return WorldEditorScreen(
+                        key: ValueKey('new-$id'),
+                        worldId: id,
+                        isNew: true,
+                      );
+                    },
+                  ),
+                  GoRoute(
+                    path: 'worlds/:id',
+                    builder: (context, state) {
+                      final id = state.pathParameters['id']!;
+                      return WorldEditorScreen(
+                        key: ValueKey('edit-$id'),
+                        worldId: id,
+                        isNew: false,
+                      );
+                    },
+                  ),
+                ],
               ),
             ],
           ),

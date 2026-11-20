@@ -56,6 +56,32 @@ class MapMarker {
   int get hashCode => Object.hash(id, point, colorHex);
 }
 
+/// A circular area drawn at its true size, such as a World's unlock radius.
+@immutable
+class MapArea {
+  const MapArea({
+    required this.center,
+    required this.radiusMeters,
+    required this.colorHex,
+  });
+
+  final GeoPoint center;
+  final double radiusMeters;
+
+  /// Colour as `#RRGGBB`; filled translucently with a solid outline.
+  final String colorHex;
+
+  @override
+  bool operator ==(Object other) =>
+      other is MapArea &&
+      other.center == center &&
+      other.radiusMeters == radiusMeters &&
+      other.colorHex == colorHex;
+
+  @override
+  int get hashCode => Object.hash(center, radiusMeters, colorHex);
+}
+
 /// A map style and the attribution its terms require.
 @immutable
 class MapStyle {
