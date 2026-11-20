@@ -106,8 +106,10 @@ class SupabaseWorldAuthoringRepository implements WorldAuthoringRepository {
           );
     } on StorageException catch (error) {
       // A retry after the file arrived but registration failed: the file is
-      // already there, so carry on and register it.
-      if (error.statusCode != '409') rethrow;
+      // already there, so carry on and register it. Storage answers HTTP 400
+      // with {"statusCode": "409", "error": "Duplicate"} (checked against the
+      // development project); the client takes the status from the body.
+      if (error.statusCode != '409' && error.error != 'Duplicate') rethrow;
     }
     final json = await _client.rpc<Map<String, dynamic>>(
       'register_world_asset',

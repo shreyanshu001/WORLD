@@ -4,7 +4,7 @@
 **Current checkpoint:** 4 (World details and creator) in progress, approved by the owner on 2026-11-20  
 **Product direction:** Approved  
 **Documentation handoff:** Core product, journey, UX and acceptance specifications published to GitHub  
-**App implementation:** Foundation, accounts and profiles, the Explore map, World details and the World creator. Playing Worlds is not built yet. The Checkpoint 4 database migration is written but **not yet applied** to the development project.
+**App implementation:** Foundation, accounts and profiles, the Explore map, World details and the World creator. Playing Worlds is not built yet. The Checkpoint 4 database migration is applied to the development project and verified.
 
 | Checkpoint | Status | Evidence |
 |---|---|---|
@@ -13,7 +13,7 @@
 | 1. Project foundation | Implemented; device test deferred by owner; continued to Checkpoint 2 at owner's request | See "Checkpoint 1 record" below |
 | 2. Backend and identity | Implemented; device test and security review pending | See "Checkpoint 2 record" below |
 | 3. Explore map | Implemented; real-device map check pending | See "Checkpoint 3 record" below |
-| 4. World details and creator | App implemented (4A–4F); database migration not yet applied; 4G (two-account check) and device check pending | See "Checkpoint 4 record" below |
+| 4. World details and creator | Implemented (4A–4G); migration applied and tested; two-account API check passed; owner device check pending | See "Checkpoint 4 record" below |
 | 5. Experience player | Not started | — |
 | 6. Saved/profile/moderation | Not started | — |
 | 7. Beta and pilot | Not started | — |
@@ -26,7 +26,8 @@
 - The Checkpoint 2 security review has not been explicitly given.
 - Checkpoint 3's map package and tile provider were adopted on recommendation when the owner said "continue" (D-016, D-017); the owner has not chosen them explicitly.
 - The pilot area, and so the Explore default centre, is undecided (D-021).
-- The Checkpoint 4 migration `20261120090000_create_world_authoring.sql` is not applied. The Supabase connection now asks for approval before SQL that changes data, and this editor declines that prompt automatically, so the owner has to run the prepared SQL in the Supabase SQL editor (see the Checkpoint 4 record). Until then, creating and publishing fail against the real backend.
+- Data-changing SQL through the Supabase connection needs an approval prompt that this editor declines automatically, so schema changes are run by the owner in the Supabase SQL editor from prepared files (see `supabase/README.md`).
+- Checkpoint 4 has not been checked on a phone by the owner: the creator, place picker, photo picker and details screen are unseen on a real screen.
 - Gap G1 (unlisted Worlds by direct link) is still open; the creator does not offer "unlisted" (D-029).
 - The application ID is the placeholder `com.example.worlds`. It must be replaced before any release build.
 - Supabase region and plan are unverified. Verified: Postgres 17.12; sign-up enabled; email confirmation **off** since 2026-11-20 (`mailer_autoconfirm: true` from the public auth settings; it was `false` before).
@@ -204,14 +205,27 @@ Only the scaffold part of Checkpoint 1 is done. It was created at the product ow
 - **Started:** the owner approved Checkpoint 4 with a written brief (stages 4A–4G) and asked for work to continue without questions unless genuinely blocked. Restrictive defaults were taken where the documents conflict or are silent and reported in the baseline: D-023 to D-029. Backend hosting stays on Supabase Cloud (owner, D-030).
 - **Baseline before coding:** `dart format` 82 files, 0 changed; `flutter analyze` no issues; `flutter test` 138 of 138. Database: the three earlier migrations only; tables `profiles` and `worlds`; no storage bucket; one profile, no Worlds.
 
-### Database (written; not yet applied, see "Not applied" below)
+### Database
 - `supabase/migrations/20261120090000_create_world_authoring.sql`:
   - `worlds.location` may be empty for drafts; `cover_asset_id` references `world_assets`.
   - `world_assets`, `world_content_blocks` (deferred unique position), `private.world_question_secrets` (no API access), all with row level security; clients have no write grants.
   - Private `world-media` bucket (5 MB; JPEG, PNG, WebP) with upload, read and delete policies on `storage.objects`.
   - Functions `save_world`, `get_world_draft`, `publish_world`, `unpublish_world`, `delete_world`, `register_world_asset`, `forget_world_asset` (signed-in only) and `get_world_details` (everyone). See `docs/DATABASE.md`.
 - `supabase/tests/world_authoring_test.sql`: about 70 checks covering grants and row level security, bucket settings, answer normalisation (case, spaces, Unicode compatibility forms), signed-out refusal, create and idempotent retry, answers hashed and never returned, rejected content (an `answer` key in a block, a part not allowed in the category, unknown keys, lengths, 31 parts, a bad latitude), publish problems, idempotent publish, published Worlds staying complete, discovery and details without content or answers, another user unable to read, save, unpublish, delete or hijack block ids, unpublish, forward-only story choices, reorder, removal, category rules, asset registration (owner, folder, type and size), storage upload policy, covers public only while published, hidden and deleted Worlds, the daily creation limit and table constraints.
-- **Not applied:** the Supabase connection now asks for confirmation before SQL that changes data, and this editor declines that prompt automatically (it was declined twice, and the owner confirmed no prompt appeared). Three files were prepared for the owner to paste into the Supabase SQL editor: a rolled-back dry run of the migration with all three test files, the migration plus its migration-history row, and the tests on their own. No dry-run result has been reported yet, so **no database test result exists for this checkpoint**.
+- **Applied, 2026-11-20:** the owner ran three prepared files in the Supabase SQL editor, because data-changing SQL through the Supabase connection needs an approval prompt this editor declines automatically.
+  - Dry run (migration plus all three test files, rolled back): `WORLDS_ALL_TESTS_PASSED: profiles_test 32 checks; worlds_test 36 checks; world_authoring_test 74 checks`.
+  - Apply (the file plus its migration-history row): "Success. No rows returned". `list_migrations` now shows `20261120090000 create_world_authoring`. The stored statement equals the committed file apart from Windows line endings added by the clipboard (1,199 CR characters; md5 without them `226b7fd74bdc2f8b8936f78403199311`, the same as the file).
+  - Tests against the applied schema: the same 32, 36 and 74 checks passed.
+  - Read-only checks afterwards: three new tables with row level security, the private bucket (5 MB; JPEG, PNG, WebP), three storage policies, eight new functions with the intended grants (only `get_world_details` callable signed out), and no API access to the `private` schema.
+  - Security advisor: an INFO note that `private.world_question_secrets` has no policies (intended: no client access); WARN notes that signed-in users can call the eight `security definer` functions and that anyone can call `get_world_details` (intended: they are the API and check `auth.uid()` themselves); and a WARN that leaked-password protection is off in Auth settings. Performance advisor: INFO notes on unused indexes, expected while the tables are empty.
+- **Stage 4G, creator to explorer, 2026-11-20:** a script used the public APIs exactly as the app does (publishable key, real user sessions) with two labelled test accounts (`e2e_creator_74c7a3`, `e2e_explorer_74c7a3`, `example.com` addresses) and a test World in the South Pacific (-41, -121). **46 of 46 checks passed**:
+  - Account A saved a puzzle (answer stored, never returned), retried the save, uploaded a PNG, registered it, set it as the cover and published, then published again without change.
+  - Storage refused an overwrite, a GIF, a file over 5 MB, uploads into another user's folder, a signed-out upload, and account B uploading into A's World.
+  - Account B and a signed-out visitor found the World in nearby search with a server-computed distance, opened its details (cover, part count, no content, no answer) and could show the cover, but could not read A's unused image or any block content.
+  - Account B could not read A's draft copy, save over it, unpublish it, delete it, release its images or reuse its block ids; direct table writes and signed-out saves were refused; an answer inside block content and emptying a published World were refused.
+  - After A unpublished, B could neither find nor open the World. A released and deleted both images and deleted the World.
+  - A follow-up probe showed that uploading the same file twice returns HTTP 400 with `{"statusCode": "409", "error": "Duplicate"}`; the app's retry path now accepts either field.
+  - Left behind: two soft-deleted test Worlds (invisible to everyone), no files, and the two test accounts, kept for Checkpoint 5's two-account tests.
 
 ### App
 - **4A, World details** (`lib/features/worlds/presentation/world_details_screen.dart`): cover or category panel, title, category, creator, description, unlock radius with a Locked panel (distance from the user only when they shared a location), part count, creator status (Draft, Unpublished, Published, Hidden). Actions only where they work: "Show on map" (focuses the World on Explore) and, for the creator, "Edit World". No Start, Unlock, Save, Share or Report yet. Loading, not-available and error-with-retry states. Opened from the Explore preview card and from each list row.
@@ -229,18 +243,19 @@ Only the scaffold part of Checkpoint 1 is done. It was created at the product ow
 - `flutter build apk --debug --dart-define-from-file=.env` — passed. Permissions in the built APK: INTERNET, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, and AndroidX's app-internal `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. No background location, storage, media or camera permission.
 
 ### Manual device verification
-None for this checkpoint. Nothing in Checkpoint 4 has been seen on a phone, and creating Worlds cannot work on a device until the migration is applied.
+The build with the applied backend was installed on the owner's phone over USB and launched: it is running, with nothing in the crash log and no Flutter errors in the system log. The screen has **not** been seen, so the creator, place picker, photo picker, preview and details screen are not visually verified on a device. The owner's checklist is in the Checkpoint 4 report.
 
 ### Known issues
-- The migration is not applied, so there is no database test evidence and stage 4G (publish with account A, find and open it with account B) has not started.
 - The server checks an uploaded file's declared type, extension, owner and size, but does not decode the image; a mislabelled file would be stored but fail to display. Server-side decoding would need an Edge Function.
 - Files of deleted Worlds, and files whose release fails, stay in storage; there is no scheduled clean-up yet.
 - No thumbnails: images are resized on the phone to 2,048 px only.
+- Leaked-password protection is off in Supabase Auth (security advisor WARN); turning it on is a dashboard setting and may need a paid plan.
+- Two soft-deleted test Worlds from the 4G check remain in the database, invisible to everyone; the two test accounts remain for Checkpoint 5.
 - Unlisted Worlds (G1) and the play-account decision (D-022) remain open.
 - The visual design is still the Material 3 baseline; the "living atlas" direction is not approved.
 
 ### Approval status
-Pending: the database steps and 4G must be completed, and the owner's device check done, before Checkpoint 4 can be called complete.
+Pending the owner's device check and approval. The Checkpoint 4 gate (publish with account A, verify as account B) passed at the API level with the real backend.
 
 ## Update protocol
 For each checkpoint record date, commit SHA, summary, tests and results, manual device verification, known issues and approval status. Never mark a checkpoint complete without evidence.
