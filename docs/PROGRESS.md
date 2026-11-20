@@ -1,17 +1,17 @@
 # WORLDS — Implementation progress
 
-**Phase:** Foundation  
-**Current checkpoint:** 1 — App foundation (implemented; awaiting device verification and approval)  
+**Phase:** Identity  
+**Current checkpoint:** 2 — Backend and identity (implemented; awaiting device verification and security review)  
 **Product direction:** Approved  
 **Documentation handoff:** Published to GitHub  
-**App implementation:** Startup, configuration checks, theme, four-tab shell and shared state views; no product features
+**App implementation:** Foundation plus email/password accounts and profiles backed by Supabase; no World features yet
 
 | Checkpoint | Status | Evidence |
 |---|---|---|
 | Documentation handoff | Complete | README, AGENTS.md and 12 supporting files committed to main |
 | 0. Repository audit | Audit delivered. Owner answered D1 and D3 and asked for the scaffold; ten decisions remain open | `docs/REPOSITORY_AUDIT.md`, commit `f1b92f1`, 2026-11-19 |
-| 1. Project foundation | Implemented; launch on a device not yet verified; awaiting approval | See "Checkpoint 1 record" below |
-| 2. Backend and identity | Not started | — |
+| 1. Project foundation | Implemented; device test deferred by owner; continued to Checkpoint 2 at owner's request | See "Checkpoint 1 record" below |
+| 2. Backend and identity | Implemented; device test and security review pending | See "Checkpoint 2 record" below |
 | 3. Explore map | Not started | — |
 | 4. World details and creator | Not started | — |
 | 5. Experience player | Not started | — |
@@ -20,12 +20,12 @@
 
 ## Current blockers
 
-- Checkpoint 1 acceptance requires the app to launch on Android. That is not yet verified because no device is connected.
-- Checkpoint 2 needs product-owner approval to start.
-- Six decisions from `docs/REPOSITORY_AUDIT.md` are still open: D4–D8 and D10. D12 (Android licenses) is an owner action. D2, D9 and D11 were adopted on recommendation at the start of Checkpoint 1 (`docs/DECISIONS.md`, D-010 to D-012).
+- On-device verification of Checkpoints 1 and 2 is deferred by the owner. Sign-up through real Supabase Auth, sign-in, sign-out and session restore have not been exercised on a device.
+- Sign-up with email confirmation on (Supabase's default) only works for project team members' addresses until custom SMTP is set up. For development, turn off *Confirm email* in the dashboard (see `supabase/README.md`).
+- The Checkpoint 2 gate is a security review by the owner.
+- Checkpoint 3 needs product-owner approval to start, plus decisions D4 (map package), D5 (tile provider) and gap G3 (how far signed-out users can go) from `docs/REPOSITORY_AUDIT.md`.
 - The application ID is the placeholder `com.example.worlds`. It must be replaced before any release build.
-- The Supabase project has been inspected read-only and is empty: no tables, migrations, users, buckets or functions. PostGIS is available but not installed. Region, plan, Postgres version and Auth settings are still unverified.
-- Map package and tile provider are recommended in the audit but not yet approved.
+- Supabase region and plan are unverified. Verified: Postgres 17.12; sign-up enabled; email confirmation **on** (`mailer_autoconfirm: false` from the public auth settings).
 
 ## Checkpoint 0 record
 
@@ -77,7 +77,7 @@ Only the scaffold part of Checkpoint 1 is done. It was created at the product ow
 ## Checkpoint 1 record
 
 - **Date:** 2026-11-20
-- **Branch:** `checkpoint-1-app-foundation` (local only, not pushed). Commit: recorded in the commit that follows this entry.
+- **Branch:** `checkpoint-1-app-foundation` (local only, not pushed). Commit: `d598dbc`.
 - **Summary:** App foundation on top of the scaffold. Startup validates build-time configuration and initialises Supabase with the publishable key, showing a loading screen and then either the app or an error screen (with retry when retrying can help). Material 3 light and dark themes, a `go_router` shell with four tabs that each keep their own stack, placeholder screens that say plainly they are not built yet, shared loading/empty/error views, and the typed `AppFailure` model from the architecture document.
 - **Files:**
   - `lib/main.dart`, `lib/app/app.dart`, `lib/app/startup_gate.dart`, `lib/app/bootstrap.dart`, `lib/app/app_shell.dart`.
@@ -106,6 +106,45 @@ Only the scaffold part of Checkpoint 1 is done. It was created at the product ow
   - The theme's seed colour is a placeholder; there is no design system.
   - Android SDK licenses are still not all accepted.
 - **Approval status:** Pending.
+
+## Checkpoint 2 record
+
+- **Date:** 2026-11-20
+- **Branch:** `checkpoint-2-backend-identity` (local only, not pushed). Commits: `19e6874`, plus a follow-up fix and these notes.
+- **Started:** at the owner's instruction to continue implementation, with Checkpoint 1's device test deferred. Owner decisions: apply migrations to the remote project through the MCP connection (D-015) and choose usernames at sign-up (D-014).
+- **Database changes, applied to the development project:**
+  - `supabase/migrations/20261119190312_enable_postgis.sql` — PostGIS in the `extensions` schema.
+  - `supabase/migrations/20261119190424_create_profiles.sql` — `public.profiles` with RLS, explicit grants (public read; owners update `username`, `display_name`, `bio` only; no client insert or delete), an `updated_at` trigger, and the sign-up trigger that creates the profile. Helpers live in a `private` schema the API does not expose.
+  - Each file was applied from its exact bytes (the tool input was compared character for character), then renamed to the version Supabase recorded.
+- **Database tests:** `supabase/tests/profiles_test.sql`, 32 checks covering bootstrap (requested, lower-cased, taken, invalid, missing and colliding generated names), RLS on, private schema unreachable, anon read-only, owner can update own permitted columns, user A cannot change user B, denied columns and insert/delete with their specific error codes, value limits, and `updated_at`.
+  - Dry run (migrations plus tests in one rolled-back statement): passed, 32 checks; database still empty afterwards.
+  - Mutation check: with the update policy weakened to `using (true)`, the tests failed with `FAIL user A: updated user B's profile`.
+  - Against the applied schema: passed, 32 checks.
+  - Supabase security advisor: no findings. Performance advisor: no findings.
+- **App:**
+  - Auth: `lib/features/auth/` — domain (`AuthUser`, `AuthRepository`, `CredentialRules`), Supabase data source, Riverpod controllers, sign-in, sign-up and a reusable sign-in prompt.
+  - Profile: `lib/features/profile/` — `Profile` model, repository, rules mirroring the database, profile view with sign-out, profile editing, and a one-time notice when the server assigns a different username.
+  - Saved and Create tabs show a sign-in prompt when signed out; Explore stays open to everyone.
+  - Router: `/sign-in`, `/register`, `/profile/edit`; signed-out users are sent from `/profile/edit` to sign-in.
+  - Errors: auth errors are mapped by Supabase error code (verified against Supabase's error-code reference), database errors by SQLSTATE; network errors map to "offline".
+  - Riverpod automatic retry is turned off so failures reach the screen and the user chooses when to retry.
+  - `http` added as a direct dependency (already present transitively) to recognise network errors. `build.yaml` makes JSON keys snake_case.
+- **Tests and results:**
+  - `dart format --output=none --set-exit-if-changed .` — 53 files, 0 changed.
+  - `flutter analyze` — no issues.
+  - `flutter test --timeout 60s` — 101 of 101 passed. These caught two bugs, both fixed: pages opened with `push` were not left after sign-in, because go_router's redirect only sees the page underneath; and a test awaited a fake timer outside the test clock.
+  - Follow-up fix found in review: after a failed or unconfirmed sign-up, signing in to another account could show "X was taken" for that account. The requested username is now kept only when sign-up ends signed in, and cleared on sign-in and sign-out; two regression tests added. The profile save now stays alive until it finishes, so the profile always refreshes.
+  - Real Data API, anonymous requests with the publishable key: listing profiles returned HTTP 200 with an empty list; a missing single row returned HTTP 406 `PGRST116`; an edit returned HTTP 401 `42501`. All three match the app's error mapping. The public auth settings show sign-up enabled and email confirmation on.
+  - `flutter build apk --debug --dart-define-from-file=.env` — passed; `INTERNET` is still the only permission.
+- **Manual device verification:** Deferred by the owner.
+- **Not verified:**
+  - Real sign-up through Supabase Auth. The database tests insert users as `postgres`, because `supabase_auth_admin` cannot be assumed; the sign-up function is `security definer`, so it runs with the same rights either way.
+  - "Fresh database builds from migrations" beyond this first run: the project was empty and the two files were applied in order, but no separate clean database was rebuilt (that would need a paid branch, or the CLI and Docker).
+- **Known issues:**
+  - Email confirmation and Supabase's default SMTP restrict sign-up as described under Current blockers.
+  - Supabase's own minimum password length is 6; the app asks for 8. The project's server setting is unverified.
+  - No password reset or email-change flow yet; out of this checkpoint's scope.
+- **Approval status:** Pending security review.
 
 ## Update protocol
 For each checkpoint record date, commit SHA, summary, tests and results, manual device verification, known issues and approval status. Never mark a checkpoint complete without evidence.

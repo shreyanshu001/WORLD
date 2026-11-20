@@ -18,6 +18,11 @@ The next four were adopted on the audit's recommendation when the product owner 
 - **D-012 Generated code is committed:** `*.freezed.dart` and `*.g.dart` are committed so a fresh clone builds without running `build_runner`. Audit decision D11.
 - **D-013 Hand-written Riverpod providers:** `riverpod_generator`, `riverpod_annotation` and `riverpod_lint` are not used. On Flutter 3.38.3 the generator holds Riverpod at 3.1.0; without it Riverpod resolves to 3.3.2, and the slow `build_runner` step stays limited to Freezed and json_serializable. Revisit if the project moves to a newer Flutter.
 
+Checkpoint 2 decisions:
+
+- **D-014 Usernames chosen at sign-up:** product-owner decision, 2026-11-20. 3–20 characters of lower-case letters, digits and underscores, unique, stored lower-case. If the requested name is invalid or taken when the account is created, sign-up still succeeds with a generated `user_` name the user can change. Alternative rejected: generated names for everyone.
+- **D-015 Remote Supabase project as the development database, changed through the MCP connection:** product-owner decision, 2026-11-20. Migrations are dry-run with their tests, applied from the committed file's exact contents, then renamed to the version Supabase records. The MCP connection stays write-capable by the owner's choice; ad-hoc schema changes through it remain forbidden. See `supabase/README.md`.
+
 ## Pending; require evidence and rationale
 - Map package/version after SDK audit. Recommendation recorded in `docs/REPOSITORY_AUDIT.md` (D4); not yet approved.
 - Production tile provider and its terms. Recommendation recorded in `docs/REPOSITORY_AUDIT.md` (D5); not yet approved.
@@ -25,6 +30,6 @@ The next four were adopted on the audit's recommendation when the product owner 
 - Final application ID (placeholder in use, see D-009).
 - Supabase region/configuration.
 - Image transform/thumbnail strategy.
-- Username uniqueness/case-folding policy.
+- Email confirmation and custom SMTP for the pilot (see `supabase/README.md`).
 
 Do not silently resolve pending decisions. Record evidence, alternatives and trade-offs.

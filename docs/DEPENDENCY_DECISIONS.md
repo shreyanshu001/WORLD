@@ -57,11 +57,12 @@ Added on 2026-11-20 with the owner's go-ahead for Checkpoint 1. Versions are fro
 | `go_router` | 17.5.0 | Routing | Four-tab shell |
 | `supabase_flutter` | 2.18.3 | Backend | Initialised with `publishableKey` |
 | `freezed_annotation` | 3.1.0 | Models | Used by `AppFailure` |
-| `json_annotation` | 4.9.0 | JSON | Added now, first used in Checkpoint 2 |
+| `json_annotation` | 4.9.0 | JSON | Used by `Profile` since Checkpoint 2 |
 | `build_runner` (dev) | 2.15.1 | Code generation | |
 | `freezed` (dev) | 3.2.3 | Code generation | |
-| `json_serializable` (dev) | 6.11.2 | Code generation | Added now, first used in Checkpoint 2 |
-| `mocktail` (dev) | 1.0.5 | Tests | Added now, first used with repositories in Checkpoint 2 |
+| `json_serializable` (dev) | 6.11.2 | Code generation | Used by `Profile` since Checkpoint 2; snake_case keys set in `build.yaml` |
+| `mocktail` (dev) | 1.0.5 | Tests | Still unused: tests so far use hand-written fakes. Remove if still unused at Checkpoint 4 |
+| `http` | 1.6.0 | Network errors | Added in Checkpoint 2 as a direct dependency (already present transitively) to recognise `ClientException` |
 | `flutter_lints` (dev) | 6.0.0 | Lints | |
 
 `flutter pub add` without a version picked `flutter_riverpod` 2.6.1 on this SDK, so the constraint is set explicitly to `^3.3.2`. `json_annotation`, `freezed` and `json_serializable` are pinned to the versions verified together in the Checkpoint 0 spike; newer `freezed` 3.2.5 and `json_serializable` 6.14.1 also resolve but were not verified.

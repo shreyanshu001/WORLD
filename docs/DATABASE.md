@@ -4,6 +4,12 @@ PostgreSQL + PostGIS. All schema changes must be committed migrations.
 
 ## Tables
 - **profiles**: `id uuid PK references auth.users`, unique username, display_name, bio, avatar_path, created_at, updated_at. Expose only approved public fields; owner updates own profile.
+  Implemented in Checkpoint 2 (`supabase/migrations/20261119190424_create_profiles.sql`):
+  - username: 3–20 characters, `[a-z0-9_]`, stored lower-case, unique.
+  - display_name: optional, trimmed, 1–50 characters. bio: optional, at most 280 characters.
+  - Every column is public. Private data stays in `auth.users`.
+  - Clients may update only `username`, `display_name` and `bio`, on their own row. `avatar_path` stays server-managed until storage ownership rules exist.
+  - A trigger on `auth.users` creates the profile at sign-up. It uses the requested username if valid and free, otherwise a generated `user_` name; it never fails sign-up over the username.
 - **worlds**: `id uuid PK`, creator_id FK, title, description, cover_asset_id, category check (story/puzzle/art/experience), `location geography(point,4326)`, unlock_radius_meters default 50 check 25–150, visibility public/unlisted, status draft/published/hidden/deleted, published_at, timestamps.
 - **world_assets**: id, world_id, owner_id, unique storage_path, mime_type, size_bytes, created_at.
 - **world_content_blocks**: id, world_id, block_type, position, schema_version, content jsonb, timestamps; unique(world_id, position). Never put question answers in content.

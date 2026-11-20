@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:worlds/app/router/app_router.dart';
 import 'package:worlds/app/theme/app_theme.dart';
 
+/// Turns off Riverpod's automatic retry of failed providers, so failures
+/// reach the screen immediately and the user decides when to retry.
+Duration? noAutomaticRetry(int retryCount, Object error) => null;
+
 /// Root widget of the WORLDS application.
 ///
 /// Must be placed under a `ProviderScope`.

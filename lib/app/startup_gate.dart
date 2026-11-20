@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:worlds/app/app.dart';
 import 'package:worlds/app/bootstrap.dart';
 import 'package:worlds/app/config/env.dart';
@@ -15,11 +16,16 @@ class StartupGate extends StatefulWidget {
   const StartupGate({
     required this.env,
     required this.initializeSupabase,
+    this.overrides = const [],
     super.key,
   });
 
   final AppEnv env;
   final SupabaseInitializer initializeSupabase;
+
+  /// Provider overrides for the running app. Tests use these to replace
+  /// Supabase-backed repositories.
+  final List<Override> overrides;
 
   @override
   State<StartupGate> createState() => _StartupGateState();
@@ -47,7 +53,11 @@ class _StartupGateState extends State<StartupGate> {
           return const _StartupScreen(child: LoadingView(label: 'Starting'));
         }
         return switch (snapshot.data) {
-          StartupReady() => const ProviderScope(child: WorldsApp()),
+          StartupReady() => ProviderScope(
+            overrides: widget.overrides,
+            retry: noAutomaticRetry,
+            child: const WorldsApp(),
+          ),
           StartupMisconfigured(:final problems) => _StartupScreen(
             child: ErrorView(
               message: [
