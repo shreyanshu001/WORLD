@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:worlds/shared/components/design.dart';
 import 'package:go_router/go_router.dart';
 import 'package:worlds/app/leave_guard.dart';
 import 'package:worlds/app/router/app_routes.dart';
+import 'package:worlds/app/theme/app_tokens.dart';
 import 'package:worlds/core/errors/app_failure.dart';
 import 'package:worlds/core/widgets/empty_view.dart';
 import 'package:worlds/core/widgets/error_view.dart';
@@ -304,20 +306,60 @@ class _StepBar extends ConsumerWidget {
     final step = ref.watch(provider.select((s) => s.step));
     final hasDraft = ref.watch(provider.select((s) => s.draft != null));
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+    final colors = AppColors.of(context);
+    final theme = Theme.of(context);
+
+    // A segmented progress bar: done and current steps are filled. Each
+    // segment is a button, so steps can be revisited in any order.
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(Space.md, 0, Space.md, Space.sm),
       child: Row(
         children: [
           for (final (index, item) in EditorStep.values.indexed)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: ChoiceChip(
-                label: Text('${index + 1}. ${item.label}'),
+            Expanded(
+              child: Semantics(
+                button: true,
                 selected: item == step,
-                onSelected: hasDraft || item == EditorStep.category
-                    ? (_) => ref.read(provider.notifier).goTo(item)
-                    : null,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(Radii.sm),
+                  onTap: hasDraft || item == EditorStep.category
+                      ? () => ref.read(provider.notifier).goTo(item)
+                      : null,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 3,
+                      vertical: Space.sm,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: index <= step.index
+                                ? colors.primary
+                                : colors.outline,
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '${index + 1}. ${item.label}',
+                          maxLines: 1,
+                          overflow: TextOverflow.fade,
+                          softWrap: false,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: item == step ? colors.ink : colors.muted,
+                            fontWeight: item == step
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
         ],
@@ -417,46 +459,37 @@ class _StepNavigation extends ConsumerWidget {
       if (await controller.save() && next != null) controller.goTo(next);
     }
 
-    return Material(
-      elevation: 3,
-      color: Theme.of(context).colorScheme.surfaceContainer,
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          // Both buttons flex so small phones and large text never overflow.
-          child: Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: busy ? null : () => controller.goTo(previous),
-                  child: const Text('Back'),
-                ),
-              ),
-              if (next != null) ...[
-                const SizedBox(width: 12),
-                Expanded(
-                  flex: 2,
-                  child: FilledButton(
-                    onPressed: busy ? null : saveAndContinue,
-                    child: saving
-                        ? const SizedBox.square(
-                            dimension: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              semanticsLabel: 'Saving',
-                            ),
-                          )
-                        : const Text(
-                            'Save and continue',
-                            textAlign: TextAlign.center,
-                          ),
-                  ),
-                ),
-              ],
-            ],
+    return BottomActionBar(
+      child: Row(
+        children: [
+          Expanded(
+            child: OutlinedButton(
+              onPressed: busy ? null : () => controller.goTo(previous),
+              child: const Text('Back'),
+            ),
           ),
-        ),
+          if (next != null) ...[
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 2,
+              child: FilledButton(
+                onPressed: busy ? null : saveAndContinue,
+                child: saving
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          semanticsLabel: 'Saving',
+                        ),
+                      )
+                    : const Text(
+                        'Save and continue',
+                        textAlign: TextAlign.center,
+                      ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

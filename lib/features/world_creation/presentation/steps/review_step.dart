@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:worlds/app/theme/app_tokens.dart';
 import 'package:worlds/app/router/app_routes.dart';
 import 'package:worlds/features/explore/application/explore_focus.dart';
 import 'package:worlds/features/world_creation/application/world_editor_controller.dart';
@@ -9,6 +10,7 @@ import 'package:worlds/features/world_creation/domain/world_draft.dart';
 import 'package:worlds/features/world_creation/domain/world_rules.dart';
 import 'package:worlds/features/world_creation/presentation/world_preview_screen.dart';
 import 'package:worlds/features/worlds/domain/world_status.dart';
+import 'package:worlds/shared/components/design.dart';
 
 /// What is still missing, a preview, the public-place promise, and the
 /// publish or unpublish action.
@@ -38,35 +40,76 @@ class _ReviewStepState extends ConsumerState<ReviewStep> {
     }.toList();
     final live = draft.lifecycle == WorldLifecycle.published;
 
+    final colors = AppColors.of(context);
+
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      padding: const EdgeInsets.fromLTRB(
+        Space.lg,
+        Space.sm,
+        Space.lg,
+        Space.xl,
+      ),
       children: [
-        Text(
-          live ? 'Your World is live' : 'Review and publish',
-          style: theme.textTheme.headlineSmall,
-        ),
-        const SizedBox(height: 12),
-        _StatusCard(lifecycle: draft.lifecycle),
-        const SizedBox(height: 16),
-        Text(
-          live ? 'Before you save changes' : 'Before you publish',
-          style: theme.textTheme.titleMedium,
-        ),
-        const SizedBox(height: 4),
-        if (problems.isEmpty)
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: Icon(Icons.check_circle, color: theme.colorScheme.primary),
-            title: const Text('Everything needed is in place.'),
-          )
-        else
-          for (final problem in problems)
-            _ProblemTile(
-              problem: problem,
-              draft: draft,
-              onFix: () => controller.goTo(_stepFor(problem.code)),
+        if (live)
+          const _LiveHero()
+        else ...[
+          const SectionHeader(
+            title: 'Review and publish',
+            subtitle: 'Check everything is ready, preview it, then share it.',
+          ),
+          const SizedBox(height: Space.lg),
+          _StatusCard(lifecycle: draft.lifecycle),
+        ],
+        const SizedBox(height: Space.lg),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              Space.lg,
+              Space.lg,
+              Space.sm,
+              Space.sm,
             ),
-        const SizedBox(height: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  live ? 'Before you save changes' : 'Before you publish',
+                  style: theme.textTheme.titleMedium,
+                ),
+                const SizedBox(height: Space.sm),
+                if (problems.isEmpty)
+                  Container(
+                    margin: const EdgeInsets.only(
+                      right: Space.sm,
+                      bottom: Space.sm,
+                    ),
+                    padding: const EdgeInsets.all(Space.md),
+                    decoration: BoxDecoration(
+                      color: colors.successSoft,
+                      borderRadius: BorderRadius.circular(Radii.md),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.check_circle, color: colors.success),
+                        const SizedBox(width: Space.md),
+                        const Expanded(
+                          child: Text('Everything needed is in place.'),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  for (final problem in problems)
+                    _ProblemTile(
+                      problem: problem,
+                      draft: draft,
+                      onFix: () => controller.goTo(_stepFor(problem.code)),
+                    ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: Space.md),
         OutlinedButton.icon(
           onPressed: draft.blocks.isEmpty
               ? null
@@ -212,6 +255,49 @@ class _ReviewStepState extends ConsumerState<ReviewStep> {
   };
 }
 
+/// The moment a World goes live: clear, calm success, no confetti
+/// (docs/UI_UX_SPECIFICATION.md, Motion).
+class _LiveHero extends StatelessWidget {
+  const _LiveHero();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
+    return Container(
+      padding: const EdgeInsets.all(Space.xl),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [colors.successSoft, colors.primarySoft],
+        ),
+        borderRadius: BorderRadius.circular(Radii.xl),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(Space.md),
+            decoration: BoxDecoration(
+              color: colors.surface,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.public, size: 32, color: colors.success),
+          ),
+          const SizedBox(height: Space.lg),
+          Text('Your World is live', style: theme.textTheme.headlineSmall),
+          const SizedBox(height: Space.xs),
+          Text(
+            'Anyone exploring nearby can now find it on the map.',
+            style: theme.textTheme.bodyLarge,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _StatusCard extends StatelessWidget {
   const _StatusCard({required this.lifecycle});
 
@@ -235,9 +321,12 @@ class _StatusCard extends StatelessWidget {
         'Hidden by moderation. Other people cannot see it.',
       ),
     };
-    return Card.filled(
-      margin: EdgeInsets.zero,
+    return Card(
       child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: Space.lg,
+          vertical: Space.xs,
+        ),
         leading: Icon(icon, color: scheme.primary),
         title: Text(lifecycle.label),
         subtitle: Text(text),

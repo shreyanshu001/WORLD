@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:worlds/app/theme/app_tokens.dart';
 import 'package:worlds/core/utils/uuid.dart';
 import 'package:worlds/features/world_creation/application/world_editor_controller.dart';
 import 'package:worlds/features/world_creation/domain/world_rules.dart';
 import 'package:worlds/features/world_creation/presentation/widgets/block_type_style.dart';
 import 'package:worlds/features/world_creation/presentation/widgets/image_slot.dart';
 import 'package:worlds/features/worlds/domain/content_block.dart';
+import 'package:worlds/shared/components/design.dart';
 
 /// Edits one block. Each card owns the text controllers for its fields, so
 /// moving a block keeps what was typed. Every change goes straight to the
@@ -56,6 +58,7 @@ class _BlockEditorCardState extends ConsumerState<BlockEditorCard> {
     );
     final controller = ref.read(provider.notifier);
     final theme = Theme.of(context);
+    final colors = AppColors.of(context);
 
     // A saved answer leaves the device: clear the field once the server has
     // it, so it is not kept on screen.
@@ -68,10 +71,14 @@ class _BlockEditorCardState extends ConsumerState<BlockEditorCard> {
       }
     });
 
-    return Card.outlined(
-      margin: EdgeInsets.zero,
+    return Card(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(4, 4, 12, 12),
+        padding: const EdgeInsets.fromLTRB(
+          Space.xs,
+          Space.xs,
+          Space.md,
+          Space.lg,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -87,22 +94,40 @@ class _BlockEditorCardState extends ConsumerState<BlockEditorCard> {
                     ),
                   ),
                 ),
-                Icon(block.type.icon, size: 20),
-                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(Space.sm),
+                  decoration: BoxDecoration(
+                    color: colors.primarySoft,
+                    borderRadius: BorderRadius.circular(Radii.sm),
+                  ),
+                  child: Icon(block.type.icon, size: 20, color: colors.primary),
+                ),
+                const SizedBox(width: Space.md),
                 Expanded(
-                  child: Text(
-                    'Part ${widget.index + 1} · ${block.type.label}',
-                    style: theme.textTheme.titleSmall,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Part ${widget.index + 1}',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: colors.muted,
+                        ),
+                      ),
+                      Text(
+                        block.type.label,
+                        style: theme.textTheme.titleMedium,
+                      ),
+                    ],
                   ),
                 ),
                 if (incomplete)
                   Padding(
-                    padding: const EdgeInsets.only(right: 4),
-                    child: Chip(
-                      label: const Text('Incomplete'),
-                      visualDensity: VisualDensity.compact,
-                      side: BorderSide(color: theme.colorScheme.error),
-                      labelStyle: TextStyle(color: theme.colorScheme.error),
+                    padding: const EdgeInsets.only(right: Space.xs),
+                    child: InfoChip(
+                      label: 'Incomplete',
+                      icon: Icons.error_outline,
+                      color: colors.danger,
+                      background: colors.dangerSoft,
                     ),
                   ),
                 PopupMenuButton<_BlockAction>(

@@ -34,15 +34,17 @@ void main() {
     map = FakeMapAdapter();
   });
 
-  Future<void> pumpExplore(WidgetTester tester, {GeoPoint? defaultCenter}) =>
-      pumpWorldsApp(
-        tester,
-        auth: FakeAuthRepository(),
-        worlds: worlds,
-        location: location,
-        map: map,
-        exploreDefaultCenter: defaultCenter,
-      );
+  Future<void> pumpExplore(WidgetTester tester, {GeoPoint? defaultCenter}) {
+    usePhoneScreen(tester);
+    return pumpWorldsApp(
+      tester,
+      auth: FakeAuthRepository(),
+      worlds: worlds,
+      location: location,
+      map: map,
+      exploreDefaultCenter: defaultCenter,
+    );
+  }
 
   Finder marker(String id) => find.byKey(ValueKey('marker-$id'));
 
@@ -94,7 +96,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Harbor Story'), findsOneWidget);
-      expect(find.text('Story · by @alice'), findsOneWidget);
+      expect(find.text('by @alice'), findsOneWidget);
       expect(find.text('90 m from the map centre'), findsOneWidget);
       expect(map.lastConfig!.selectedMarkerId, 'w1');
 
@@ -109,7 +111,7 @@ void main() {
       await pumpExplore(tester, defaultCenter: center);
       await tester.tap(marker('w3'));
       await tester.pumpAndSettle();
-      expect(find.text('Art · by Mira'), findsOneWidget);
+      expect(find.text('by Mira'), findsOneWidget);
 
       await tester.tap(find.byKey(const ValueKey('map-background')));
       await tester.pumpAndSettle();
@@ -122,6 +124,10 @@ void main() {
     ) async {
       await pumpExplore(tester, defaultCenter: center);
 
+      await tester.ensureVisible(
+        find.widgetWithText(ChoiceChip, 'Puzzle', skipOffstage: false),
+      );
+      await tester.pump();
       await tester.tap(find.widgetWithText(ChoiceChip, 'Puzzle'));
       await tester.pumpAndSettle();
 
@@ -129,6 +135,10 @@ void main() {
       expect(marker('w2'), findsOneWidget);
       expect(marker('w1'), findsNothing);
 
+      await tester.ensureVisible(
+        find.widgetWithText(ChoiceChip, 'All', skipOffstage: false),
+      );
+      await tester.pump();
       await tester.tap(find.widgetWithText(ChoiceChip, 'All'));
       await tester.pumpAndSettle();
 
@@ -162,6 +172,10 @@ void main() {
         findsOneWidget,
       );
 
+      await tester.ensureVisible(
+        find.widgetWithText(ChoiceChip, 'Art', skipOffstage: false),
+      );
+      await tester.pump();
       await tester.tap(find.widgetWithText(ChoiceChip, 'Art'));
       await tester.pumpAndSettle();
 
@@ -206,6 +220,10 @@ void main() {
         exploreDefaultCenter: center,
         settle: false,
       );
+      await tester.ensureVisible(
+        find.widgetWithText(ChoiceChip, 'Puzzle', skipOffstage: false),
+      );
+      await tester.pump();
       await tester.tap(find.widgetWithText(ChoiceChip, 'Puzzle'));
       await tester.pump();
       expect(worlds.held, hasLength(2));

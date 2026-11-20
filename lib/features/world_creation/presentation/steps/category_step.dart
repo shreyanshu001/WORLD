@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:worlds/app/theme/app_tokens.dart';
 import 'package:worlds/features/world_creation/application/world_editor_controller.dart';
 import 'package:worlds/shared/components/category_style.dart';
+import 'package:worlds/shared/components/design.dart';
 import 'package:worlds/shared/models/world_category.dart';
 
 /// What each kind of World is, with an example, so a first-time creator can
@@ -34,20 +36,20 @@ class CategoryStep extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final provider = worldEditorProvider(args);
     final selected = ref.watch(provider.select((s) => s.draft?.category));
-    final theme = Theme.of(context);
-
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      padding: const EdgeInsets.fromLTRB(
+        Space.lg,
+        Space.sm,
+        Space.lg,
+        Space.xl,
+      ),
       children: [
-        Text('What are you making?', style: theme.textTheme.headlineSmall),
-        const SizedBox(height: 4),
-        Text(
-          'You can change this later if your content fits the new type.',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+        const SectionHeader(
+          title: 'What are you making?',
+          subtitle:
+              'You can change this later if your content fits the new type.',
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: Space.lg),
         for (final category in WorldCategory.values)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
@@ -90,54 +92,67 @@ class _CategoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = AppColors.of(context);
     final (summary, example) = categoryExplanations[category]!;
     return Semantics(
       selected: selected,
       button: true,
-      child: Card.outlined(
-        margin: EdgeInsets.zero,
-        clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(
-            color: selected ? category.color : theme.colorScheme.outlineVariant,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        decoration: BoxDecoration(
+          color: selected
+              ? Color.alphaBlend(
+                  category.color.withValues(alpha: 0.07),
+                  colors.surface,
+                )
+              : colors.surface,
+          borderRadius: BorderRadius.circular(Radii.lg),
+          border: Border.all(
+            color: selected ? category.color : colors.outline,
             width: selected ? 2 : 1,
           ),
         ),
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CircleAvatar(
-                  backgroundColor: category.color.withValues(alpha: 0.14),
-                  child: Icon(category.icon, color: category.color),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(category.label, style: theme.textTheme.titleMedium),
-                      const SizedBox(height: 4),
-                      Text(summary, style: theme.textTheme.bodyMedium),
-                      const SizedBox(height: 4),
-                      Text(
-                        'For example: $example',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(Radii.lg),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(Space.lg),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CategoryBadge(category: category, size: 56),
+                  const SizedBox(width: Space.lg),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          category.label,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            color: selected ? category.color : colors.ink,
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: Space.xs),
+                        Text(summary, style: theme.textTheme.bodyMedium),
+                        const SizedBox(height: Space.sm),
+                        Text(
+                          'For example: $example',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colors.muted,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                if (selected) ...[
-                  const SizedBox(width: 8),
-                  Icon(Icons.check_circle, color: category.color),
+                  if (selected) ...[
+                    const SizedBox(width: Space.sm),
+                    Icon(Icons.check_circle, color: category.color),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),

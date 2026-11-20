@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:worlds/app/router/app_routes.dart';
+import 'package:worlds/app/theme/app_tokens.dart';
 import 'package:worlds/core/errors/app_failure.dart';
 import 'package:worlds/core/utils/date_format.dart';
 import 'package:worlds/core/utils/uuid.dart';
@@ -12,7 +13,9 @@ import 'package:worlds/features/auth/presentation/sign_in_prompt.dart';
 import 'package:worlds/features/world_creation/application/authoring_providers.dart';
 import 'package:worlds/features/world_creation/domain/world_draft.dart';
 import 'package:worlds/features/worlds/domain/world_status.dart';
-import 'package:worlds/shared/components/category_style.dart';
+import 'package:worlds/features/worlds/presentation/status_pill.dart';
+import 'package:worlds/shared/components/design.dart';
+import 'package:worlds/shared/models/world_category.dart';
 
 /// The Create tab: the creator's own Worlds and a way to start a new one.
 class CreateScreen extends ConsumerWidget {
@@ -36,13 +39,20 @@ class CreateScreen extends ConsumerWidget {
       );
     }
 
+    // The empty state has its own start button; the floating one appears
+    // once there is a list.
+    final hasWorlds = ref.watch(
+      myWorldsProvider.select((worlds) => worlds.value?.isNotEmpty ?? false),
+    );
     return Scaffold(
       appBar: AppBar(title: const Text('Create')),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _startNewWorld(context),
-        icon: const Icon(Icons.add),
-        label: const Text('New World'),
-      ),
+      floatingActionButton: !hasWorlds
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: () => _startNewWorld(context),
+              icon: const Icon(Icons.add),
+              label: const Text('New World'),
+            ),
       body: const _MyWorlds(),
     );
   }
@@ -78,41 +88,103 @@ class _FirstWorld extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 96),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.add_location_alt_outlined,
-              size: 56,
-              color: theme.colorScheme.primary,
+    final colors = AppColors.of(context);
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(Space.xl, Space.lg, Space.xl, 112),
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(Radii.xl),
+          child: SizedBox(
+            height: 168,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                const AtlasPanel(
+                  category: WorldCategory.experience,
+                  iconSize: 0,
+                  seed: 7,
+                ),
+                Center(
+                  child: Wrap(
+                    spacing: Space.md,
+                    children: [
+                      for (final category in WorldCategory.values)
+                        Container(
+                          padding: const EdgeInsets.all(Space.sm),
+                          decoration: BoxDecoration(
+                            color: colors.surface,
+                            borderRadius: BorderRadius.circular(Radii.md),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x33000000),
+                                blurRadius: 12,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: CategoryBadge(category: category, size: 44),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            Text(
-              'Create your first World',
-              style: theme.textTheme.headlineSmall,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Pick a public place, then add a story, a puzzle, an artwork or '
-              'a mix of all three. People nearby can find it on the map.',
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: () => _startNewWorld(context),
-              icon: const Icon(Icons.add),
-              label: const Text('Start a World'),
-            ),
-          ],
+          ),
         ),
-      ),
+        const SizedBox(height: Space.xl),
+        Text('Create your first World', style: theme.textTheme.headlineMedium),
+        const SizedBox(height: Space.sm),
+        Text(
+          'Leave a story, a puzzle or a piece of art at a real place. People '
+          'exploring nearby find it on the map.',
+          style: theme.textTheme.bodyLarge?.copyWith(color: colors.muted),
+        ),
+        const SizedBox(height: Space.xl),
+        for (final (index, (title, text)) in const [
+          ('Pick a public place', 'A park, a square, a corner with a story.'),
+          ('Make something there', 'Write, add photos, choices or a riddle.'),
+          ('Publish', 'Explorers unlock it when they get close.'),
+        ].indexed)
+          Padding(
+            padding: const EdgeInsets.only(bottom: Space.lg),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CircleAvatar(
+                  radius: 16,
+                  backgroundColor: colors.primarySoft,
+                  child: Text(
+                    '${index + 1}',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: colors.primary,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: Space.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: theme.textTheme.titleMedium),
+                      Text(
+                        text,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colors.muted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        const SizedBox(height: Space.sm),
+        FilledButton.icon(
+          onPressed: () => _startNewWorld(context),
+          icon: const Icon(Icons.add),
+          label: const Text('Start a World'),
+        ),
+      ],
     );
   }
 }
@@ -124,6 +196,8 @@ class _WorldGroups extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
     final groups = <(String, List<WorldSummary>)>[
       (
         'Drafts',
@@ -149,17 +223,33 @@ class _WorldGroups extends StatelessWidget {
         ],
       ),
     ];
+    final published = groups[1].$2.length;
 
     return ListView(
-      padding: const EdgeInsets.only(bottom: 96),
+      padding: const EdgeInsets.fromLTRB(Space.lg, Space.xs, Space.lg, 112),
       children: [
+        Text(
+          published == 0
+              ? '${worlds.length} in progress'
+              : '$published live on the map · ${worlds.length} in all',
+          style: theme.textTheme.bodyMedium?.copyWith(color: colors.muted),
+        ),
         for (final (title, items) in groups)
           if (items.isNotEmpty) ...[
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-              child: Text(title, style: Theme.of(context).textTheme.titleSmall),
+              padding: const EdgeInsets.fromLTRB(
+                Space.xs,
+                Space.xl,
+                Space.xs,
+                Space.sm,
+              ),
+              child: Text(title, style: theme.textTheme.titleMedium),
             ),
-            for (final world in items) _WorldTile(world: world),
+            for (final world in items)
+              Padding(
+                padding: const EdgeInsets.only(bottom: Space.sm),
+                child: _WorldTile(world: world),
+              ),
           ],
       ],
     );
@@ -173,21 +263,45 @@ class _WorldTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hidden = world.lifecycle == WorldLifecycle.hidden;
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: world.category.color.withValues(alpha: 0.14),
-        child: Icon(world.category.icon, color: world.category.color),
+    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.go(AppRoutes.editWorld(world.id)),
+        child: Padding(
+          padding: const EdgeInsets.all(Space.md),
+          child: Row(
+            children: [
+              CategoryBadge(category: world.category, size: 52),
+              const SizedBox(width: Space.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      world.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${world.category.label} · edited '
+                      '${formatDay(world.updatedAt)}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colors.muted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: Space.sm),
+              StatusPill(lifecycle: world.lifecycle),
+            ],
+          ),
+        ),
       ),
-      title: Text(world.title),
-      subtitle: Text(
-        '${world.category.label} · ${world.lifecycle.label} · '
-        'edited ${formatDay(world.updatedAt)}',
-      ),
-      trailing: hidden
-          ? const Icon(Icons.flag_outlined)
-          : const Icon(Icons.chevron_right),
-      onTap: () => context.go(AppRoutes.editWorld(world.id)),
     );
   }
 }

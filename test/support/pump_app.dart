@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:worlds/app/app.dart';
 import 'package:worlds/core/location/location_providers.dart';
+import 'package:worlds/core/maps/map_adapter.dart';
 import 'package:worlds/core/maps/map_providers.dart';
 import 'package:worlds/core/media/media_providers.dart';
 import 'package:worlds/features/world_creation/application/authoring_providers.dart';
@@ -26,6 +27,9 @@ Future<void> pumpWorldsApp(
   FakeWorldRepository? worlds,
   FakeLocationService? location,
   FakeMapAdapter? map,
+
+  /// Replaces [map] as the drawn map, for screen renders.
+  MapAdapter? mapAdapter,
   FakeWorldMediaRepository? media,
   FakeWorldAuthoringRepository? authoring,
   FakeImagePickerService? picker,
@@ -58,7 +62,9 @@ Future<void> pumpWorldsApp(
         locationServiceProvider.overrideWithValue(
           location ?? FakeLocationService(),
         ),
-        mapAdapterProvider.overrideWithValue(map ?? FakeMapAdapter()),
+        mapAdapterProvider.overrideWithValue(
+          mapAdapter ?? map ?? FakeMapAdapter(),
+        ),
         exploreDefaultCenterProvider.overrideWithValue(exploreDefaultCenter),
       ],
       retry: noAutomaticRetry,

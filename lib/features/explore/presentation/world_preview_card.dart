@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:worlds/app/theme/app_tokens.dart';
 import 'package:worlds/core/utils/distance_format.dart';
 import 'package:worlds/features/worlds/domain/world_preview.dart';
 import 'package:worlds/shared/components/category_style.dart';
+import 'package:worlds/shared/components/design.dart';
 
 /// Summary of the selected World. Tapping it opens the World's details.
 class WorldPreviewCard extends StatelessWidget {
@@ -23,57 +25,99 @@ class WorldPreviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = AppColors.of(context);
     final distance = formatDistance(world.distanceMeters);
-    return Card(
-      elevation: 4,
+
+    return Material(
+      color: colors.surface,
+      elevation: 6,
+      shadowColor: Colors.black45,
+      borderRadius: BorderRadius.circular(Radii.lg),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onOpen,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 4, 8),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          padding: const EdgeInsets.fromLTRB(
+            Space.lg,
+            Space.lg,
+            Space.sm,
+            Space.lg,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Icon(world.category.icon, color: world.category.color),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CategoryBadge(category: world.category, size: 52),
+                  const SizedBox(width: Space.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          world.category.label.toUpperCase(),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: world.category.color,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.1,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          world.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'by ${world.creatorName}',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colors.muted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Close',
+                    visualDensity: VisualDensity.compact,
+                    icon: Icon(Icons.close, color: colors.muted),
+                    onPressed: onClose,
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              const SizedBox(height: Space.md),
+              Padding(
+                padding: const EdgeInsets.only(right: Space.sm),
+                child: Row(
                   children: [
-                    Text(world.title, style: theme.textTheme.titleMedium),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${world.category.label} · by ${world.creatorName}',
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      fromUserLocation
-                          ? '$distance away'
-                          : '$distance from the map centre',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                    Flexible(
+                      child: InfoChip(
+                        icon: fromUserLocation
+                            ? Icons.near_me_outlined
+                            : Icons.place_outlined,
+                        label: fromUserLocation
+                            ? '$distance away'
+                            : '$distance from the map centre',
+                        color: colors.accent,
+                        background: colors.accent.withValues(alpha: 0.12),
                       ),
                     ),
-                    TextButton.icon(
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        visualDensity: VisualDensity.compact,
-                      ),
+                    const SizedBox(width: Space.sm),
+                    FilledButton(
                       onPressed: onOpen,
-                      icon: const Icon(Icons.arrow_forward, size: 18),
-                      label: const Text('View details'),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(0, 44),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: Space.lg,
+                        ),
+                      ),
+                      child: const Text('View details'),
                     ),
                   ],
                 ),
-              ),
-              IconButton(
-                tooltip: 'Close',
-                icon: const Icon(Icons.close),
-                onPressed: onClose,
               ),
             ],
           ),

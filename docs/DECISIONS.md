@@ -43,6 +43,8 @@ Checkpoint 4 decisions, 2026-11-20. The owner approved Checkpoint 4 and asked fo
 - **D-029 Unlisted Worlds are not offered yet:** gap G1 remains open. The creator cannot choose "unlisted", and details open only published public Worlds (plus the creator's own). Decide with share links in Checkpoint 6.
 - **D-030 Backend stays on Supabase Cloud:** product-owner decision, 2026-11-20, after asking to deploy "on AWS". Supabase Cloud already runs on AWS; self-hosting or rebuilding on native AWS services was not chosen. The project's region should be checked against the pilot area before launch.
 
+- **D-031 Visual direction "living atlas / field journal" adopted:** product-owner request, 2026-11-20 ("the UI is not nice … make it high quality"). It implements the direction proposed in `docs/UI_UX_SPECIFICATION.md` section 3 inside Material 3: warm paper canvas `#F7F4EE`, white surfaces, deep botanical green `#1F5E4B`, ochre accent for distance, the existing category colours, Android's system font with a stronger weight and size scale, a 4 dp spacing scale and one radius family (10/14/20/28). Tokens live in `lib/app/theme/app_tokens.dart`; widgets use roles, not hex values. Explore's map now fills the screen with floating search and filters; Worlds without a cover show their category colour with atlas contour lines. Exact values remain open to the owner's review, as are an app icon and launch screen.
+
 ## Pending; require evidence and rationale
 - Pilot area, and the Explore default centre that goes with it (D-021).
 - Whether unlisted Worlds open by direct link (gap G1, D-029).

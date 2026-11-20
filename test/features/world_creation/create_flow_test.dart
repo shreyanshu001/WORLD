@@ -95,6 +95,11 @@ void main() {
     expect(find.text('The keeper'), findsNothing);
     expect(find.text('Everything needed is in place.'), findsOneWidget);
 
+    await tester.scrollUntilVisible(
+      find.text('Publish'),
+      200,
+      scrollable: find.byType(Scrollable).last,
+    );
     final publish = find.ancestor(
       of: find.text('Publish'),
       matching: find.byWidgetPredicate((w) => w is FilledButton),
@@ -207,7 +212,8 @@ void main() {
     await pumpCreator(tester);
 
     expect(find.text('Drafts'), findsOneWidget);
-    expect(find.text('Published'), findsOneWidget);
+    // The section header, and the status pill on the card.
+    expect(find.text('Published'), findsNWidgets(2));
     expect(find.text('Pier Ghost'), findsOneWidget);
 
     await tapText(tester, 'Harbour Mural');

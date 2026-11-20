@@ -212,7 +212,9 @@ class _FakeMap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Below the floating search bar and filters, as on a phone screen.
     return SingleChildScrollView(
+      padding: const EdgeInsets.only(top: 260),
       child: Column(
         children: [
           if (config.userLocation != null) const Text('user location shown'),
