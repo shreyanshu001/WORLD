@@ -201,7 +201,7 @@ Only the scaffold part of Checkpoint 1 is done. It was created at the product ow
 ## Checkpoint 4 record
 
 - **Date:** 2026-11-20
-- **Branch:** `checkpoint-4-world-creator`, from `main` at `11e17f0` (Checkpoints 0–3 merged by PRs #1–#4). Commits: `078211f` (email-setting note carried over), `1c70075` (4A: details and migration), `581fb0c` (4B–4F: creator), plus these records.
+- **Branch:** `checkpoint-4-world-creator`, from `main` at `11e17f0` (Checkpoints 0–3 merged by PRs #1–#4). Commits: `078211f` (email-setting note carried over), `1c70075` (4A: details and migration), `581fb0c` (4B–4F: creator), `7aab36b` (records), `dc61038` (duplicate-upload retry fix, 4G records), `e75419b` (Create-tab leave guard, live checks), `4d6875e` (visual identity, D-031), plus these records. Only `078211f` is on GitHub; the rest are local.
 - **Started:** the owner approved Checkpoint 4 with a written brief (stages 4A–4G) and asked for work to continue without questions unless genuinely blocked. Restrictive defaults were taken where the documents conflict or are silent and reported in the baseline: D-023 to D-029. Backend hosting stays on Supabase Cloud (owner, D-030).
 - **Baseline before coding:** `dart format` 82 files, 0 changed; `flutter analyze` no issues; `flutter test` 138 of 138. Database: the three earlier migrations only; tables `profiles` and `worlds`; no storage bucket; one profile, no Worlds.
 
@@ -242,8 +242,14 @@ Only the scaffold part of Checkpoint 1 is done. It was created at the product ow
 - `flutter test --timeout 60s` — 211 of 211 passed (73 new: details screen, creator flows end to end with fakes, editor controller, publishing rules, draft codec, media and utility helpers, error mapping, routes, architecture). The tests caught three layout bugs before any device saw them: the editor's bottom bar overflowing on a 411 dp phone, details actions laid out below the screen, and the preview's bottom bar taking the whole body height.
 - `flutter build apk --debug --dart-define-from-file=.env` — passed. Permissions in the built APK: INTERNET, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, and AndroidX's app-internal `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. No background location, storage, media or camera permission.
 
+### After review (same day)
+- **The app's own data layer against the real backend:** `test_live/authoring_repository_live_test.dart` runs the app's Supabase repositories as the two test accounts (save and retry, list, load, image upload and the duplicate retry path, cover, publish, nearby and details as the other account, the cover through its signed URL, refusals arriving as the app's own failures, unpublish, typed publish problems, clean-up). Passed (`flutter test test_live`, 1 test, about 11 s). Not part of `flutter test`.
+- **Silent data loss fixed:** tapping the active Create tab returned to its first screen and closed the editor without asking, dropping unsaved changes. The editor now registers a leave check that the bottom navigation asks first. Regression test added (212 tests).
+- **The 4G script is now in the repository** as `tool/e2e/creator_to_explorer.mjs`; the test accounts' passwords stay in the gitignored `tool/e2e/.accounts.json`.
+- **Visual identity (D-031):** at the owner's request ("the UI is not nice … make it high quality"), the living-atlas direction from the UI spec was implemented: tokens and component themes, full-screen Explore map with floating controls, richer preview card, cover hero with atlas contours, Create cards and first-World state, segmented editor progress, review checklist and a "Your World is live" moment. `test_screens/` renders the main screens with sample data so the design can be reviewed; each screen was rendered and checked at 411 × 891 dp before handover. 212 of 212 tests pass; `flutter analyze` reports no issues.
+
 ### Manual device verification
-The build with the applied backend was installed on the owner's phone over USB and launched: it is running, with nothing in the crash log and no Flutter errors in the system log. The screen has **not** been seen, so the creator, place picker, photo picker, preview and details screen are not visually verified on a device. The owner's checklist is in the Checkpoint 4 report.
+The redesigned build (`4d6875e`) with the applied backend was installed on the owner's phone over USB and launched: it is running, with nothing in the crash log and no Flutter errors or layout overflows in the system log. The screen has **not** been seen, so the creator, place picker, photo picker, preview and details screen are not visually verified on a device. The owner's checklist is in the Checkpoint 4 report.
 
 ### Known issues
 - The server checks an uploaded file's declared type, extension, owner and size, but does not decode the image; a mislabelled file would be stored but fail to display. Server-side decoding would need an Edge Function.
