@@ -36,3 +36,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Live end-to-end test accounts (passwords); never commit.
+tool/e2e/.accounts.json

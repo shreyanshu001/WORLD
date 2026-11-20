@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:worlds/app/leave_guard.dart';
 import 'package:worlds/app/router/app_routes.dart';
 import 'package:worlds/core/errors/app_failure.dart';
 import 'package:worlds/core/widgets/empty_view.dart';
@@ -105,58 +108,99 @@ class WorldEditorScreen extends ConsumerWidget {
 }
 
 /// Asks before leaving with changes the server has not confirmed.
-class _UnsavedChangesGuard extends ConsumerWidget {
+/// Asks before leaving with changes the server has not confirmed: on back
+/// navigation, and, through [leaveGuardProvider], when the Create tab is
+/// tapped again to return to its first screen.
+class _UnsavedChangesGuard extends ConsumerStatefulWidget {
   const _UnsavedChangesGuard({required this.args, required this.child});
 
   final WorldEditorArgs args;
   final Widget child;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final provider = worldEditorProvider(args);
-    final unsaved = ref.watch(provider.select((s) => s.hasUnsavedChanges));
+  ConsumerState<_UnsavedChangesGuard> createState() =>
+      _UnsavedChangesGuardState();
+}
+
+class _UnsavedChangesGuardState extends ConsumerState<_UnsavedChangesGuard> {
+  late final LeaveGuard _guard;
+  late final LeaveCheck _check = _confirmLeave;
+
+  @override
+  void initState() {
+    super.initState();
+    _guard = ref.read(leaveGuardProvider.notifier);
+    ref.listenManual(
+      worldEditorProvider(widget.args).select((s) => s.hasUnsavedChanges),
+      (_, unsaved) {
+        // Providers cannot change while widgets build.
+        scheduleMicrotask(() {
+          if (!mounted) return;
+          unsaved ? _guard.register(_check) : _guard.unregister(_check);
+        });
+      },
+      fireImmediately: true,
+    );
+  }
+
+  @override
+  void dispose() {
+    final guard = _guard;
+    final check = _check;
+    scheduleMicrotask(() => guard.unregister(check));
+    super.dispose();
+  }
+
+  /// Resolves to true when the user may leave: after a confirmed save, or
+  /// after choosing to discard.
+  Future<bool> _confirmLeave() async {
+    final choice = await showDialog<_LeaveChoice>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Save your changes?'),
+        content: const Text(
+          'Some changes have not been saved yet. Unsaved changes are lost if '
+          'you leave.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(_LeaveChoice.stay),
+            child: const Text('Keep editing'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(_LeaveChoice.discard),
+            child: const Text('Discard'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(_LeaveChoice.save),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) return false;
+    return switch (choice) {
+      _LeaveChoice.save =>
+        await ref.read(worldEditorProvider(widget.args).notifier).save(),
+      _LeaveChoice.discard => true,
+      _LeaveChoice.stay || null => false,
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final unsaved = ref.watch(
+      worldEditorProvider(widget.args).select((s) => s.hasUnsavedChanges),
+    );
     return PopScope(
       canPop: !unsaved,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
-        final choice = await showDialog<_LeaveChoice>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Save your changes?'),
-            content: const Text(
-              'Some changes have not been saved yet. Unsaved changes are lost '
-              'if you leave.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(_LeaveChoice.stay),
-                child: const Text('Keep editing'),
-              ),
-              TextButton(
-                onPressed: () =>
-                    Navigator.of(context).pop(_LeaveChoice.discard),
-                child: const Text('Discard'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(_LeaveChoice.save),
-                child: const Text('Save'),
-              ),
-            ],
-          ),
-        );
-        if (!context.mounted) return;
-        switch (choice) {
-          case _LeaveChoice.save:
-            if (await ref.read(provider.notifier).save() && context.mounted) {
-              context.go(AppRoutes.create);
-            }
-          case _LeaveChoice.discard:
-            context.go(AppRoutes.create);
-          case _LeaveChoice.stay || null:
-            break;
+        if (await _confirmLeave() && context.mounted) {
+          context.go(AppRoutes.create);
         }
       },
-      child: child,
+      child: widget.child,
     );
   }
 }

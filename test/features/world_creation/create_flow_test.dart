@@ -137,6 +137,41 @@ void main() {
     expect(authoring.saves, isEmpty);
   });
 
+  testWidgets('tapping the Create tab again asks before dropping changes', (
+    tester,
+  ) async {
+    await pumpCreator(tester);
+    await tapText(tester, 'Start a World');
+    await tapText(tester, 'Story');
+    await typeInto(tester, 'Title', 'Pier Ghost');
+
+    // The active tab returns to its first screen, which would close the
+    // editor without its back-navigation guard.
+    await tester.tap(
+      find.descendant(
+        of: find.byType(NavigationBar),
+        matching: find.text('Create'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Save your changes?'), findsOneWidget);
+
+    await tapText(tester, 'Keep editing');
+    expect(find.text('Pier Ghost'), findsOneWidget);
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(NavigationBar),
+        matching: find.text('Create'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tapText(tester, 'Save');
+    expect(authoring.saves.single.draft.title, 'Pier Ghost');
+    expect(find.text('Drafts'), findsOneWidget);
+    expect(find.text('Pier Ghost'), findsOneWidget);
+  });
+
   testWidgets('"Use my location" explains first, and "Not now" reads nothing', (
     tester,
   ) async {
