@@ -5,6 +5,7 @@ import 'package:worlds/core/errors/app_failure.dart';
 import 'package:worlds/core/location/location_providers.dart';
 import 'package:worlds/core/location/location_service.dart';
 import 'package:worlds/core/maps/map_types.dart';
+import 'package:worlds/features/explore/application/explore_focus.dart';
 import 'package:worlds/features/explore/application/explore_state.dart';
 import 'package:worlds/features/worlds/application/world_providers.dart';
 import 'package:worlds/features/worlds/domain/world_repository.dart';
@@ -46,9 +47,36 @@ class ExploreController extends Notifier<ExploreState> {
       _cameraTimer?.cancel();
       _searchTimer?.cancel();
     });
+    ref.listen(exploreFocusProvider, (_, request) {
+      if (request != null) _focus(request);
+    });
+    final pending = ref.read(exploreFocusProvider);
+    if (pending != null) {
+      scheduleMicrotask(() {
+        if (ref.mounted) _focus(pending);
+      });
+      return const ExploreState();
+    }
     final center = ref.watch(exploreDefaultCenterProvider);
     if (center != null) scheduleMicrotask(_load);
     return ExploreState(searchCenter: center);
+  }
+
+  /// Another screen asked to show a World: search around it and select it.
+  void _focus(ExploreFocusRequest request) {
+    ref.read(exploreFocusProvider.notifier).handled(request.id);
+    state = state.copyWith(
+      searchCenter: request.point,
+      centerIsUserLocation: false,
+      selectedWorldId: request.worldId,
+      view: ExploreView.map,
+      cameraRequest: CameraRequest(
+        id: ++_cameraSequence,
+        target: request.point,
+        zoom: worldZoom,
+      ),
+    );
+    unawaited(_load());
   }
 
   /// Searches again with the current settings.

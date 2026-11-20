@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:worlds/app/app.dart';
 import 'package:worlds/core/location/location_providers.dart';
@@ -22,7 +23,9 @@ Future<void> pumpWorldsApp(
   FakeWorldRepository? worlds,
   FakeLocationService? location,
   FakeMapAdapter? map,
+  FakeWorldMediaRepository? media,
   GeoPoint? exploreDefaultCenter,
+  List<Override> extraOverrides = const [],
 
   /// Set false when something keeps animating (such as a search held open).
   bool settle = true,
@@ -37,6 +40,10 @@ Future<void> pumpWorldsApp(
         worldRepositoryProvider.overrideWithValue(
           worlds ?? FakeWorldRepository(),
         ),
+        worldMediaRepositoryProvider.overrideWithValue(
+          media ?? FakeWorldMediaRepository(),
+        ),
+        ...extraOverrides,
         locationServiceProvider.overrideWithValue(
           location ?? FakeLocationService(),
         ),
@@ -53,6 +60,14 @@ Future<void> pumpWorldsApp(
     await tester.pump();
     await tester.pump();
   }
+}
+
+/// Sizes the test screen like a common Android phone (411 × 891 dp) instead
+/// of the default 800 × 600.
+void usePhoneScreen(WidgetTester tester) {
+  tester.view.physicalSize = const Size(1080, 2340);
+  tester.view.devicePixelRatio = 2.625;
+  addTearDown(tester.view.reset);
 }
 
 /// Moves the app through the real lifecycle sequence to the background and

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:worlds/app/router/app_routes.dart';
 import 'package:worlds/core/utils/distance_format.dart';
 import 'package:worlds/core/widgets/empty_view.dart';
 import 'package:worlds/features/explore/application/explore_controller.dart';
@@ -46,7 +48,14 @@ class WorldList extends StatelessWidget {
             '${world.category.label} · by ${world.creatorName} · '
             '${formatDistance(world.distanceMeters)} $distanceSuffix',
           ),
-          trailing: const Icon(Icons.map_outlined),
+          trailing: IconButton(
+            tooltip: 'View details of ${world.title}',
+            icon: const Icon(Icons.chevron_right),
+            onPressed: () => context.push(
+              AppRoutes.worldDetails(world.id),
+              extra: state.userLocation,
+            ),
+          ),
           onTap: () => controller.showWorldOnMap(world.id),
         );
       },

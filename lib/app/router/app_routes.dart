@@ -8,6 +8,16 @@ abstract final class AppRoutes {
   static const signIn = '/sign-in';
   static const register = '/register';
 
+  /// A World's details, opened from Explore.
+  static String worldDetails(String worldId) => '$explore/worlds/$worldId';
+
+  /// The creator's editor for a new World with a fresh client-chosen id.
+  static String newWorld(String worldId) =>
+      Uri(path: '$create/new', queryParameters: {'id': worldId}).toString();
+
+  /// The creator's editor for an existing World.
+  static String editWorld(String worldId) => '$create/worlds/$worldId';
+
   /// The sign-in page, returning to [from] once signed in.
   static String signInFrom(String from) =>
       Uri(path: signIn, queryParameters: {'from': from}).toString();
@@ -43,6 +53,11 @@ String? authRedirect({required bool signedIn, required Uri uri}) {
   }
   if (!signedIn && path == AppRoutes.editProfile) {
     return AppRoutes.signInFrom(AppRoutes.editProfile);
+  }
+  // The creator's pages below the Create tab need an account; the tab itself
+  // explains why and offers sign-in.
+  if (!signedIn && path.startsWith('${AppRoutes.create}/')) {
+    return AppRoutes.signInFrom(AppRoutes.create);
   }
   return null;
 }

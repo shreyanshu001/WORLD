@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:worlds/app/router/app_routes.dart';
 import 'package:worlds/core/maps/map_adapter.dart';
 import 'package:worlds/core/maps/map_providers.dart';
 import 'package:worlds/core/maps/map_types.dart';
@@ -332,6 +334,10 @@ class _MapPane extends StatelessWidget {
                     world: selected,
                     fromUserLocation: state.centerIsUserLocation,
                     onClose: () => controller.selectWorld(null),
+                    onOpen: () => context.push(
+                      AppRoutes.worldDetails(selected.id),
+                      extra: state.userLocation,
+                    ),
                   ),
                 ),
               _MapAttribution(text: attribution),

@@ -14,6 +14,7 @@ AppFailure failureFromError(Object error) => switch (error) {
   final AppFailure failure => failure,
   final AuthException exception => _fromAuth(exception),
   final PostgrestException exception => _fromPostgrest(exception),
+  final StorageException exception => _fromStorage(exception),
   SocketException() ||
   http.ClientException() ||
   TimeoutException() => const AppFailure.offline(),
@@ -55,14 +56,33 @@ AppFailure _fromAuth(AuthException exception) {
 }
 
 /// PostgreSQL error codes: https://www.postgresql.org/docs/current/errcodes-appendix.html
+/// plus the app's own codes raised by its database functions.
 AppFailure _fromPostgrest(PostgrestException exception) =>
     switch (exception.code) {
       '42501' => const AppFailure.permissionDenied(),
       '23505' ||
       '23514' ||
       '23502' ||
-      '22001' => const AppFailure.invalidContent(),
+      '22001' ||
+      // invalid_parameter_value: a database function rejected the input.
+      '22023' ||
+      // invalid_text_representation: a value of the wrong form.
+      '22P02' => const AppFailure.invalidContent(),
       // PostgREST: a single row was requested but none matched.
-      'PGRST116' => const AppFailure.notFound(),
+      'PGRST116' ||
+      // no_data_found: raised by the app's functions for missing or other
+      // people's Worlds, so ids do not leak.
+      'P0002' => const AppFailure.notFound(),
+      // The app's own code for a creation limit.
+      'WR429' => const AppFailure.rateLimited(),
       _ => const AppFailure.unexpected(),
+    };
+
+/// Storage errors carry an HTTP status code.
+AppFailure _fromStorage(StorageException exception) =>
+    switch (exception.statusCode) {
+      '401' || '403' => const AppFailure.permissionDenied(),
+      '404' => const AppFailure.notFound(),
+      '429' => const AppFailure.rateLimited(),
+      _ => const AppFailure.uploadFailed(),
     };

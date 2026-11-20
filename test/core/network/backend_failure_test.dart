@@ -99,7 +99,11 @@ void main() {
       '23514': AppFailure.invalidContent(),
       '23502': AppFailure.invalidContent(),
       '22001': AppFailure.invalidContent(),
+      '22023': AppFailure.invalidContent(),
+      '22P02': AppFailure.invalidContent(),
       'PGRST116': AppFailure.notFound(),
+      'P0002': AppFailure.notFound(),
+      'WR429': AppFailure.rateLimited(),
       'XX000': AppFailure.unexpected(),
     };
 
@@ -107,6 +111,27 @@ void main() {
       test(code, () {
         expect(
           failureFromError(PostgrestException(message: 'db', code: code)),
+          expected,
+        );
+      });
+    }
+  });
+
+  group('storage errors are mapped by status code', () {
+    const cases = <String?, AppFailure>{
+      '403': AppFailure.permissionDenied(),
+      '401': AppFailure.permissionDenied(),
+      '404': AppFailure.notFound(),
+      '429': AppFailure.rateLimited(),
+      '413': AppFailure.uploadFailed(),
+      '500': AppFailure.uploadFailed(),
+      null: AppFailure.uploadFailed(),
+    };
+
+    for (final MapEntry(key: status, value: expected) in cases.entries) {
+      test('$status', () {
+        expect(
+          failureFromError(StorageException('storage', statusCode: status)),
           expected,
         );
       });

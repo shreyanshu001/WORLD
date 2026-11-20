@@ -11,6 +11,8 @@ import 'package:worlds/features/profile/presentation/edit_profile_screen.dart';
 import 'package:worlds/features/profile/presentation/profile_screen.dart';
 import 'package:worlds/features/saved/presentation/saved_screen.dart';
 import 'package:worlds/features/world_creation/presentation/create_screen.dart';
+import 'package:worlds/features/worlds/presentation/world_details_screen.dart';
+import 'package:worlds/shared/models/geo_point.dart';
 
 /// The app's router: one shell with a tab for each top-level section, plus
 /// full-screen sign-in and sign-up pages.
@@ -42,6 +44,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: AppRoutes.explore,
                 builder: (context, state) => const ExploreScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'worlds/:id',
+                    builder: (context, state) => WorldDetailsScreen(
+                      worldId: state.pathParameters['id']!,
+                      from: state.extra is GeoPoint
+                          ? state.extra! as GeoPoint
+                          : null,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
