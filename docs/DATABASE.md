@@ -23,7 +23,9 @@ PostgreSQL + PostGIS. All schema changes must be committed migrations.
 - **world_question_secrets**: block_id PK/FK, answer_hash, normalization_version. No direct client SELECT; only trusted validation function can access.
   Implemented in Checkpoint 4 as `private.world_question_secrets`: in the schema the Data API does not expose, with row level security on and no policies or grants. bcrypt hash of the answer normalised by `private.normalize_answer` (version 1, D-026).
 - **world_visits**: world_id, user_id, first/last visited timestamps, visit_count; composite PK.
+  Implemented in Checkpoint 5 (`supabase/migrations/20261121090000_create_world_play.sql`): one row per account and World, counting successful on-site unlock checks. No positions are stored. Readable by its owner only; written only by `unlock_world`.
 - **world_progress**: world_id, user_id, current_block_id, status in_progress/completed, validated progress jsonb, started_at/completed_at/updated_at; composite PK.
+  Implemented in Checkpoint 5 with two validated arrays instead of one jsonb value: `path` (parts visited, at most 300) and `answered` (questions answered correctly), plus `completion_count`. Created by a successful unlock; changed only by the play functions; readable by its owner only (anon has a select grant that matches no rows, because the assets policy looks here). Answer attempts live in `private.world_answer_attempts` for the attempt limit, with no API access.
 - **saved_worlds**: world_id, user_id, created_at; composite PK.
 - **world_reports**: id, world_id, reporter_id, reason, description, status pending/reviewed/actioned/dismissed, created_at. Prevent duplicate pending reports per reporter/World.
 
@@ -59,6 +61,19 @@ Implemented in Checkpoint 4 as a set of `security definer` functions, each check
 | `get_world_details(world_id, from_lat, from_lon)` | Callable signed out. Safe details of a published public World (or the caller's own): no blocks, only a count; distance computed by the server. |
 
 Errors: 42501 not allowed (signed out, or hidden by moderation); P0002 not found, also for other people's Worlds; 22023 invalid content; WR429 a creation limit.
+
+## Play RPCs
+Implemented in Checkpoint 5, all `security definer`, signed-in users only (D-032), rules in D-033:
+
+| Function | Purpose |
+| --- | --- |
+| `unlock_world(world_id, latitude, longitude, accuracy_meters)` | Checks one fresh reading: `unlocked` (creates progress, counts a visit), `too_far` or `inaccurate`. |
+| `get_world_play(world_id)` | Parts in order without answers or success messages, the images they use, and progress. WR403 before unlocking. |
+| `advance_world(world_id, from_block_id, option_id)` | One validated step; `stale` when the player had already moved on; completion counted once. |
+| `answer_question(world_id, block_id, answer)` | Checks the normalised answer against the stored hash; five wrong per ten minutes, then `rate_limited`. Never returns the answer. |
+| `restart_world(world_id)` | Back to the first part; questions must be answered again. |
+
+`get_world_details` also returns `play_status` (`locked`, `in_progress`, `completed`; null when signed out). Players can read the images of Worlds they unlocked while those are published.
 
 ## RLS
 Enable RLS on every exposed table:
