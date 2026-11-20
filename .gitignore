@@ -13,3 +13,26 @@ coverage/
 !.env.example
 supabase/.temp/
 android/local.properties
+
+# Flutter template entries missing from the original list
+*.class
+*.log
+*.pyc
+*.swp
+*.ipr
+*.iws
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+.pub-cache/
+migrate_working_dir/
+**/doc/api/
+app.*.symbols
+app.*.map.json
+/android/app/debug
+/android/app/profile
+/android/app/release
