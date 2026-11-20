@@ -487,20 +487,30 @@ class _CompletionView extends ConsumerWidget {
                 InfoChip(icon: Icons.replay, label: 'Finished $times times'),
               ],
               const SizedBox(height: Space.xxl),
-              FilledButton.icon(
-                onPressed: () => context.go(AppRoutes.explore),
-                icon: const Icon(Icons.map_outlined),
-                label: const Text('Find another World'),
-              ),
-              const SizedBox(height: Space.md),
-              OutlinedButton.icon(
-                onPressed: state.busy
-                    ? null
-                    : ref
-                          .read(playerControllerProvider(worldId).notifier)
-                          .restart,
-                icon: const Icon(Icons.replay),
-                label: const Text('Play again'),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 360),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    FilledButton.icon(
+                      onPressed: () => context.go(AppRoutes.explore),
+                      icon: const Icon(Icons.map_outlined),
+                      label: const Text('Find another World'),
+                    ),
+                    const SizedBox(height: Space.md),
+                    OutlinedButton.icon(
+                      onPressed: state.busy
+                          ? null
+                          : ref
+                                .read(
+                                  playerControllerProvider(worldId).notifier,
+                                )
+                                .restart,
+                      icon: const Icon(Icons.replay),
+                      label: const Text('Play again'),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

@@ -1,3 +1,4 @@
+import 'dart:async';
 // Renders the app's main screens to PNG images with sample data, for design
 // review. Not part of `flutter test`. Run:
 //
@@ -15,6 +16,10 @@ import 'package:worlds/core/maps/map_adapter.dart';
 import 'package:worlds/features/auth/domain/auth_user.dart';
 import 'package:worlds/features/world_creation/domain/world_draft.dart';
 import 'package:worlds/features/worlds/domain/content_block.dart';
+import 'package:worlds/features/worlds/domain/world_details.dart';
+import 'package:go_router/go_router.dart';
+import 'package:worlds/app/router/app_routes.dart';
+import 'package:worlds/core/location/location_service.dart';
 import 'package:worlds/features/worlds/domain/world_status.dart';
 import 'package:worlds/shared/models/geo_point.dart';
 import 'package:worlds/shared/models/world_category.dart';
@@ -22,6 +27,7 @@ import 'package:worlds/shared/models/world_category.dart';
 import '../test/support/creation_fakes.dart';
 import '../test/support/explore_fakes.dart';
 import '../test/support/fakes.dart';
+import '../test/support/play_fakes.dart';
 import '../test/support/pump_app.dart';
 
 Future<void> _loadFonts() async {
@@ -219,6 +225,8 @@ void main() {
   late FakeWorldRepository worlds;
   late FakeWorldAuthoringRepository authoring;
   late FakeMapAdapter map;
+  late FakeWorldPlayRepository play;
+  late FakeLocationService location;
 
   setUp(() {
     worlds = FakeWorldRepository([
@@ -271,6 +279,23 @@ void main() {
     );
     authoring = FakeWorldAuthoringRepository();
     map = FakeMapAdapter();
+    location = FakeLocationService()
+      ..permission = LocationPermissionStatus.granted;
+    play = FakeWorldPlayRepository()
+      ..addWorld(
+        'w1',
+        testStoryBlocks(),
+        title: 'The Lighthouse Keeper',
+        unlocked: true,
+      )
+      ..addWorld(
+        'w2',
+        testPuzzleBlocks(),
+        title: 'Riddle of the Old Mill',
+        unlocked: true,
+      )
+      ..answers['p-q'] = 'keeper'
+      ..successMessages['p-q'] = 'Right, the keeper! The light never went out.';
   });
 
   Future<void> pump(WidgetTester tester, {bool signedIn = true}) async {
@@ -284,6 +309,8 @@ void main() {
       authoring: authoring,
       map: map,
       mapAdapter: _SketchMapAdapter(map),
+      play: play,
+      location: location,
       exploreDefaultCenter: center,
     );
   }
@@ -432,5 +459,57 @@ void main() {
     await tapText(tester, 'Preview as an explorer');
     await tapText(tester, 'Continue');
     await shot(tester, '14_preview_choice');
+  });
+
+  Future<void> openPlayer(WidgetTester tester, String worldId) async {
+    await pump(tester);
+    unawaited(
+      GoRouter.of(
+        tester.element(find.byType(NavigationBar)),
+      ).push<void>(AppRoutes.play(worldId)),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  renderTest('unlock', (tester) async {
+    worlds.detailsById['w1'] = worlds.detailsById['w1']!.copyWith(
+      playStatus: PlayStatus.locked,
+    );
+    await pump(tester);
+    await tester.tap(find.byKey(const ValueKey('marker-w1')));
+    await tester.pumpAndSettle();
+    await tapText(tester, 'View details');
+    await shot(tester, '15_details_locked');
+    await tapText(tester, 'Check my location');
+    await shot(tester, '16_details_too_far');
+  });
+
+  renderTest('player story', (tester) async {
+    await openPlayer(tester, 'w1');
+    await shot(tester, '17_player_text');
+    await tapText(tester, 'Continue');
+    await shot(tester, '18_player_choice');
+  });
+
+  renderTest('player puzzle', (tester) async {
+    await openPlayer(tester, 'w2');
+    await tapText(tester, 'Continue');
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Your answer'),
+      'the cook',
+    );
+    await tester.pump();
+    await tapText(tester, 'Check answer');
+    await shot(tester, '19_player_wrong');
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Your answer'),
+      'keeper',
+    );
+    await tester.pump();
+    await tapText(tester, 'Check answer');
+    await shot(tester, '20_player_correct');
+    await tapText(tester, 'Continue');
+    await tapText(tester, 'Finish');
+    await shot(tester, '21_player_complete');
   });
 }
