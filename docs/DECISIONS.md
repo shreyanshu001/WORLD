@@ -30,7 +30,7 @@ Checkpoint 3 decisions. The owner said "continue" without choosing, so the first
 - **D-018 Title search is part of the nearby query:** `get_nearby_worlds` takes an optional `search_text` (case-insensitive, `%` and `_` literal). Resolves audit gap G2.
 - **D-019 Browsing needs no account:** the nearby query is callable signed out. Whether unlocking and playing need an account is still open for Checkpoint 5 (rest of audit gap G3).
 - **D-020 World text limits (proposed):** title 3–80 characters, trimmed; description at most 2,000 characters. Not specified in the documents; change by a forward migration if the product needs other limits.
-- **D-021 Location is read only when the user taps "find Worlds near me":** even if permission was granted earlier. One reading with a 15-second limit; MapLibre's own location layer stays off because it tracks continuously. Before that, Explore opens at `EXPLORE_DEFAULT_CENTER` if set, otherwise zoomed out. **The pilot area, and so the default centre, is undecided.**
+- **D-021 Location is read only when the user taps "find Worlds near me":** even if permission was granted earlier. One reading with a 15-second limit; MapLibre's own location layer stays off because it tracks continuously. Before Android's permission prompt, a short dialog explains that location is used only on tap, is not tracked in the background and is never shown to others. Before that, Explore opens at `EXPLORE_DEFAULT_CENTER` if set, otherwise zoomed out. **The pilot area, and so the default centre, is undecided.**
 
 ## Pending; require evidence and rationale
 - Pilot area, and the Explore default centre that goes with it (D-021).

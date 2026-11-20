@@ -282,11 +282,38 @@ void main() {
   });
 
   group('finding Worlds near me', () {
-    testWidgets('asks permission, takes one reading, centres and searches '
-        'there', (tester) async {
+    const explanationTitle = 'Find Worlds near you';
+
+    testWidgets('explains why first; "Not now" leaves location untouched', (
+      tester,
+    ) async {
       await pumpExplore(tester);
 
       await tester.tap(find.byTooltip('Find Worlds near me'));
+      await tester.pumpAndSettle();
+
+      expect(find.text(explanationTitle), findsOneWidget);
+      expect(
+        find.textContaining('not tracked in the background'),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.widgetWithText(TextButton, 'Not now'));
+      await tester.pumpAndSettle();
+
+      expect(find.text(explanationTitle), findsNothing);
+      expect(location.permissionRequests, 0);
+      expect(location.positionReads, 0);
+      expect(worlds.queries, isEmpty);
+    });
+
+    testWidgets('after "Continue", asks permission, takes one reading, '
+        'centres and searches there', (tester) async {
+      await pumpExplore(tester);
+
+      await tester.tap(find.byTooltip('Find Worlds near me'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Continue'));
       await tester.pumpAndSettle();
 
       expect(location.permissionRequests, 1);
@@ -310,6 +337,7 @@ void main() {
       await tester.tap(find.byTooltip('Find Worlds near me'));
       await tester.pumpAndSettle();
 
+      expect(find.text(explanationTitle), findsNothing);
       expect(location.permissionRequests, 0);
       expect(location.positionReads, 1);
     });
@@ -321,6 +349,8 @@ void main() {
       await pumpExplore(tester, defaultCenter: center);
 
       await tester.tap(find.byTooltip('Find Worlds near me'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Continue'));
       await tester.pumpAndSettle();
 
       expect(
@@ -346,6 +376,8 @@ void main() {
       await tester.tap(find.byTooltip('Find Worlds near me'));
       await tester.pumpAndSettle();
 
+      // Android cannot prompt for blocked permission, so no explanation first.
+      expect(find.text(explanationTitle), findsNothing);
       expect(find.textContaining('Location is blocked for WORLDS'), findsOne);
       expect(location.permissionRequests, 0);
 

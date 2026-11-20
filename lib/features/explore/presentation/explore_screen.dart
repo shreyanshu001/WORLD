@@ -122,7 +122,9 @@ class _TopBar extends StatelessWidget {
               ),
               IconButton(
                 tooltip: 'Find Worlds near me',
-                onPressed: locating ? null : controller.locate,
+                onPressed: locating
+                    ? null
+                    : () => _findWorldsNearMe(context, controller),
                 icon: locating
                     ? const SizedBox.square(
                         dimension: 20,
@@ -151,6 +153,41 @@ class _TopBar extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Explains why location is wanted before Android's prompt appears, then
+/// locates only if the user agrees.
+Future<void> _findWorldsNearMe(
+  BuildContext context,
+  ExploreController controller,
+) async {
+  if (await controller.shouldExplainLocation()) {
+    if (!context.mounted) return;
+    final agreed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: const Icon(Icons.my_location),
+        title: const Text('Find Worlds near you'),
+        content: const Text(
+          'WORLDS uses your location only when you tap this button, to show '
+          'Worlds around you. It is not tracked in the background and is '
+          'never shown to other people.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Not now'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+    if (agreed != true) return;
+  }
+  await controller.locate();
 }
 
 class _SearchField extends StatefulWidget {

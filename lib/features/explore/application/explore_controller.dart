@@ -112,6 +112,20 @@ class ExploreController extends Notifier<ExploreState> {
     state = state.copyWith(locationStatus: LocationStatus.notRequested);
   }
 
+  /// Whether tapping "find Worlds near me" will show Android's permission
+  /// prompt, so the app should first explain why it wants location
+  /// (docs/SECURITY_AND_PRIVACY.md). Reads settings only; reads no position.
+  Future<bool> shouldExplainLocation() async {
+    final location = ref.read(locationServiceProvider);
+    try {
+      if (!await location.isServiceEnabled()) return false;
+      return await location.checkPermission() ==
+          LocationPermissionStatus.denied;
+    } on Object {
+      return false;
+    }
+  }
+
   /// Asks for permission if needed, takes one position sample, centres the
   /// map there and searches. Runs only when the user asks.
   Future<void> locate() async {

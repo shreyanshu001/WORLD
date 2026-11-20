@@ -92,8 +92,8 @@ Terms were read on 2026-11-19; see the audit for quotations and the cost estimat
 
 | Provider | Outcome | Rationale |
 | --- | --- | --- |
-| OpenFreeMap public instance | **Proposed for development and pilot** | Commercial use allowed, no key, no request limit, attribution added by MapLibre. No SLA. |
-| Stadia Maps Starter ($20/month) | **Proposed as fallback** | Commercial use allowed from this tier; 1,000,000 credits a month covers the pilot estimate. |
+| OpenFreeMap public instance | **Adopted for development and pilot** (on recommendation, D-017) | Commercial use allowed, no key, no request limit. No SLA. The app also shows its attribution permanently on the map. All resources come from `tiles.openfreemap.org`. |
+| Stadia Maps Starter ($20/month) | **Pre-approved fallback** (on recommendation, D-017) | Commercial use allowed from this tier; 1,000,000 credits a month covers the pilot estimate. Switch with `MAP_STYLE_URL` and `MAP_ATTRIBUTION`. |
 | MapTiler Flex ($30/month) | Alternative fallback | Free tier is described as non-commercial and pauses at quota. |
 | Self-hosted Protomaps (PMTiles) | Deferred to before public launch | Removes the third-party dependency but adds hosting work. |
 | Public OpenStreetMap tile server | **Rejected for production** | No SLA; access can be blocked without notice; offline use prohibited. |

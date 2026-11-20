@@ -20,7 +20,7 @@
 
 ## Current blockers
 
-- On-device verification of Checkpoints 1 and 2 is deferred by the owner. Sign-up through real Supabase Auth, sign-in, sign-out and session restore have not been exercised on a device.
+- On-device: the app has been installed and launched on the owner's phone and runs without crashing, but its screen has not been seen. Sign-up through real Supabase Auth, sign-in, sign-out, session restore and the map are untested on a device.
 - Sign-up with email confirmation on (Supabase's default) only works for project team members' addresses until custom SMTP is set up. For development, turn off *Confirm email* in the dashboard (see `supabase/README.md`).
 - The Checkpoint 2 gate is a security review by the owner.
 - The Checkpoint 2 security review has not been explicitly given.
@@ -113,7 +113,7 @@ Only the scaffold part of Checkpoint 1 is done. It was created at the product ow
 ## Checkpoint 2 record
 
 - **Date:** 2026-11-20
-- **Branch:** `checkpoint-2-backend-identity` (local only, not pushed). Commits: `19e6874`, plus a follow-up fix and these notes.
+- **Branch:** `checkpoint-2-backend-identity` (local only, not pushed). Commits: `19e6874` and the follow-up fix `3438787`.
 - **Started:** at the owner's instruction to continue implementation, with Checkpoint 1's device test deferred. Owner decisions: apply migrations to the remote project through the MCP connection (D-015) and choose usernames at sign-up (D-014).
 - **Database changes, applied to the development project:**
   - `supabase/migrations/20261119190312_enable_postgis.sql` — PostGIS in the `extensions` schema.
@@ -152,7 +152,7 @@ Only the scaffold part of Checkpoint 1 is done. It was created at the product ow
 ## Checkpoint 3 record
 
 - **Date:** 2026-11-20
-- **Branch:** `checkpoint-3-explore-map` (local only, not pushed). Commit: the commit that adds this entry.
+- **Branch:** `checkpoint-3-explore-map` (local only, not pushed). Commits: `26df7e3`, plus a follow-up adding the location explanation and these notes.
 - **Started:** at the owner's "continue". Map package and tile provider adopted on recommendation (D-016, D-017); title search added to the nearby query (D-018); browsing without an account (D-019).
 - **Database changes, applied to the development project:**
   - `supabase/migrations/20261120050626_create_worlds.sql` — `public.worlds` (GIST index on location, discovery and creator indexes, `updated_at` trigger), one read policy (published public Worlds, plus creators' own non-deleted Worlds), read-only grants, and `get_nearby_worlds` (validation, clamps, title search with literal `%` and `_`, explicit published/public filter, preview fields only, callable signed out).
@@ -177,12 +177,23 @@ Only the scaffold part of Checkpoint 1 is done. It was created at the product ow
   - `flutter test --timeout 60s` — 137 of 137 passed. New: 19 Explore screen tests (including a slow older search arriving after a newer one), architecture tests (map and location SDKs and Supabase confined to their layers, domain free of Flutter and SDKs, manifest without background location, Gradle wrapper version), and unit tests.
   - `flutter build apk --debug --dart-define-from-file=.env` — passed. The built APK requests only INTERNET, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, ACCESS_NETWORK_STATE and ACCESS_WIFI_STATE (the last two from MapLibre). No background location, no foreground-service permission, and geolocator's service is absent from the merged manifest.
 - **Incident:** the Gradle wrapper was changed to 9.7.1 outside this work, most likely by the editor's Gradle tooling, which broke the build (Android Gradle Plugin 8.11.1 cannot run on Gradle 9.6+). Restored to 8.14 with the owner's approval; a test now fails if it changes again.
-- **Manual device verification:** Partial. The debug APK installed and launched on the owner's Android 16 phone with the owner's approval, ran for several minutes with no crash or freeze, and created the map's native view. The screen itself was not seen: the only screenshot showed the notification shade over the app and was deleted unviewed beyond that. Map rendering, tiles, attribution placement, markers and the location flow on a real device are **not verified**.
+- **Manual device verification:** Partial, with the owner's approval. What was done on the phone over USB:
+  - Installed the debug APK (still installed) and launched it twice.
+  - Took one screenshot. It was opened once, showed the system notification shade rather than the app, and was deleted.
+  - Collapsed the notification shade with `cmd statusbar collapse`.
+  - Wrote a temporary UI dump file to the phone, which came back empty, and deleted it.
+
+  Observed: the app stayed running for several minutes with no crash or "not responding" record. That the map's native view was created is **inferred** from a display surface the app created at the map's size; the screen itself was never seen. Map rendering, tiles, attribution placement, markers and the location flow on a real device are **not verified**.
 - **Known issues:**
   - The Checkpoint 3 gate (real-device map and tile check) is open. Recommended before Checkpoint 4, whose location picker reuses the map.
   - No Worlds exist yet, so a device shows the empty state unless the seed script is run.
-  - Map tiles come from OpenFreeMap, a third party that sees the device's IP address and the areas viewed; no SLA.
+  - Map tiles come from OpenFreeMap, a third party that sees the device's IP address and the areas viewed; no SLA. Every style, tile, font and sprite request goes to the single host `tiles.openfreemap.org` (checked from the style and tile index).
   - Pilot area and default centre undecided.
+  - The app asks for one page of up to 50 results. In an area with more than 50 Worlds within 5 km, the furthest ones are silently left out; paging is not implemented.
+- **Follow-up after review:**
+  - Added the location explanation required by `docs/SECURITY_AND_PRIVACY.md` ("Explain why location is requested"): before Android's prompt, a short dialog says location is used only on tap, never tracked in the background, never shown to others. "Not now" touches nothing. It is skipped when permission is already granted or blocked. 138 of 138 tests pass.
+  - Seed script rehearsed in a rolled-back run with a test account: it inserted 8 Worlds (7 published, 1 draft); a signed-out nearby search returned 6, without the draft or the World 6 km away.
+  - The nearby call with exactly the app's payload (five keys, two of them null) returned HTTP 200.
 - **Approval status:** Pending.
 
 ## Update protocol
