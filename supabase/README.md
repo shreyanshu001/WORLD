@@ -49,3 +49,5 @@ Supabase's built-in email sender only delivers to members of the project's team 
 
 - **Development:** turn off *Authentication → Sign In / Providers → Email → Confirm email*, or sign up only with a team member's address.
 - **Pilot:** configure custom SMTP before inviting testers, and keep email confirmation on.
+
+**Current state (development project):** *Confirm email* was turned **off** on 2026-11-20. The public auth settings (`GET /auth/v1/settings` with the publishable key) report `mailer_autoconfirm: true`. Turn it back on together with custom SMTP before the pilot.
