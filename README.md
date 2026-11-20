@@ -45,14 +45,27 @@ That complete journey is the release gate.
 
 The Flutter app lives at the repository root: `lib/`, `test/` and `android/`. Android is the only platform enabled. It was created with Flutter 3.38.3.
 
+### Configuration
+
+Copy `.env.example` to `.env` and fill in the Supabase project URL and its **publishable** key (`sb_publishable_...`). Both are public client values. `.env` is gitignored. Never put a secret or service-role key in it: the app refuses to start with one.
+
+### Commands
+
 ```sh
 flutter pub get
+dart run build_runner build --delete-conflicting-outputs   # after changing a Freezed or JSON model
 flutter analyze
 flutter test
-flutter run
+flutter run --dart-define-from-file=.env
 ```
 
-The app is currently a scaffold. The folder structure from [`docs/TECHNICAL_ARCHITECTURE.md`](docs/TECHNICAL_ARCHITECTURE.md) exists, but no features are implemented. See [`docs/PROGRESS.md`](docs/PROGRESS.md) for status.
+Without `--dart-define-from-file=.env` the app starts on a "This build is not configured" screen.
+
+Generated files (`*.freezed.dart`, `*.g.dart`) are committed. Regenerate them whenever their source model changes.
+
+Gradle is pinned to Java 21 by `android/gradle/gradle-daemon-jvm.properties`, so a JDK 21 must be installed (Android Studio ships one).
+
+The app currently has its foundation only: startup and configuration checks, theme, the four-tab shell and shared state views. No product features are implemented yet. See [`docs/PROGRESS.md`](docs/PROGRESS.md) for status.
 
 ## Principles
 

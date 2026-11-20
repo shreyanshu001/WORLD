@@ -43,13 +43,34 @@ Installed toolchain: Flutter 3.38.3 / Dart 3.10.1. Current stable is Flutter 3.5
 
 ### Version policy (decision D1 in the audit)
 
-**Decided 2026-11-19:** the product owner chose to start on the installed Flutter 3.38.3 (`docs/DECISIONS.md`, D-008). The "Resolved" column therefore applies; that exact set is verified. The packages themselves are still proposals until approved, and none has been added to `pubspec.yaml` yet.
+**Decided 2026-11-19:** the product owner chose to start on the installed Flutter 3.38.3 (`docs/DECISIONS.md`, D-008). The "Resolved" column therefore applies; that exact set is verified.
 
 If the project later moves to a newer Flutter, target the "Latest" column, repeat the spike before changing anything else, and record the resulting `pubspec.lock` versions here.
 
+### Selected in Checkpoint 1
+
+Added on 2026-11-20 with the owner's go-ahead for Checkpoint 1. Versions are from `pubspec.lock`.
+
+| Package | Locked version | Role | Note |
+| --- | --- | --- | --- |
+| `flutter_riverpod` | 3.3.2 | State | Hand-written providers; see below |
+| `go_router` | 17.5.0 | Routing | Four-tab shell |
+| `supabase_flutter` | 2.18.3 | Backend | Initialised with `publishableKey` |
+| `freezed_annotation` | 3.1.0 | Models | Used by `AppFailure` |
+| `json_annotation` | 4.9.0 | JSON | Added now, first used in Checkpoint 2 |
+| `build_runner` (dev) | 2.15.1 | Code generation | |
+| `freezed` (dev) | 3.2.3 | Code generation | |
+| `json_serializable` (dev) | 6.11.2 | Code generation | Added now, first used in Checkpoint 2 |
+| `mocktail` (dev) | 1.0.5 | Tests | Added now, first used with repositories in Checkpoint 2 |
+| `flutter_lints` (dev) | 6.0.0 | Lints | |
+
+`flutter pub add` without a version picked `flutter_riverpod` 2.6.1 on this SDK, so the constraint is set explicitly to `^3.3.2`. `json_annotation`, `freezed` and `json_serializable` are pinned to the versions verified together in the Checkpoint 0 spike; newer `freezed` 3.2.5 and `json_serializable` 6.14.1 also resolve but were not verified.
+
+**Rejected on this SDK:** `riverpod_generator`, `riverpod_annotation` and `riverpod_lint`. With them, Flutter 3.38.3's `meta` pin holds Riverpod at 3.1.0; without them it resolves to 3.3.2. See `docs/DECISIONS.md`, D-013.
+
 ### Build requirement
 
-`maplibre_gl` 0.27.1 compiles for Java 21. This machine's user-level Gradle setting forces JDK 20, which fails the build. Proposed fix: commit `android/gradle/gradle-daemon-jvm.properties` containing `toolchainVersion=21`. Verified on Gradle 8.14.
+`maplibre_gl` 0.27.1 compiles for Java 21. This machine's user-level Gradle setting forces JDK 20, which fails the build. Fix adopted in Checkpoint 1: `android/gradle/gradle-daemon-jvm.properties` containing `toolchainVersion=21`. `gradlew --version` in the project reports `Daemon JVM: Compatible with Java 21 ... (from gradle/gradle-daemon-jvm.properties)`.
 
 ### Rejected or deferred options
 

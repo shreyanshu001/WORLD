@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:worlds/app/router/app_router.dart';
+import 'package:worlds/app/theme/app_theme.dart';
 
 /// Root widget of the WORLDS application.
 ///
-/// Scaffold only: routing, theme and the app shell arrive in Checkpoint 1.
-class WorldsApp extends StatelessWidget {
+/// Must be placed under a `ProviderScope`.
+class WorldsApp extends ConsumerWidget {
   const WorldsApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
+  Widget build(BuildContext context, WidgetRef ref) {
+    return MaterialApp.router(
       title: 'WORLDS',
-      home: Scaffold(body: Center(child: Text('WORLDS'))),
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      routerConfig: ref.watch(appRouterProvider),
     );
   }
 }

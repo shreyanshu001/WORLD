@@ -1,16 +1,16 @@
 # WORLDS — Implementation progress
 
-**Phase:** Scaffolding  
-**Current checkpoint:** 1 — App foundation (scaffold only; remainder not started)  
+**Phase:** Foundation  
+**Current checkpoint:** 1 — App foundation (implemented; awaiting device verification and approval)  
 **Product direction:** Approved  
 **Documentation handoff:** Published to GitHub  
-**App implementation:** Empty Flutter app and folder structure created; no features
+**App implementation:** Startup, configuration checks, theme, four-tab shell and shared state views; no product features
 
 | Checkpoint | Status | Evidence |
 |---|---|---|
 | Documentation handoff | Complete | README, AGENTS.md and 12 supporting files committed to main |
 | 0. Repository audit | Audit delivered. Owner answered D1 and D3 and asked for the scaffold; ten decisions remain open | `docs/REPOSITORY_AUDIT.md`, commit `f1b92f1`, 2026-11-19 |
-| 1. Project foundation | Scaffold only — awaiting approval to continue | See "Checkpoint 1 scaffold record" below |
+| 1. Project foundation | Implemented; launch on a device not yet verified; awaiting approval | See "Checkpoint 1 record" below |
 | 2. Backend and identity | Not started | — |
 | 3. Explore map | Not started | — |
 | 4. World details and creator | Not started | — |
@@ -20,8 +20,9 @@
 
 ## Current blockers
 
-- The rest of Checkpoint 1 (dependencies, theme, router, app shell, Supabase initialisation) needs product-owner approval to start.
-- Ten decisions are still open in `docs/REPOSITORY_AUDIT.md`. Four of them gate the rest of Checkpoint 1: D2 (Gradle JDK), D9 (publishable-key rename), D11 (commit generated code) and D12 (Android licenses). D1 and D3 were answered on 2026-11-19 and are logged in `docs/DECISIONS.md`.
+- Checkpoint 1 acceptance requires the app to launch on Android. That is not yet verified because no device is connected.
+- Checkpoint 2 needs product-owner approval to start.
+- Six decisions from `docs/REPOSITORY_AUDIT.md` are still open: D4–D8 and D10. D12 (Android licenses) is an owner action. D2, D9 and D11 were adopted on recommendation at the start of Checkpoint 1 (`docs/DECISIONS.md`, D-010 to D-012).
 - The application ID is the placeholder `com.example.worlds`. It must be replaced before any release build.
 - The Supabase project has been inspected read-only and is empty: no tables, migrations, users, buckets or functions. PostGIS is available but not installed. Region, plan, Postgres version and Auth settings are still unverified.
 - Map package and tile provider are recommended in the audit but not yet approved.
@@ -71,6 +72,39 @@ Only the scaffold part of Checkpoint 1 is done. It was created at the product ow
   - The application ID is a placeholder.
   - `INTERNET` is declared only for debug and profile builds; the main manifest needs it once networking is added.
   - The Gradle JDK pin (decision D2) is not yet added; the scaffold builds without it, but the map plugin will not.
+- **Approval status:** Pending.
+
+## Checkpoint 1 record
+
+- **Date:** 2026-11-20
+- **Branch:** `checkpoint-1-app-foundation` (local only, not pushed). Commit: recorded in the commit that follows this entry.
+- **Summary:** App foundation on top of the scaffold. Startup validates build-time configuration and initialises Supabase with the publishable key, showing a loading screen and then either the app or an error screen (with retry when retrying can help). Material 3 light and dark themes, a `go_router` shell with four tabs that each keep their own stack, placeholder screens that say plainly they are not built yet, shared loading/empty/error views, and the typed `AppFailure` model from the architecture document.
+- **Files:**
+  - `lib/main.dart`, `lib/app/app.dart`, `lib/app/startup_gate.dart`, `lib/app/bootstrap.dart`, `lib/app/app_shell.dart`.
+  - `lib/app/config/env.dart` — reads `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`; rejects missing values, non-HTTPS URLs and secret or service-role keys; never shows a key value.
+  - `lib/app/router/app_router.dart`, `lib/app/router/app_routes.dart`, `lib/app/theme/app_theme.dart`.
+  - `lib/core/errors/app_failure.dart` and its generated `app_failure.freezed.dart`.
+  - `lib/core/network/supabase_client_provider.dart`.
+  - `lib/core/widgets/{loading_view,empty_view,error_view}.dart`.
+  - `lib/features/{explore,saved,world_creation,profile}/presentation/*_screen.dart`.
+  - `test/app/{bootstrap,startup_gate,app_shell}_test.dart`, `test/app/config/env_test.dart`, `test/core/errors/app_failure_test.dart`, `test/core/widgets/state_views_test.dart`. The scaffold's single smoke test was replaced by these.
+  - `android/gradle/gradle-daemon-jvm.properties` (Java 21), `INTERNET` in the main Android manifest.
+  - `pubspec.yaml`, `pubspec.lock`, `analysis_options.yaml` (strict analyzer modes, generated files excluded), `.env.example` (publishable-key name), `README.md`.
+  - Local only, gitignored: `.env` with the project URL and publishable key, read through the read-only Supabase tool.
+- **Database/API changes:** none.
+- **Tests and results:**
+  - `dart format --output=none --set-exit-if-changed .` — 25 files, 0 changed (generated files included).
+  - `flutter analyze` — no issues.
+  - `flutter test` — 27 of 27 passed. One test caught a real bug: the retry handler passed `setState` a callback that returned a Future, which Flutter rejects. Fixed.
+  - `dart run build_runner build --delete-conflicting-outputs` — succeeded (about 75 s).
+  - `flutter build apk --debug --dart-define-from-file=.env` — passed in about 3 minutes. The APK reports package `com.example.worlds`, label `WORLDS`, minSdk 24, targetSdk 36, and `INTERNET` as its only Android permission.
+- **Manual device verification:** Deferred by the product owner on 2026-11-20 ("I will test it later"). Real Supabase initialisation and on-device navigation are therefore unverified.
+- **Known issues:**
+  - Launch on a device is unverified, so the Checkpoint 1 acceptance criterion "app launches on Android" is not yet met.
+  - `json_serializable`, `json_annotation` and `mocktail` are added but unused until Checkpoint 2.
+  - The application ID is still the placeholder `com.example.worlds`.
+  - The theme's seed colour is a placeholder; there is no design system.
+  - Android SDK licenses are still not all accepted.
 - **Approval status:** Pending.
 
 ## Update protocol
