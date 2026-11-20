@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:worlds/app/config/env.dart';
+import 'package:worlds/core/maps/map_types.dart';
+import 'package:worlds/shared/models/geo_point.dart';
 
 /// Builds an unsigned JWT-shaped string at runtime, so that no token-like
 /// literal is stored in the repository.
@@ -85,5 +87,59 @@ void main() {
     for (final problem in EnvProblem.values) {
       expect(problem.description, isNotEmpty, reason: problem.name);
     }
+  });
+
+  group('map and Explore settings', () {
+    AppEnv mapEnv({
+      String style = '',
+      String attribution = '',
+      String center = '',
+    }) => AppEnv(
+      supabaseUrl: url,
+      supabasePublishableKey: publishableKey,
+      mapStyleUrl: style,
+      mapAttribution: attribution,
+      exploreDefaultCenter: center,
+    );
+
+    test('the default map style is OpenFreeMap with its attribution', () {
+      final env = mapEnv();
+      expect(env.problems, isEmpty);
+      expect(env.mapStyle.url, MapStyle.openFreeMap.url);
+      expect(env.mapStyle.attribution, MapStyle.openFreeMap.attribution);
+    });
+
+    test('a custom style must be https and come with an attribution', () {
+      expect(mapEnv(style: 'https://tiles.example/style.json').problems, [
+        EnvProblem.missingMapAttribution,
+      ]);
+      expect(
+        mapEnv(
+          style: 'http://tiles.example/style.json',
+          attribution: 'X',
+        ).problems,
+        [EnvProblem.invalidMapStyleUrl],
+      );
+      final env = mapEnv(
+        style: ' https://tiles.example/style.json ',
+        attribution: ' © Example ',
+      );
+      expect(env.problems, isEmpty);
+      expect(env.mapStyle.url, 'https://tiles.example/style.json');
+      expect(env.mapStyle.attribution, '© Example');
+    });
+
+    test('the Explore centre is optional "latitude,longitude"', () {
+      expect(mapEnv().exploreCenter, isNull);
+      expect(
+        mapEnv(center: ' 51.5, -0.12 ').exploreCenter,
+        const GeoPoint(latitude: 51.5, longitude: -0.12),
+      );
+      for (final value in ['51.5', 'a,b', '91,0', '0,181', '1,2,3']) {
+        final env = mapEnv(center: value);
+        expect(env.exploreCenter, isNull, reason: value);
+        expect(env.problems, [EnvProblem.invalidExploreCenter], reason: value);
+      }
+    });
   });
 }

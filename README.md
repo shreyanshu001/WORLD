@@ -49,6 +49,8 @@ The Flutter app lives at the repository root: `lib/`, `test/` and `android/`. An
 
 Copy `.env.example` to `.env` and fill in the Supabase project URL and its **publishable** key (`sb_publishable_...`). Both are public client values. `.env` is gitignored. Never put a secret or service-role key in it: the app refuses to start with one.
 
+Optional keys: `MAP_STYLE_URL` and `MAP_ATTRIBUTION` switch the map provider (default: OpenFreeMap), and `EXPLORE_DEFAULT_CENTER=latitude,longitude` sets where Explore opens before the user shares a location.
+
 ### Commands
 
 ```sh
@@ -65,7 +67,7 @@ Generated files (`*.freezed.dart`, `*.g.dart`) are committed. Regenerate them wh
 
 Gradle is pinned to Java 21 by `android/gradle/gradle-daemon-jvm.properties`, so a JDK 21 must be installed (Android Studio ships one).
 
-The app currently has its foundation plus email/password accounts and profiles. No World features are implemented yet. See [`docs/PROGRESS.md`](docs/PROGRESS.md) for status.
+The app currently has its foundation, email/password accounts and profiles, and the Explore map of nearby published Worlds. Creating and playing Worlds are not implemented yet. See [`docs/PROGRESS.md`](docs/PROGRESS.md) for status.
 
 Before testing sign-up, read the email-confirmation note in [`supabase/README.md`](supabase/README.md): with the project's current settings, sign-up only works for addresses on the Supabase project team.
 

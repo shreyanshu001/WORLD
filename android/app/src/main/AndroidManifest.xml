@@ -1,6 +1,12 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Needed to reach Supabase. Location permissions arrive with the map; background location is never allowed. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- Needed to reach Supabase and the map tiles. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Foreground location only, requested when the user taps "find Worlds near me".
+         Never add ACCESS_BACKGROUND_LOCATION or FOREGROUND_SERVICE_LOCATION
+         (test/architecture/android_manifest_test.dart enforces this). -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <application
         android:label="WORLDS"
         android:name="${applicationName}"
@@ -32,6 +38,11 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- geolocator declares a location foreground service for background
+             tracking. WORLDS never tracks in the background, so remove it. -->
+        <service
+            android:name="com.baseflow.geolocator.GeolocatorLocationService"
+            tools:node="remove" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

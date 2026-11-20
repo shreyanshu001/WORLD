@@ -5,10 +5,14 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:worlds/app/config/env.dart';
 import 'package:worlds/app/startup_gate.dart';
+import 'package:worlds/core/location/location_providers.dart';
+import 'package:worlds/core/maps/map_providers.dart';
 import 'package:worlds/core/widgets/loading_view.dart';
 import 'package:worlds/features/auth/application/auth_providers.dart';
 import 'package:worlds/features/profile/application/profile_providers.dart';
+import 'package:worlds/features/worlds/application/world_providers.dart';
 
+import '../support/explore_fakes.dart';
 import '../support/fakes.dart';
 
 void main() {
@@ -18,10 +22,14 @@ void main() {
     supabasePublishableKey: key,
   );
 
-  // The app behind the gate reads Supabase-backed repositories; replace them.
+  // The app behind the gate reads Supabase-backed repositories and the real
+  // map and location plugins; replace them.
   List<Override> fakeRepositories() => [
     authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
     profileRepositoryProvider.overrideWithValue(FakeProfileRepository()),
+    worldRepositoryProvider.overrideWithValue(FakeWorldRepository()),
+    locationServiceProvider.overrideWithValue(FakeLocationService()),
+    mapAdapterProvider.overrideWithValue(FakeMapAdapter()),
   ];
 
   testWidgets('shows loading, then the app, when startup succeeds', (
