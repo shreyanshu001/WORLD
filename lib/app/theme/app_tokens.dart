@@ -119,6 +119,27 @@ abstract final class Space {
   static const xxl = 32.0;
 }
 
+/// How long things move and how they ease (docs/UI_UX_SPECIFICATION.md,
+/// Motion). Motion says what changed: it is short, and nothing loops.
+abstract final class Motion {
+  /// A small change in place: an icon, a colour, something leaving.
+  static const quick = Duration(milliseconds: 150);
+
+  /// Something arriving: a card, a message, the next part of a World.
+  static const standard = Duration(milliseconds: 260);
+
+  /// A single mark of success, once.
+  static const emphasis = Duration(milliseconds: 420);
+
+  static const enter = Curves.easeOutCubic;
+  static const exit = Curves.easeInCubic;
+
+  /// [duration], or no time at all when the device is set to remove
+  /// animations. Every animation in the app takes its duration from here.
+  static Duration of(BuildContext context, Duration duration) =>
+      MediaQuery.disableAnimationsOf(context) ? Duration.zero : duration;
+}
+
 /// One corner-radius family.
 abstract final class Radii {
   static const sm = 10.0;

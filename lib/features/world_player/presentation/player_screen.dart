@@ -13,6 +13,7 @@ import 'package:worlds/features/worlds/domain/content_block.dart';
 import 'package:worlds/features/worlds/presentation/blocks/block_view.dart';
 import 'package:worlds/shared/components/category_style.dart';
 import 'package:worlds/shared/components/design.dart';
+import 'package:worlds/shared/components/motion.dart';
 
 /// Plays an unlocked World, full screen and reading first. Every step is
 /// confirmed by the server, so leaving at any point keeps the place.
@@ -49,9 +50,17 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
       Future.microtask(() => ref.read(provider.notifier).restart());
     }
 
+    // Opening, playing and finishing fade into one another.
+    return StateSwitcher(child: _stage(state));
+  }
+
+  Widget _stage(PlayerState state) {
+    final provider = playerControllerProvider(widget.worldId);
+    final session = state.session;
     if (session == null) {
       final failure = state.loadFailure;
       return Scaffold(
+        key: ValueKey(failure == null ? 'opening' : 'unavailable'),
         appBar: AppBar(leading: const _CloseButton()),
         body: switch (failure) {
           null => const LoadingView(label: 'Opening World'),
@@ -74,12 +83,17 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     }
 
     if (session.progress.completed) {
-      return _CompletionView(worldId: widget.worldId, session: session);
+      return _CompletionView(
+        key: const ValueKey('complete'),
+        worldId: widget.worldId,
+        session: session,
+      );
     }
     if (session.currentBlock == null) {
       // The server's place is a part this copy does not have. Loading again
       // gets the World as it is now.
       return Scaffold(
+        key: const ValueKey('lost'),
         appBar: AppBar(leading: const _CloseButton()),
         body: ErrorView(
           message: "We lost your place in this World. Let's find it again.",
@@ -87,7 +101,11 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
         ),
       );
     }
-    return _PartView(worldId: widget.worldId, session: session);
+    return _PartView(
+      key: const ValueKey('playing'),
+      worldId: widget.worldId,
+      session: session,
+    );
   }
 }
 
@@ -106,7 +124,7 @@ class _CloseButton extends StatelessWidget {
 }
 
 class _PartView extends ConsumerWidget {
-  const _PartView({required this.worldId, required this.session});
+  const _PartView({required this.worldId, required this.session, super.key});
 
   final String worldId;
   final PlaySession session;
@@ -139,33 +157,29 @@ class _PartView extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(Space.lg, 0, Space.lg, Space.sm),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(3),
-              child: LinearProgressIndicator(
-                value: total == 0 ? 0 : (index + 1) / total,
-                minHeight: 5,
-                color: session.category.color,
-                backgroundColor: colors.outline,
-                semanticsLabel: 'Progress',
-                semanticsValue: 'Part ${index + 1} of $total',
+              // The bar grows to the new part instead of jumping to it.
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(end: total == 0 ? 0 : (index + 1) / total),
+                duration: Motion.of(context, Motion.standard),
+                curve: Motion.enter,
+                builder: (context, value, _) => LinearProgressIndicator(
+                  value: value,
+                  minHeight: 5,
+                  color: session.category.color,
+                  backgroundColor: colors.outline,
+                  semanticsLabel: 'Progress',
+                  semanticsValue: 'Part ${index + 1} of $total',
+                ),
               ),
             ),
           ),
         ),
       ),
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 260),
-        switchInCurve: Curves.easeOutCubic,
-        transitionBuilder: (child, animation) => FadeTransition(
-          opacity: animation,
-          child: SlideTransition(
-            position: Tween(
-              begin: const Offset(0.06, 0),
-              end: Offset.zero,
-            ).animate(animation),
-            child: child,
-          ),
-        ),
-        layoutBuilder: (current, previous) =>
-            Stack(fit: StackFit.expand, children: [...previous, ?current]),
+      // The next part comes in from the right as the last one leaves to
+      // the left: forward, like turning a page. Each part starts at its top.
+      body: StateSwitcher(
+        from: const Offset(0.06, 0),
+        to: const Offset(-0.06, 0),
         child: SingleChildScrollView(
           key: ValueKey(block.id),
           padding: const EdgeInsets.fromLTRB(
@@ -322,7 +336,13 @@ class _AnswerAreaState extends ConsumerState<_AnswerArea> {
           ),
           child: Row(
             children: [
-              Icon(Icons.check_circle, color: colors.success, size: 28),
+              PopIn(
+                child: Icon(
+                  Icons.check_circle,
+                  color: colors.success,
+                  size: 28,
+                ),
+              ),
               const SizedBox(width: Space.md),
               Expanded(
                 child: Text(
@@ -443,7 +463,11 @@ class _StepBar extends ConsumerWidget {
 
 /// The end of a World: a calm, clear moment with somewhere to go next.
 class _CompletionView extends ConsumerWidget {
-  const _CompletionView({required this.worldId, required this.session});
+  const _CompletionView({
+    required this.worldId,
+    required this.session,
+    super.key,
+  });
 
   final String worldId;
   final PlaySession session;
@@ -463,20 +487,23 @@ class _CompletionView extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(
-                width: 132,
-                height: 132,
-                child: ClipOval(
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      AtlasPanel(
-                        category: session.category,
-                        iconSize: 0,
-                        seed: worldId.hashCode,
-                      ),
-                      const Icon(Icons.check, size: 64, color: Colors.white),
-                    ],
+              // The one mark of success: it settles into place, once.
+              PopIn(
+                child: SizedBox(
+                  width: 132,
+                  height: 132,
+                  child: ClipOval(
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        AtlasPanel(
+                          category: session.category,
+                          iconSize: 0,
+                          seed: worldId.hashCode,
+                        ),
+                        const Icon(Icons.check, size: 64, color: Colors.white),
+                      ],
+                    ),
                   ),
                 ),
               ),

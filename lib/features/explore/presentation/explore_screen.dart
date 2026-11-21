@@ -16,6 +16,7 @@ import 'package:worlds/features/explore/presentation/world_preview_card.dart';
 import 'package:worlds/shared/components/category_style.dart';
 import 'package:worlds/shared/models/geo_point.dart';
 import 'package:worlds/shared/models/world_category.dart';
+import 'package:worlds/shared/components/motion.dart';
 
 /// The Explore tab: a map of nearby published Worlds, with search, category
 /// filters and a list view that works even if the map does not.
@@ -428,19 +429,32 @@ class _MapPane extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (selected != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-                  child: WorldPreviewCard(
-                    world: selected,
-                    fromUserLocation: state.centerIsUserLocation,
-                    onClose: () => controller.selectWorld(null),
-                    onOpen: () => context.push(
-                      AppRoutes.worldDetails(selected.id),
-                      extra: state.userLocation,
-                    ),
-                  ),
-                ),
+              // The card rises into place when a World is selected and
+              // fades from one World to the next. Only the card moves: the
+              // map under it is never animated.
+              StateSwitcher(
+                fill: false,
+                alignment: Alignment.bottomCenter,
+                from: const Offset(0, 0.12),
+                child: selected == null
+                    ? const SizedBox(
+                        key: ValueKey('no-preview'),
+                        width: double.infinity,
+                      )
+                    : Padding(
+                        key: ValueKey('preview-${selected.id}'),
+                        padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                        child: WorldPreviewCard(
+                          world: selected,
+                          fromUserLocation: state.centerIsUserLocation,
+                          onClose: () => controller.selectWorld(null),
+                          onOpen: () => context.push(
+                            AppRoutes.worldDetails(selected.id),
+                            extra: state.userLocation,
+                          ),
+                        ),
+                      ),
+              ),
               _MapAttribution(text: attribution),
             ],
           ),
