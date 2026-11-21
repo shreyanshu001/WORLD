@@ -172,18 +172,7 @@ void main() {
       }
 
       /// The three guidelines, on whatever is on screen now.
-      ///
-      /// [distanceLabel] marks the one known shortfall: in the light theme
-      /// the ochre distance label on its own tint over the canvas is 4.23:1,
-      /// under the 4.5:1 that text of its size needs. Its colour is the
-      /// owner's to change (docs/DECISIONS.md, D-041). Until then the test
-      /// requires that label, and nothing else, to fall short, so the gap
-      /// is measured here and this exception fails as soon as it is closed.
-      Future<void> check(
-        WidgetTester tester,
-        String where, {
-        bool distanceLabel = false,
-      }) async {
+      Future<void> check(WidgetTester tester, String where) async {
         await tester.pumpAndSettle();
         await expectLater(
           tester,
@@ -195,23 +184,11 @@ void main() {
           meetsGuideline(labeledTapTargetGuideline),
           reason: '$where: a control has no name',
         );
-        final contrast = await textContrastGuideline.evaluate(tester);
-        if (distanceLabel && brightness == Brightness.light) {
-          final reason = contrast.reason ?? '';
-          expect(contrast.passed, isFalse, reason: '$where: gap closed?');
-          expect(
-            'Expected contrast ratio'.allMatches(reason),
-            hasLength(1),
-            reason: '$where: $reason',
-          );
-          expect(reason, contains('but found 4.23 for a font size of 12.0'));
-        } else {
-          expect(
-            contrast.passed,
-            isTrue,
-            reason: '$where: text does not stand out. ${contrast.reason}',
-          );
-        }
+        await expectLater(
+          tester,
+          meetsGuideline(textContrastGuideline),
+          reason: '$where: text does not stand out',
+        );
       }
 
       Future<void> tapText(WidgetTester tester, String text) async {
@@ -251,10 +228,10 @@ void main() {
         await tester.tap(find.byKey(const ValueKey('marker-w1')));
         await tester.pumpAndSettle();
         await tapText(tester, 'View details');
-        await check(tester, 'World details', distanceLabel: true);
+        await check(tester, 'World details');
 
         await tapText(tester, 'Check my location');
-        await check(tester, 'World details, too far away', distanceLabel: true);
+        await check(tester, 'World details, too far away');
         handle.dispose();
       });
 

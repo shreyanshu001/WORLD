@@ -233,7 +233,7 @@ class _DetailsView extends StatelessWidget {
                         InfoChip(
                           icon: Icons.near_me_outlined,
                           label: '${formatDistance(distance)} away',
-                          color: colors.accent,
+                          color: colors.accentText,
                           background: colors.accent.withValues(alpha: 0.12),
                         ),
                       InfoChip(
@@ -283,7 +283,7 @@ class _CategoryLabel extends StatelessWidget {
         Text(
           world.category.label,
           style: theme.textTheme.labelLarge?.copyWith(
-            color: world.category.foregroundOn(theme.brightness),
+            color: world.category.textOn(theme.brightness),
             fontWeight: FontWeight.w700,
           ),
         ),

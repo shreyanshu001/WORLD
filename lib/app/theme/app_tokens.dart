@@ -15,6 +15,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.primary,
     required this.primarySoft,
     required this.accent,
+    required this.accentText,
     required this.outline,
     required this.danger,
     required this.dangerSoft,
@@ -43,6 +44,11 @@ class AppColors extends ThemeExtension<AppColors> {
 
   /// Ochre, for small highlights such as distance.
   final Color accent;
+
+  /// [accent] deep enough to read as small text on its own tint. In the
+  /// light theme the ochre itself is 4.2:1 there; this is 5.1:1
+  /// (docs/DECISIONS.md, D-041). In the dark theme the two are the same.
+  final Color accentText;
   final Color outline;
   final Color danger;
   final Color dangerSoft;
@@ -58,6 +64,7 @@ class AppColors extends ThemeExtension<AppColors> {
     primary: Color(0xFF1F5E4B),
     primarySoft: Color(0xFFDCEBE3),
     accent: Color(0xFF9A5B12),
+    accentText: Color(0xFF885010),
     outline: Color(0xFFE2DBCF),
     danger: Color(0xFFB3261E),
     dangerSoft: Color(0xFFFBE4E1),
@@ -74,6 +81,7 @@ class AppColors extends ThemeExtension<AppColors> {
     primary: Color(0xFF8ED0B4),
     primarySoft: Color(0xFF1F3B31),
     accent: Color(0xFFE2A85C),
+    accentText: Color(0xFFE2A85C),
     outline: Color(0xFF333C38),
     danger: Color(0xFFF2B8B5),
     dangerSoft: Color(0xFF3C1F1D),
@@ -100,6 +108,7 @@ class AppColors extends ThemeExtension<AppColors> {
       primary: mix(primary, other.primary),
       primarySoft: mix(primarySoft, other.primarySoft),
       accent: mix(accent, other.accent),
+      accentText: mix(accentText, other.accentText),
       outline: mix(outline, other.outline),
       danger: mix(danger, other.danger),
       dangerSoft: mix(dangerSoft, other.dangerSoft),

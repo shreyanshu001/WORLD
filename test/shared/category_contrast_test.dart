@@ -48,22 +48,39 @@ void main() {
     }
   });
 
-  test('on light surfaces three of the four names meet the text level', () {
-    // Puzzle's amber is 4.2:1 on white and 3.9:1 on the canvas: enough for
-    // its icon, short of 4.5:1 for its name. Its value is the owner's to
-    // change (docs/DECISIONS.md, D-041), so it is measured here, not hidden.
-    const light = AppColors.light;
-    for (final category in WorldCategory.values) {
-      final onCard = contrast(category.color, light.surface);
-      if (category == WorldCategory.puzzle) {
-        expect(onCard, inInclusiveRange(4.2, 4.3));
-      } else {
-        expect(onCard, greaterThanOrEqualTo(text), reason: category.name);
-        expect(
-          contrast(category.color, light.canvas),
-          greaterThanOrEqualTo(text),
-          reason: category.name,
+  test('category names meet the text level in both themes', () {
+    // Puzzle's amber is 4.2:1 on white: enough for its icon, short of 4.5:1
+    // for its name, which is drawn in a deeper shade the owner approved on
+    // 2026-11-21 (docs/DECISIONS.md, D-041).
+    expect(
+      contrast(WorldCategory.puzzle.color, AppColors.light.surface),
+      lessThan(text),
+    );
+    for (final (brightness, c) in [
+      (Brightness.light, AppColors.light),
+      (Brightness.dark, AppColors.dark),
+    ]) {
+      for (final category in WorldCategory.values) {
+        for (final surface in [c.canvas, c.surface]) {
+          expect(
+            contrast(category.textOn(brightness), surface),
+            greaterThanOrEqualTo(text),
+            reason: '${category.name} name, ${brightness.name}, on $surface',
+          );
+        }
+      }
+    }
+  });
+
+  test('the distance label can be read on its own tint', () {
+    // The ochre itself was 4.2:1 here in the light theme.
+    for (final c in [AppColors.light, AppColors.dark]) {
+      for (final surface in [c.canvas, c.surface]) {
+        final tint = Color.alphaBlend(
+          c.accent.withValues(alpha: 0.12),
+          surface,
         );
+        expect(contrast(c.accentText, tint), greaterThanOrEqualTo(text));
       }
     }
   });

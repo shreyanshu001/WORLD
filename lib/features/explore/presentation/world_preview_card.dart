@@ -60,9 +60,7 @@ class WorldPreviewCard extends StatelessWidget {
                         Text(
                           world.category.label.toUpperCase(),
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: world.category.foregroundOn(
-                              theme.brightness,
-                            ),
+                            color: world.category.textOn(theme.brightness),
                             fontWeight: FontWeight.w700,
                             letterSpacing: 1.1,
                           ),
@@ -108,7 +106,7 @@ class WorldPreviewCard extends StatelessWidget {
                       label: fromUserLocation
                           ? '$distance away'
                           : '$distance from the map centre',
-                      color: colors.accent,
+                      color: colors.accentText,
                       background: colors.accent.withValues(alpha: 0.12),
                     ),
                     FilledButton(

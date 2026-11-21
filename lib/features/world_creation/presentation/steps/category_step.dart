@@ -132,7 +132,7 @@ class _CategoryCard extends StatelessWidget {
                           category.label,
                           style: theme.textTheme.titleLarge?.copyWith(
                             color: selected
-                                ? category.foregroundOn(theme.brightness)
+                                ? category.textOn(theme.brightness)
                                 : colors.ink,
                           ),
                         ),
