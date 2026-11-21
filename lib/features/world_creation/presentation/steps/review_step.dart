@@ -11,6 +11,7 @@ import 'package:worlds/features/world_creation/domain/world_rules.dart';
 import 'package:worlds/features/world_creation/presentation/world_preview_screen.dart';
 import 'package:worlds/features/worlds/domain/world_status.dart';
 import 'package:worlds/shared/components/design.dart';
+import 'package:worlds/shared/components/motion.dart';
 
 /// What is still missing, a preview, the public-place promise, and the
 /// publish or unpublish action.
@@ -277,13 +278,15 @@ class _LiveHero extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(Space.md),
-            decoration: BoxDecoration(
-              color: colors.surface,
-              shape: BoxShape.circle,
+          PopIn(
+            child: Container(
+              padding: const EdgeInsets.all(Space.md),
+              decoration: BoxDecoration(
+                color: colors.surface,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.public, size: 32, color: colors.success),
             ),
-            child: Icon(Icons.public, size: 32, color: colors.success),
           ),
           const SizedBox(height: Space.lg),
           Text('Your World is live', style: theme.textTheme.headlineSmall),

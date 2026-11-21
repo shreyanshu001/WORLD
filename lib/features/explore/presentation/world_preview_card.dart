@@ -37,10 +37,12 @@ class WorldPreviewCard extends StatelessWidget {
       child: InkWell(
         onTap: onOpen,
         child: Padding(
+          // The right inset is small because the close button brings its
+          // own: it is 48 dp to touch, round a 24 dp cross.
           padding: const EdgeInsets.fromLTRB(
             Space.lg,
             Space.lg,
-            Space.sm,
+            Space.xs,
             Space.lg,
           ),
           child: Column(
@@ -49,7 +51,11 @@ class WorldPreviewCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CategoryBadge(category: world.category, size: 52),
+                  CategoryBadge(
+                    category: world.category,
+                    size: 52,
+                    named: false,
+                  ),
                   const SizedBox(width: Space.md),
                   Expanded(
                     child: Column(
@@ -58,7 +64,7 @@ class WorldPreviewCard extends StatelessWidget {
                         Text(
                           world.category.label.toUpperCase(),
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: world.category.color,
+                            color: world.category.textOn(theme.brightness),
                             fontWeight: FontWeight.w700,
                             letterSpacing: 1.1,
                           ),
@@ -82,7 +88,6 @@ class WorldPreviewCard extends StatelessWidget {
                   ),
                   IconButton(
                     tooltip: 'Close',
-                    visualDensity: VisualDensity.compact,
                     icon: Icon(Icons.close, color: colors.muted),
                     onPressed: onClose,
                   ),
@@ -90,22 +95,24 @@ class WorldPreviewCard extends StatelessWidget {
               ),
               const SizedBox(height: Space.md),
               Padding(
-                padding: const EdgeInsets.only(right: Space.sm),
-                child: Row(
+                padding: const EdgeInsets.only(right: Space.md),
+                // The button drops under the distance when both cannot
+                // share a line (large text, a narrow screen).
+                child: Wrap(
+                  spacing: Space.sm,
+                  runSpacing: Space.sm,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Flexible(
-                      child: InfoChip(
-                        icon: fromUserLocation
-                            ? Icons.near_me_outlined
-                            : Icons.place_outlined,
-                        label: fromUserLocation
-                            ? '$distance away'
-                            : '$distance from the map centre',
-                        color: colors.accent,
-                        background: colors.accent.withValues(alpha: 0.12),
-                      ),
+                    InfoChip(
+                      icon: fromUserLocation
+                          ? Icons.near_me_outlined
+                          : Icons.place_outlined,
+                      label: fromUserLocation
+                          ? '$distance away'
+                          : '$distance from the map centre',
+                      color: colors.accentText,
+                      background: colors.accent.withValues(alpha: 0.12),
                     ),
-                    const SizedBox(width: Space.sm),
                     FilledButton(
                       onPressed: onOpen,
                       style: FilledButton.styleFrom(

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:worlds/app/app.dart';
+import 'package:worlds/core/analytics/analytics_providers.dart';
 import 'package:worlds/core/location/location_providers.dart';
 import 'package:worlds/core/maps/map_adapter.dart';
 import 'package:worlds/core/maps/map_providers.dart';
@@ -17,6 +18,7 @@ import 'package:worlds/features/saved/application/saved_providers.dart';
 import 'package:worlds/features/worlds/application/world_providers.dart';
 import 'package:worlds/shared/models/geo_point.dart';
 
+import 'analytics_fakes.dart';
 import 'community_fakes.dart';
 import 'creation_fakes.dart';
 import 'explore_fakes.dart';
@@ -41,6 +43,7 @@ Future<void> pumpWorldsApp(
   FakeWorldPlayRepository? play,
   FakeSavedWorldsRepository? saved,
   FakeReportRepository? reports,
+  FakeProductEventSink? events,
   GeoPoint? exploreDefaultCenter,
   List<Override> extraOverrides = const [],
 
@@ -63,6 +66,9 @@ Future<void> pumpWorldsApp(
         ),
         reportRepositoryProvider.overrideWithValue(
           reports ?? FakeReportRepository(),
+        ),
+        productEventSinkProvider.overrideWithValue(
+          events ?? FakeProductEventSink(),
         ),
         worldRepositoryProvider.overrideWithValue(
           worlds ?? FakeWorldRepository(),

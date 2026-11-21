@@ -4,6 +4,7 @@ import 'package:worlds/core/widgets/empty_view.dart';
 import 'package:worlds/features/world_creation/application/world_editor_controller.dart';
 import 'package:worlds/features/worlds/domain/content_block.dart';
 import 'package:worlds/features/worlds/presentation/blocks/block_view.dart';
+import 'package:worlds/shared/components/motion.dart';
 
 /// Walks through the draft one part at a time, the way an explorer will,
 /// following choices to their destinations. Answers are not checked here:
@@ -72,13 +73,11 @@ class _WorldPreviewScreenState extends ConsumerState<WorldPreviewScreen> {
               title: 'Nothing to preview yet',
               message: 'Add some content first.',
             )
-          : AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              // Each part fills the screen from the top, like a page.
-              layoutBuilder: (current, previous) => Stack(
-                fit: StackFit.expand,
-                children: [...previous, ?current],
-              ),
+          // Each part fills the screen from the top, like a page, and
+          // turns the way it does for an explorer.
+          : StateSwitcher(
+              from: const Offset(0.06, 0),
+              to: const Offset(-0.06, 0),
               child: SingleChildScrollView(
                 key: ValueKey(_path.length),
                 padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),

@@ -9,6 +9,7 @@ import 'package:worlds/core/widgets/error_view.dart';
 import 'package:worlds/core/widgets/loading_view.dart';
 import 'package:worlds/features/profile/application/profile_providers.dart';
 import 'package:worlds/features/profile/presentation/profile_worlds.dart';
+import 'package:worlds/shared/components/motion.dart';
 
 /// The public page of a creator: who they are and the Worlds they have
 /// published. Nothing here is private; activity counts stay with their
@@ -32,30 +33,40 @@ class CreatorScreen extends ConsumerWidget {
         ),
         title: Text('@$username'),
       ),
-      body: switch (state) {
-        AsyncData(:final value) => _CreatorPage(
-          username: username,
-          state: value,
-        ),
-        AsyncError(:final error) =>
-          error is NotFoundFailure
-              ? const EmptyView(
-                  icon: Icons.person_off_outlined,
-                  title: 'No one has this username',
-                  message: 'They may have changed it.',
-                )
-              : ErrorView(
-                  message: messageForError(error),
-                  onRetry: () => ref.invalidate(profilePageProvider(username)),
-                ),
-        _ => const LoadingView(label: 'Loading profile'),
-      },
+      // Loading fades into the page, or into what there is instead.
+      body: StateSwitcher(
+        child: switch (state) {
+          AsyncData(:final value) => _CreatorPage(
+            key: const ValueKey('page'),
+            username: username,
+            state: value,
+          ),
+          AsyncError(:final error) =>
+            error is NotFoundFailure
+                ? const EmptyView(
+                    key: ValueKey('missing'),
+                    icon: Icons.person_off_outlined,
+                    title: 'No one has this username',
+                    message: 'They may have changed it.',
+                  )
+                : ErrorView(
+                    key: const ValueKey('error'),
+                    message: messageForError(error),
+                    onRetry: () =>
+                        ref.invalidate(profilePageProvider(username)),
+                  ),
+          _ => const LoadingView(
+            key: ValueKey('loading'),
+            label: 'Loading profile',
+          ),
+        },
+      ),
     );
   }
 }
 
 class _CreatorPage extends StatelessWidget {
-  const _CreatorPage({required this.username, required this.state});
+  const _CreatorPage({required this.username, required this.state, super.key});
 
   final String username;
   final ProfilePageState state;

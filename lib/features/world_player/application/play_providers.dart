@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:worlds/core/analytics/analytics_providers.dart';
+import 'package:worlds/core/analytics/product_analytics.dart';
 import 'package:worlds/core/errors/app_failure.dart';
 import 'package:worlds/core/location/location_providers.dart';
 import 'package:worlds/core/location/location_service.dart';
@@ -93,10 +95,16 @@ class UnlockController extends Notifier<UnlockState> {
       if (ref.mounted) state = next;
     }
 
+    // How the attempt ended, for the pilot funnel: no distance, no accuracy.
+    final analytics = ref.read(productAnalyticsProvider);
+    void ended(UnlockOutcome outcome) =>
+        analytics.unlockAttempted(worldId, outcome);
+
     set(const UnlockState(phase: UnlockPhase.locating));
     final LocationFix fix;
     try {
       if (!await location.isServiceEnabled()) {
+        ended(UnlockOutcome.noLocation);
         return set(const UnlockState(phase: UnlockPhase.serviceDisabled));
       }
       var permission = await location.checkPermission();
@@ -105,18 +113,22 @@ class UnlockController extends Notifier<UnlockState> {
       }
       switch (permission) {
         case LocationPermissionStatus.denied:
+          ended(UnlockOutcome.noLocation);
           return set(const UnlockState(phase: UnlockPhase.denied));
         case LocationPermissionStatus.deniedForever:
+          ended(UnlockOutcome.noLocation);
           return set(const UnlockState(phase: UnlockPhase.deniedForever));
         case LocationPermissionStatus.granted:
           break;
       }
       fix = await location.currentFix(timeLimit: locationTimeout);
     } on Object {
+      ended(UnlockOutcome.noLocation);
       return set(const UnlockState(phase: UnlockPhase.unavailable));
     }
 
     if (fix.accuracyMeters > maxAccuracyMeters) {
+      ended(UnlockOutcome.inaccurate);
       return set(
         UnlockState(
           phase: UnlockPhase.inaccurate,
@@ -132,9 +144,11 @@ class UnlockController extends Notifier<UnlockState> {
           .unlock(worldId, fix);
       switch (result) {
         case Unlocked():
+          ended(UnlockOutcome.unlocked);
           set(const UnlockState(phase: UnlockPhase.unlocked));
           ref.invalidate(worldDetailsProvider);
         case TooFar(:final distanceMeters, :final radiusMeters):
+          ended(UnlockOutcome.tooFar);
           set(
             UnlockState(
               phase: UnlockPhase.tooFar,
@@ -143,6 +157,7 @@ class UnlockController extends Notifier<UnlockState> {
             ),
           );
         case Inaccurate(:final accuracyMeters):
+          ended(UnlockOutcome.inaccurate);
           set(
             UnlockState(
               phase: UnlockPhase.inaccurate,
@@ -151,6 +166,7 @@ class UnlockController extends Notifier<UnlockState> {
           );
       }
     } on Object catch (error) {
+      ended(UnlockOutcome.failed);
       set(
         UnlockState(
           phase: UnlockPhase.failed,

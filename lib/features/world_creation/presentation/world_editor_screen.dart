@@ -309,43 +309,53 @@ class _StepBar extends ConsumerWidget {
     final colors = AppColors.of(context);
     final theme = Theme.of(context);
 
+    // At large text sizes five names cannot share one line, so each segment
+    // shows its number and the current step is named in full underneath.
+    final numbersOnly = hasLargeText(context);
+    String name(int index, EditorStep item) => '${index + 1}. ${item.label}';
+
     // A segmented progress bar: done and current steps are filled. Each
     // segment is a button, so steps can be revisited in any order.
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(Space.md, 0, Space.md, Space.sm),
-      child: Row(
-        children: [
-          for (final (index, item) in EditorStep.values.indexed)
-            Expanded(
-              child: Semantics(
-                button: true,
-                selected: item == step,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(Radii.sm),
-                  onTap: hasDraft || item == EditorStep.category
-                      ? () => ref.read(provider.notifier).goTo(item)
-                      : null,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 3,
-                      vertical: Space.sm,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          height: 5,
-                          decoration: BoxDecoration(
-                            color: index <= step.index
-                                ? colors.primary
-                                : colors.outline,
-                            borderRadius: BorderRadius.circular(3),
-                          ),
+    final segments = Row(
+      children: [
+        for (final (index, item) in EditorStep.values.indexed)
+          Expanded(
+            child: Semantics(
+              button: true,
+              selected: item == step,
+              label: numbersOnly ? name(index, item) : null,
+              child: InkWell(
+                key: ValueKey('step-${item.name}'),
+                borderRadius: BorderRadius.circular(Radii.sm),
+                onTap: hasDraft || item == EditorStep.category
+                    ? () => ref.read(provider.notifier).goTo(item)
+                    : null,
+                // Each step is a button: at least 48 dp tall to touch.
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 48),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 3,
+                    vertical: Space.sm,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AnimatedContainer(
+                        duration: Motion.of(context, Motion.quick),
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: index <= step.index
+                              ? colors.primary
+                              : colors.outline,
+                          borderRadius: BorderRadius.circular(3),
                         ),
-                        const SizedBox(height: 6),
-                        Text(
-                          '${index + 1}. ${item.label}',
+                      ),
+                      const SizedBox(height: 6),
+                      ExcludeSemantics(
+                        excluding: numbersOnly,
+                        child: Text(
+                          numbersOnly ? '${index + 1}' : name(index, item),
                           maxLines: 1,
                           overflow: TextOverflow.fade,
                           softWrap: false,
@@ -356,14 +366,37 @@ class _StepBar extends ConsumerWidget {
                                 : FontWeight.w500,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
-        ],
-      ),
+          ),
+      ],
+    );
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(Space.md, 0, Space.md, Space.sm),
+      child: numbersOnly
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                segments,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 3),
+                  child: Text(
+                    'Step ${step.index + 1} of ${EditorStep.values.length}: '
+                    '${step.label}',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: colors.ink,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : segments,
     );
   }
 }

@@ -12,6 +12,7 @@ import 'package:worlds/features/auth/presentation/sign_in_prompt.dart';
 import 'package:worlds/features/saved/application/saved_providers.dart';
 import 'package:worlds/features/saved/domain/saved_world.dart';
 import 'package:worlds/features/worlds/presentation/world_tile.dart';
+import 'package:worlds/shared/components/motion.dart';
 
 /// The Saved tab: the Worlds the signed-in user bookmarked. The list is
 /// private to the account.
@@ -41,23 +42,36 @@ class _SavedList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Loading fades into the list, or into what there is instead of one.
+    return StateSwitcher(child: _stage(context, ref));
+  }
+
+  Widget _stage(BuildContext context, WidgetRef ref) {
     final state = ref.watch(savedListControllerProvider);
     final controller = ref.read(savedListControllerProvider.notifier);
 
     if (state.items.isEmpty) {
       if (state.loading) {
-        return const LoadingView(label: 'Loading saved Worlds');
+        return const LoadingView(
+          key: ValueKey('loading'),
+          label: 'Loading saved Worlds',
+        );
       }
       if (state.failure case final failure?) {
         return ErrorView(
+          key: const ValueKey('error'),
           message: failure.userMessage,
           onRetry: controller.load,
         );
       }
-      return _NothingSaved(unavailable: state.unavailable);
+      return _NothingSaved(
+        key: const ValueKey('empty'),
+        unavailable: state.unavailable,
+      );
     }
 
     return RefreshIndicator(
+      key: const ValueKey('list'),
       onRefresh: controller.load,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(
@@ -125,7 +139,7 @@ class _SavedTile extends ConsumerWidget {
 
 /// The empty state: what Saved is for, and the way back to the map.
 class _NothingSaved extends StatelessWidget {
-  const _NothingSaved({required this.unavailable});
+  const _NothingSaved({required this.unavailable, super.key});
 
   final int unavailable;
 

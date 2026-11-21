@@ -68,6 +68,8 @@ class _DetailsStepState extends ConsumerState<DetailsStep> {
           decoration: const InputDecoration(
             labelText: 'Description',
             helperText: 'What will people find? Needed before publishing.',
+            // Two lines: on a 360 dp phone one line cut it short.
+            helperMaxLines: 2,
             alignLabelWithHint: true,
             border: OutlineInputBorder(),
           ),

@@ -19,6 +19,7 @@ import 'package:worlds/features/worlds/presentation/world_cover.dart';
 import 'package:worlds/shared/components/category_style.dart';
 import 'package:worlds/shared/components/design.dart';
 import 'package:worlds/shared/models/geo_point.dart';
+import 'package:worlds/shared/components/motion.dart';
 
 /// Everything a visitor may know about a World before playing it.
 ///
@@ -36,32 +37,40 @@ class WorldDetailsScreen extends ConsumerWidget {
     final request = (worldId: worldId, from: from);
     final details = ref.watch(worldDetailsProvider(request));
 
-    return switch (details) {
-      AsyncData(:final value) => _DetailsView(world: value),
-      AsyncError(:final error) => Scaffold(
-        appBar: AppBar(),
-        body: error is NotFoundFailure
-            ? const EmptyView(
-                icon: Icons.travel_explore,
-                title: "This World isn't available",
-                message:
-                    'It may have been unpublished or removed by its creator.',
-              )
-            : ErrorView(
-                message: messageForError(error),
-                onRetry: () => ref.invalidate(worldDetailsProvider(request)),
-              ),
-      ),
-      _ => Scaffold(
-        appBar: AppBar(),
-        body: const LoadingView(label: 'Loading World'),
-      ),
-    };
+    // Loading fades into the World, or into what went wrong.
+    return StateSwitcher(
+      child: switch (details) {
+        AsyncData(:final value) => _DetailsView(
+          key: const ValueKey('details'),
+          world: value,
+        ),
+        AsyncError(:final error) => Scaffold(
+          key: const ValueKey('unavailable'),
+          appBar: AppBar(),
+          body: error is NotFoundFailure
+              ? const EmptyView(
+                  icon: Icons.travel_explore,
+                  title: "This World isn't available",
+                  message:
+                      'It may have been unpublished or removed by its creator.',
+                )
+              : ErrorView(
+                  message: messageForError(error),
+                  onRetry: () => ref.invalidate(worldDetailsProvider(request)),
+                ),
+        ),
+        _ => Scaffold(
+          key: const ValueKey('loading'),
+          appBar: AppBar(),
+          body: const LoadingView(label: 'Loading World'),
+        ),
+      },
+    );
   }
 }
 
 class _DetailsView extends StatelessWidget {
-  const _DetailsView({required this.world});
+  const _DetailsView({required this.world, super.key});
 
   final WorldDetails world;
 
@@ -79,29 +88,29 @@ class _DetailsView extends StatelessWidget {
             pinned: true,
             expandedHeight: 300,
             backgroundColor: colors.canvas,
-            leading: Padding(
-              padding: const EdgeInsets.all(Space.sm),
-              child: Material(
-                color: colors.surface.withValues(alpha: 0.92),
-                shape: const CircleBorder(),
-                child: IconButton(
-                  tooltip: 'Back',
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => context.canPop()
-                      ? context.pop()
-                      : context.go(AppRoutes.explore),
+            // The round buttons over the cover are 40 dp to look at and
+            // 48 dp to touch: the button draws its own disc and keeps the
+            // touch area round it.
+            leading: Center(
+              child: IconButton(
+                tooltip: 'Back',
+                style: IconButton.styleFrom(
+                  backgroundColor: colors.surface.withValues(alpha: 0.92),
                 ),
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.canPop()
+                    ? context.pop()
+                    : context.go(AppRoutes.explore),
               ),
             ),
             actions: [
               if (world.lifecycle == WorldLifecycle.published &&
                   !world.isCreator)
                 Padding(
-                  padding: const EdgeInsets.all(Space.sm),
-                  child: Material(
-                    color: colors.surface.withValues(alpha: 0.92),
-                    shape: const CircleBorder(),
-                    child: _MoreMenu(world: world),
+                  padding: const EdgeInsets.only(right: Space.xs),
+                  child: _MoreMenu(
+                    world: world,
+                    background: colors.surface.withValues(alpha: 0.92),
                   ),
                 ),
             ],
@@ -224,7 +233,7 @@ class _DetailsView extends StatelessWidget {
                         InfoChip(
                           icon: Icons.near_me_outlined,
                           label: '${formatDistance(distance)} away',
-                          color: colors.accent,
+                          color: colors.accentText,
                           background: colors.accent.withValues(alpha: 0.12),
                         ),
                       InfoChip(
@@ -269,12 +278,12 @@ class _CategoryLabel extends StatelessWidget {
     final theme = Theme.of(context);
     return Row(
       children: [
-        CategoryBadge(category: world.category, size: 28),
+        CategoryBadge(category: world.category, size: 28, named: false),
         const SizedBox(width: Space.sm),
         Text(
           world.category.label,
           style: theme.textTheme.labelLarge?.copyWith(
-            color: world.category.color,
+            color: world.category.textOn(theme.brightness),
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -426,34 +435,45 @@ class _SaveButton extends ConsumerWidget {
 
     // Saved shows as a soft filled button, not saved as an outline: two
     // shapes as well as two icons, so the state does not rest on colour.
-    return saved
-        ? IconButton.filledTonal(
-            tooltip: 'Remove from saved',
-            iconSize: 24,
-            padding: const EdgeInsets.all(Space.md),
-            icon: const Icon(Icons.bookmark),
-            onPressed: toggle,
-          )
-        : IconButton.outlined(
-            tooltip: 'Save for later',
-            iconSize: 24,
-            padding: const EdgeInsets.all(Space.md),
-            icon: const Icon(Icons.bookmark_outline),
-            onPressed: toggle,
-          );
+    // One fades into the other.
+    return StateSwitcher(
+      fill: false,
+      alignment: Alignment.center,
+      child: saved
+          ? IconButton.filledTonal(
+              key: const ValueKey('saved'),
+              tooltip: 'Remove from saved',
+              iconSize: 24,
+              padding: const EdgeInsets.all(Space.md),
+              icon: const Icon(Icons.bookmark),
+              onPressed: toggle,
+            )
+          : IconButton.outlined(
+              key: const ValueKey('not-saved'),
+              tooltip: 'Save for later',
+              iconSize: 24,
+              padding: const EdgeInsets.all(Space.md),
+              icon: const Icon(Icons.bookmark_outline),
+              onPressed: toggle,
+            ),
+    );
   }
 }
 
 /// The lesser actions on a published World made by someone else.
 class _MoreMenu extends ConsumerWidget {
-  const _MoreMenu({required this.world});
+  const _MoreMenu({required this.world, required this.background});
 
   final WorldDetails world;
+
+  /// The disc behind the icon, so it shows on any cover.
+  final Color background;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return PopupMenuButton<void>(
       tooltip: 'More',
+      style: IconButton.styleFrom(backgroundColor: background),
       icon: const Icon(Icons.more_vert),
       itemBuilder: (context) => [
         PopupMenuItem<void>(

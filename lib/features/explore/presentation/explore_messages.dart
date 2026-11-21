@@ -3,6 +3,8 @@ import 'package:worlds/app/theme/app_tokens.dart';
 import 'package:worlds/core/errors/app_failure.dart';
 import 'package:worlds/features/explore/application/explore_controller.dart';
 import 'package:worlds/features/explore/application/explore_state.dart';
+import 'package:worlds/shared/components/design.dart';
+import 'package:worlds/shared/components/motion.dart';
 
 /// Short messages under the search bar: location problems, search errors,
 /// and what to do when there is nothing to show.
@@ -18,15 +20,31 @@ class ExploreMessages extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final messages = <Widget>[?_locationMessage(), ?_resultsMessage()];
-    if (messages.isEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-      child: Column(mainAxisSize: MainAxisSize.min, children: messages),
+    final location = _locationMessage();
+    final results = _resultsMessage();
+    // Messages fade in and out, and whatever is under them follows smoothly
+    // instead of jumping. A message that only rebuilds does not animate.
+    return AnimatedSize(
+      duration: Motion.of(context, Motion.standard),
+      curve: Motion.enter,
+      alignment: Alignment.topCenter,
+      child: StateSwitcher(
+        fill: false,
+        child: location == null && results == null
+            ? const SizedBox(key: ValueKey('none'), width: double.infinity)
+            : Padding(
+                key: ValueKey('${location?.text}|${results?.text}'),
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [?location, ?results],
+                ),
+              ),
+      ),
     );
   }
 
-  Widget? _locationMessage() => switch (state.locationStatus) {
+  _MessageBanner? _locationMessage() => switch (state.locationStatus) {
     LocationStatus.denied => _MessageBanner(
       icon: Icons.location_disabled,
       text:
@@ -61,7 +79,7 @@ class ExploreMessages extends StatelessWidget {
     LocationStatus.located => null,
   };
 
-  Widget? _resultsMessage() {
+  _MessageBanner? _resultsMessage() {
     final error = state.error;
     if (error != null) {
       return _MessageBanner(
@@ -113,6 +131,11 @@ class _MessageBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final accent = isError ? colors.danger : colors.primary;
+    final action = actionLabel != null && onAction != null
+        ? TextButton(onPressed: onAction, child: Text(actionLabel!))
+        : null;
+    // At large text sizes the button goes under the message, not beside it.
+    final actionBelow = action != null && hasLargeText(context);
     return Semantics(
       liveRegion: true,
       child: Padding(
@@ -129,33 +152,39 @@ class _MessageBanner extends StatelessWidget {
               Space.xs,
               Space.sm,
             ),
-            child: Row(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(Space.sm),
-                  decoration: BoxDecoration(
-                    color: isError ? colors.dangerSoft : colors.primarySoft,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(icon, size: 20, color: accent),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(Space.sm),
+                      decoration: BoxDecoration(
+                        color: isError ? colors.dangerSoft : colors.primarySoft,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(icon, size: 20, color: accent),
+                    ),
+                    const SizedBox(width: Space.md),
+                    Expanded(
+                      child: Text(
+                        text,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.copyWith(color: colors.ink),
+                      ),
+                    ),
+                    if (action != null && !actionBelow) action,
+                    if (onDismiss != null)
+                      IconButton(
+                        tooltip: 'Dismiss',
+                        icon: Icon(Icons.close, color: colors.muted),
+                        onPressed: onDismiss,
+                      ),
+                  ],
                 ),
-                const SizedBox(width: Space.md),
-                Expanded(
-                  child: Text(
-                    text,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: colors.ink),
-                  ),
-                ),
-                if (actionLabel != null && onAction != null)
-                  TextButton(onPressed: onAction, child: Text(actionLabel!)),
-                if (onDismiss != null)
-                  IconButton(
-                    tooltip: 'Dismiss',
-                    icon: Icon(Icons.close, color: colors.muted),
-                    onPressed: onDismiss,
-                  ),
+                if (action != null && actionBelow) action,
               ],
             ),
           ),

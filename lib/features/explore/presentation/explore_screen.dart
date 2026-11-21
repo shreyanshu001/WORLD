@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:worlds/core/analytics/analytics_providers.dart';
 import 'package:go_router/go_router.dart';
 import 'package:worlds/app/router/app_routes.dart';
 import 'package:worlds/app/theme/app_tokens.dart';
@@ -15,6 +16,7 @@ import 'package:worlds/features/explore/presentation/world_preview_card.dart';
 import 'package:worlds/shared/components/category_style.dart';
 import 'package:worlds/shared/models/geo_point.dart';
 import 'package:worlds/shared/models/world_category.dart';
+import 'package:worlds/shared/components/motion.dart';
 
 /// The Explore tab: a map of nearby published Worlds, with search, category
 /// filters and a list view that works even if the map does not.
@@ -41,6 +43,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    ref.read(productAnalyticsProvider).exploreOpened();
     final center = ref.read(exploreControllerProvider).searchCenter;
     _initialCamera = center == null
         ? ExploreScreen.worldViewCamera
@@ -95,11 +98,24 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
               child: Column(
                 children: [
                   _TopBar(state: state, controller: controller),
-                  ExploreMessages(state: state, controller: controller),
-                  if (!showingMap)
+                  // Over the map, messages scroll if they cannot all fit
+                  // (large text, a small screen). They take only the room
+                  // they need, so the map under them stays reachable.
+                  if (showingMap)
+                    Flexible(
+                      child: SingleChildScrollView(
+                        child: ExploreMessages(
+                          state: state,
+                          controller: controller,
+                        ),
+                      ),
+                    )
+                  else ...[
+                    ExploreMessages(state: state, controller: controller),
                     Expanded(
                       child: WorldList(state: state, controller: controller),
                     ),
+                  ],
                 ],
               ),
             ),
@@ -349,7 +365,11 @@ class _CategoryChips extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: ChoiceChip(
-                avatar: Icon(category.icon, size: 18, color: category.color),
+                avatar: Icon(
+                  category.icon,
+                  size: 18,
+                  color: category.foregroundOn(Theme.of(context).brightness),
+                ),
                 label: Text(category.label),
                 selected: selected == category,
                 elevation: elevation,
@@ -413,19 +433,32 @@ class _MapPane extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (selected != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-                  child: WorldPreviewCard(
-                    world: selected,
-                    fromUserLocation: state.centerIsUserLocation,
-                    onClose: () => controller.selectWorld(null),
-                    onOpen: () => context.push(
-                      AppRoutes.worldDetails(selected.id),
-                      extra: state.userLocation,
-                    ),
-                  ),
-                ),
+              // The card rises into place when a World is selected and
+              // fades from one World to the next. Only the card moves: the
+              // map under it is never animated.
+              StateSwitcher(
+                fill: false,
+                alignment: Alignment.bottomCenter,
+                from: const Offset(0, 0.12),
+                child: selected == null
+                    ? const SizedBox(
+                        key: ValueKey('no-preview'),
+                        width: double.infinity,
+                      )
+                    : Padding(
+                        key: ValueKey('preview-${selected.id}'),
+                        padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                        child: WorldPreviewCard(
+                          world: selected,
+                          fromUserLocation: state.centerIsUserLocation,
+                          onClose: () => controller.selectWorld(null),
+                          onOpen: () => context.push(
+                            AppRoutes.worldDetails(selected.id),
+                            extra: state.userLocation,
+                          ),
+                        ),
+                      ),
+              ),
               _MapAttribution(text: attribution),
             ],
           ),

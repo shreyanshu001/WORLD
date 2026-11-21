@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:worlds/core/analytics/analytics_providers.dart';
 import 'package:worlds/core/errors/app_failure.dart';
 import 'package:worlds/core/location/location_providers.dart';
 import 'package:worlds/core/location/location_service.dart';
@@ -116,6 +117,9 @@ class ExploreController extends Notifier<ExploreState> {
   }
 
   void selectWorld(String? worldId) {
+    if (worldId != null && worldId != state.selectedWorldId) {
+      ref.read(productAnalyticsProvider).worldSelected();
+    }
     state = state.copyWith(selectedWorldId: worldId);
   }
 
@@ -123,6 +127,9 @@ class ExploreController extends Notifier<ExploreState> {
   void showWorldOnMap(String worldId) {
     final world = state.worlds.where((w) => w.id == worldId).firstOrNull;
     if (world == null) return;
+    if (worldId != state.selectedWorldId) {
+      ref.read(productAnalyticsProvider).worldSelected();
+    }
     state = state.copyWith(
       selectedWorldId: worldId,
       view: ExploreView.map,

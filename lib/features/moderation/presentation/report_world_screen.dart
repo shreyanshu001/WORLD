@@ -7,6 +7,7 @@ import 'package:worlds/core/errors/app_failure.dart';
 import 'package:worlds/features/moderation/application/report_providers.dart';
 import 'package:worlds/features/moderation/domain/report.dart';
 import 'package:worlds/shared/components/design.dart';
+import 'package:worlds/shared/components/motion.dart';
 
 /// Reports a World to moderators: a reason, optional details, and a plain
 /// confirmation. The creator is never told who reported.
@@ -206,10 +207,12 @@ class _Sent extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(
-                  already ? Icons.hourglass_top : Icons.check_circle_outline,
-                  size: 56,
-                  color: colors.success,
+                PopIn(
+                  child: Icon(
+                    already ? Icons.hourglass_top : Icons.check_circle_outline,
+                    size: 56,
+                    color: colors.success,
+                  ),
                 ),
                 const SizedBox(height: Space.lg),
                 Text(

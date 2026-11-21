@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:worlds/core/maps/map_adapter.dart';
@@ -53,69 +55,77 @@ class _PlaceStepState extends ConsumerState<PlaceStep> {
     if (draft == null) return const SizedBox.shrink();
     final location = draft.location;
 
-    return Column(
-      children: [
-        Expanded(
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: mapAdapter.buildMap(
-                  MapViewConfig(
-                    initialCamera: _initialCamera,
-                    markers: const [],
-                    onMarkerTapped: (_) {},
-                    onUserCameraIdle: ref
-                        .read(provider.notifier)
-                        .onPickerCameraIdle,
-                    cameraRequest: cameraRequest,
-                    areas: [
-                      if (location != null)
-                        MapArea(
-                          center: location,
-                          radiusMeters: draft.unlockRadiusMeters.toDouble(),
-                          colorHex: draft.category.colorHex,
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-              // The tip of the pin marks the centre of the map.
-              IgnorePointer(
-                child: Center(
-                  child: Transform.translate(
-                    offset: const Offset(0, -22),
-                    child: Icon(
-                      Icons.place,
-                      size: 44,
-                      color: draft.category.color,
-                      semanticLabel: 'World location: the centre of the map',
+    // The map keeps at least 200 dp however large the text is; the controls
+    // scroll in what is left. On a phone at 200% text it had shrunk to a
+    // strip too thin to see the pin in.
+    return LayoutBuilder(
+      builder: (context, box) {
+        final controlsMaxHeight = math.max(
+          120.0,
+          math.min(
+            MediaQuery.sizeOf(context).height * 0.45,
+            box.maxHeight - 200,
+          ),
+        );
+        return Column(
+          children: [
+            Expanded(
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: mapAdapter.buildMap(
+                      MapViewConfig(
+                        initialCamera: _initialCamera,
+                        markers: const [],
+                        onMarkerTapped: (_) {},
+                        onUserCameraIdle: ref
+                            .read(provider.notifier)
+                            .onPickerCameraIdle,
+                        cameraRequest: cameraRequest,
+                        areas: [
+                          if (location != null)
+                            MapArea(
+                              center: location,
+                              radiusMeters: draft.unlockRadiusMeters.toDouble(),
+                              colorHex: draft.category.colorHex,
+                            ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
+                  // The tip of the pin marks the centre of the map.
+                  IgnorePointer(
+                    child: Center(
+                      child: Transform.translate(
+                        offset: const Offset(0, -22),
+                        child: Icon(
+                          Icons.place,
+                          size: 44,
+                          color: draft.category.color,
+                          semanticLabel:
+                              'World location: the centre of the map',
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: 4,
+                    bottom: 4,
+                    child: _Attribution(text: attribution),
+                  ),
+                ],
               ),
-              Positioned(
-                top: 8,
-                right: 8,
-                child: _UseMyLocationButton(args: widget.args),
+            ),
+            ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: controlsMaxHeight),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                child: _PlaceControls(args: widget.args),
               ),
-              Positioned(
-                left: 4,
-                bottom: 4,
-                child: _Attribution(text: attribution),
-              ),
-            ],
-          ),
-        ),
-        ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.sizeOf(context).height * 0.45,
-          ),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-            child: _PlaceControls(args: widget.args),
-          ),
-        ),
-      ],
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -192,6 +202,13 @@ class _PlaceControls extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Under the map, not on it: on a 360 dp phone the button covered
+        // the pin that marks the exact spot.
+        Align(
+          alignment: AlignmentDirectional.centerEnd,
+          child: _UseMyLocationButton(args: args),
+        ),
+        const SizedBox(height: 8),
         Row(
           children: [
             Icon(

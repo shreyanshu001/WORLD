@@ -10,6 +10,7 @@ import 'package:worlds/features/auth/presentation/sign_in_prompt.dart';
 import 'package:worlds/features/profile/application/profile_providers.dart';
 import 'package:worlds/features/profile/domain/profile.dart';
 import 'package:worlds/features/profile/presentation/profile_worlds.dart';
+import 'package:worlds/shared/components/motion.dart';
 
 /// The Profile tab: a sign-in prompt when signed out, otherwise the user's
 /// own profile.
@@ -41,19 +42,29 @@ class _OwnProfile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(ownProfileProvider);
 
-    return switch (profile) {
-      AsyncData(value: final profile?) => _ProfileDetails(profile: profile),
-      AsyncError(:final error) => ErrorView(
-        message: messageForError(error),
-        onRetry: () => ref.invalidate(ownProfileProvider),
-      ),
-      _ => const LoadingView(label: 'Loading profile'),
-    };
+    // Loading fades into the profile, or into what went wrong.
+    return StateSwitcher(
+      child: switch (profile) {
+        AsyncData(value: final profile?) => _ProfileDetails(
+          key: const ValueKey('profile'),
+          profile: profile,
+        ),
+        AsyncError(:final error) => ErrorView(
+          key: const ValueKey('error'),
+          message: messageForError(error),
+          onRetry: () => ref.invalidate(ownProfileProvider),
+        ),
+        _ => const LoadingView(
+          key: ValueKey('loading'),
+          label: 'Loading profile',
+        ),
+      },
+    );
   }
 }
 
 class _ProfileDetails extends ConsumerWidget {
-  const _ProfileDetails({required this.profile});
+  const _ProfileDetails({required this.profile, super.key});
 
   final Profile profile;
 

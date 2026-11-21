@@ -98,7 +98,7 @@ class _CategoryCard extends StatelessWidget {
       selected: selected,
       button: true,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+        duration: Motion.of(context, Motion.quick),
         decoration: BoxDecoration(
           color: selected
               ? Color.alphaBlend(
@@ -122,7 +122,7 @@ class _CategoryCard extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CategoryBadge(category: category, size: 56),
+                  CategoryBadge(category: category, size: 56, named: false),
                   const SizedBox(width: Space.lg),
                   Expanded(
                     child: Column(
@@ -131,7 +131,9 @@ class _CategoryCard extends StatelessWidget {
                         Text(
                           category.label,
                           style: theme.textTheme.titleLarge?.copyWith(
-                            color: selected ? category.color : colors.ink,
+                            color: selected
+                                ? category.textOn(theme.brightness)
+                                : colors.ink,
                           ),
                         ),
                         const SizedBox(height: Space.xs),
@@ -149,7 +151,10 @@ class _CategoryCard extends StatelessWidget {
                   ),
                   if (selected) ...[
                     const SizedBox(width: Space.sm),
-                    Icon(Icons.check_circle, color: category.color),
+                    Icon(
+                      Icons.check_circle,
+                      color: category.foregroundOn(theme.brightness),
+                    ),
                   ],
                 ],
               ),
