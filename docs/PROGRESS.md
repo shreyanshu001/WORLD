@@ -1,10 +1,10 @@
 # WORLDS — Implementation progress
 
 **Phase:** MVP implementation  
-**Current checkpoint:** 5 (Experience player) implemented on its branch and awaiting the owner's device check and approval. Checkpoint 4 (approved to start by the owner on 2026-11-20) is also awaiting its device check  
+**Current checkpoint:** 6 (Saved, profile and moderation) implemented on its branch and awaiting the owner's moderation and privacy review. Checkpoints 4 and 5 are still awaiting their device checks  
 **Product direction:** Approved  
 **Documentation handoff:** Core product, journey, UX and acceptance specifications published to GitHub  
-**App implementation:** Foundation, accounts and profiles, the Explore map, World details, the World creator, on-site unlocking and the World player. Saved Worlds, reporting and moderation are not built yet. The Checkpoint 4 and 5 database migrations are applied to the development project and verified. Checkpoints 4 and 5 are on their branches; `main` holds Checkpoints 0–3.
+**App implementation:** Foundation, accounts and profiles, the Explore map, World details, the World creator, on-site unlocking, the World player, saved Worlds, reporting, creator pages and profile counts. Moderation is done in the Supabase dashboard, not in the app. Share links are not built. The Checkpoint 4, 5 and 6 database migrations are applied to the development project and verified. Checkpoints 4 to 6 are on their branches; `main` holds Checkpoints 0–3.
 
 | Checkpoint | Status | Evidence |
 |---|---|---|
@@ -15,7 +15,7 @@
 | 3. Explore map | Implemented; real-device map check pending | See "Checkpoint 3 record" below |
 | 4. World details and creator | Implemented (4A–4G); migration applied and tested; two-account API check passed; owner device check pending | See "Checkpoint 4 record" below |
 | 5. Experience player | Implemented; migration applied and tested; account A to account B check passed through the app's own data layer; no device verification | See "Checkpoint 5 record" below |
-| 6. Saved/profile/moderation | Not started | — |
+| 6. Saved/profile/moderation | Implemented; migration applied; saving, reporting and profile pages checked against the real backend; moderation and privacy review pending; no device verification | See "Checkpoint 6 record" below |
 | 7. Beta and pilot | Not started | — |
 
 ## Current blockers
@@ -29,6 +29,9 @@
 - Schema changes through the Supabase connection: in Checkpoint 4 its approval prompt was declined by the editor, so the owner ran prepared files in the Supabase SQL editor. In Checkpoint 5 the connection ran single statements again (dry run, apply and tests all went through it); requests made of several statements were still refused. The prepared files are now one statement each (see `supabase/README.md`).
 - Checkpoint 4 has not been checked on a phone by the owner: the creator, place picker, photo picker and details screen are unseen on a real screen.
 - Checkpoint 5 has not run on a phone at all: unlocking with a real GPS reading, the permission prompt from the details screen and the player are untested on a device. No phone was attached on 2026-11-21.
+- Checkpoint 6 has not run on a phone, and no moderation action has been run for real: the moderation functions have only run inside rolled-back tests, and the runbook in `supabase/README.md` has not been followed by a person.
+- The Checkpoint 6 gate is the owner's moderation and privacy review. Five decisions taken for it are proposals (D-034 to D-038).
+- Checkpoints 4, 5 and 6 are not merged into `main`. The Checkpoint 6 branch `checkpoint-6-saved-profile-moderation` is local only.
 - Checkpoints 4 and 5 are not merged into `main` (their branches are on GitHub). `AGENTS.md` still describes the state before Checkpoint 4 under "Before coding" and "Current task"; a correction is proposed in the Checkpoint 5 report and left to the owner.
 - Gap G1 (unlisted Worlds by direct link) is still open; the creator does not offer "unlisted" (D-029).
 - The application ID is the placeholder `com.example.worlds`. It must be replaced before any release build.
@@ -354,6 +357,88 @@ None for Checkpoint 5. `adb devices` listed no device on 2026-11-21. The last bu
 
 ### Approval status
 Pending the owner's device check and approval. Checkpoint 6 has not been started.
+
+## Checkpoint 6 record
+
+- **Date:** 2026-11-21.
+- **Branch:** `checkpoint-6-saved-profile-moderation`, from `checkpoint-5-world-player` at `3081614`. Commits: `05b3158` (database), `3ac2386` (data layer, live check), `5011b0b` (screens and tests), `fd2df92` (renders), `07ef6a1` (bookmark style), `3002b62` (decisions, schema notes, runbook), plus this record. All local, not pushed.
+- **Started:** the owner wrote "pushed continue further" after the Checkpoint 5 report, having pushed that branch. The device checks of Checkpoints 4 and 5 and the decisions listed in that report were still open. Where the documents leave a choice, restrictive defaults were taken and recorded as proposals: D-034 (saved Worlds), D-035 (reports), D-036 (moderation in the dashboard only), D-037 (profile pages and counts), D-038 (no share links yet).
+- **Baseline before coding:** the Checkpoint 5 results at `3081614`, run earlier the same day: 147 files formatted with none changed, no analysis issues, 236 of 236 tests, live tests 2 of 2.
+
+### Database
+- `supabase/migrations/20261121060535_create_saved_reports_moderation.sql` (written as `20261121120000_…`, renamed to the version Supabase recorded):
+  - `saved_worlds` with `set_world_saved` and `get_saved_worlds`; `world_reports` with `report_world`; `private.moderation_actions` with `private.hide_world`, `restore_world`, `remove_world`, `dismiss_reports` and `moderation_queue`; `get_profile_page`; `get_world_details` now also returns `is_saved`. Details in `docs/DATABASE.md`.
+  - Row level security on the three new tables. Clients cannot write them. API roles cannot reach the moderation functions or the log at all.
+- `supabase/tests/community_test.sql`, 47 checks: grants and row level security; profile pages (exact field list, public and own views, paging, unknown username); saving (repeatable, drafts refused, order, distance, paging, privacy from other accounts and from the creator, an unpublished World counted and not listed, the 500 limit); reporting (reasons, length, drafts and own Worlds refused, a second report changing nothing, the moderation status unreadable, privacy, ten a day per account); moderation (the queue, a note required, hide, what a hide closes off, the creator unable to republish, delete or call moderation, restore, dismiss, remove, the log holding exactly the four actions).
+- **Applied on 2026-11-21 through the Supabase connection** (D-015):
+  - The first dry run was declined by the connection's confirmation step, which this editor answers "no" without showing it. Two small probes that could not change anything showed the cause: `delete` statements in the test's clean-up. The test was rewritten to need no clean-up (other fixtures instead), not disguised. The migration itself was not changed.
+  - Dry run, migration plus `community_test.sql` as one rolled-back statement: `WORLDS_ALL_TESTS_PASSED: community_test 47 checks`.
+  - Apply with `apply_migration`, name `create_saved_reports_moderation`: success. Recorded version `20261121060535`. The stored statement's md5 is `aab70225993b4124fdb08bf8bdac1ebb`, the same as the committed file (23,133 characters, one statement).
+  - **Not re-run after applying:** the five SQL test files. `community_test.sql` ran in the dry run against the identical migration text. The four older files were not run with this migration at all; the only thing it changes that they cover is `get_world_details`, whose earlier behaviour was exercised after applying by the live authoring and player checks (below) and whose new field is covered by `community_test.sql`. `.sql-to-run/3-tests-after-apply.sql` runs all five files in one paste in the SQL editor (expected: an error starting `WORLDS_ALL_TESTS_PASSED`, with 32, 36, 74, 52 and 47 checks).
+  - Read-only checks afterwards: row level security on the three tables; one read policy each on `saved_worlds` and `world_reports`; signed-in users may select only `id`, `world_id`, `reporter_id`, `reason`, `description` and `created_at` of `world_reports`; the saving and reporting functions callable by signed-in users only; `get_profile_page` and `get_world_details` callable signed out; the six moderation functions callable by no API role.
+  - Security advisor: INFO that the three private tables have no policies (intended: no client access); WARN that anyone can call `get_profile_page` and `get_world_details` and that signed-in users can call 18 `security definer` functions (intended: they are the API and check the caller themselves); WARN that leaked-password protection is off. Performance advisor: INFO on seven unused indexes; the WARN about two read policies on `world_assets` from Checkpoint 5, unchanged.
+
+### Against the real backend
+- `flutter test test_live/community_live_test.dart` passed right after applying, and again in the full `flutter test test_live` run at the end (3 of 3). It uses the app's own repositories as the two test accounts:
+  - B publishes a World. A sees it as not saved, saves it twice (one row), sees it saved in details and in the list with the creator and a distance of about 111 m.
+  - B, its creator, cannot see the save: neither through the app's repository nor by reading `saved_worlds` directly.
+  - A removes it. A reports it (details trimmed by the server); a second report says "already reported"; B cannot report their own World.
+  - A can read their own report but not its status; B can read no report of their World.
+  - A sees B's page with the World and without private counts; B sees their own counts; an unknown username is "not found".
+  - After B unpublishes, A can no longer save it.
+- The existing authoring and player live tests passed against the new schema (2 of 2).
+- Left behind, counted after the final run: 21 soft-deleted test Worlds in all (invisible to everyone), no saved rows, no files, an empty moderation log, and two pending reports by test account A of deleted `[e2e]` Worlds (one per run of the community test). The runbook says how to close such reports.
+- The daily limits apply to the test accounts too. Account A has created 19 Worlds in 24 hours (limit 20), so the authoring and player live tests cannot run again until the oldest of those is a day old, from about 10:50 UTC on 2026-11-21. A refusal with "too many attempts" there is the limit, not a regression.
+
+### App
+- **Saved tab** (`lib/features/saved`): the account's own list with cover or category panel, title, category, creator and, when the user has already shared a location on Explore, distance. Removing takes the World out at once and puts it back with a message if the server refuses. Twenty at a time with "Show more". Saved Worlds that are not published now are counted, not listed. Loading, empty (with "Explore the map"), error and retry states. The list and the saved flags are tied to the signed-in user and start again when another signs in.
+- **World details:** a bookmark that saves at once and goes back with a message on failure; signed out it leads to sign-in and back to the World. "Report this World" in a menu, only for Worlds made by someone else. The creator line opens the creator page. Back works wherever the page was opened.
+- **Report form** (`lib/features/moderation`): one of six reasons, optional details up to 500 characters with a counter, Send disabled until a reason is chosen, a confirmation that says the creator is not told who reported, and its own words for "already reported", the daily limit and a World that is gone. A failure shows beside the Send button and the form is kept.
+- **Creator page** (`/creators/<username>`): display name, username, bio, the number of published Worlds and the Worlds themselves, a page at a time. No activity counts.
+- **Own profile:** Published, Discovered and Completed as the server counts them, the published Worlds, and a line leading to Create when there are unpublished ones.
+- **Routes:** World details and creator pages also open as full pages above the tabs (`/worlds/<id>`, `/creators/<username>`), so Back returns to Saved or to the page they came from. `/report/<id>` needs an account.
+- No Share action and no unlisted Worlds (D-038). No moderator screens (D-036).
+
+### Tests and results (2026-11-21, after all changes)
+- `dart format --output=none --set-exit-if-changed .` — 169 files, 0 changed.
+- `flutter analyze` — no issues.
+- `flutter test --timeout 60s` — 271 of 271 passed (35 new). New tests cover: Saved signed out, empty, populated, opening details and coming back, removal and its rollback, paging, a failed load and retry, the unavailable count, and one account never seeing another's list; saving from details with rollback, a World saved earlier, the Saved tab following a save, and the sign-in round trip from a signed-out save; the report flow, a second report, the daily limit with the form kept, a failed send and retry, no report action for the creator, and sign-in when signed out; creator pages (public fields only, opening from a World and back, paging, unknown username, failed load, no Worlds); the own profile's counts, zeros and a failed load; the server field mappings; the redirects.
+- The first run of the new tests caught two layouts that overflowed with wide text (the report menu label and the profile counts row) and a report error shown out of sight at the end of a scrolling form. All three were fixed.
+- `flutter test test_live` — 3 of 3 passed (real backend).
+- `flutter test test_screens --update-goldens` — 12 of 12; seven new renders (Saved, details with a saved World, the report form and its confirmation, Saved when empty, the own profile, a creator page). Five were looked at: Saved, details, the report form, the own profile and a creator page. The report confirmation, the empty Saved state and the restyled bookmark were rendered but not viewed.
+- `flutter build apk --debug --dart-define-from-file=.env` — passed. Permissions unchanged: INTERNET, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE and AndroidX's app-internal `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. No background location.
+- Database: `community_test` 47 checks in the dry run, as above.
+
+### Acceptance criteria (docs/FEATURE_ACCEPTANCE_CRITERIA.md, section 8)
+| Criterion | Status | Evidence |
+| --- | --- | --- |
+| Save and remove persist; optimistic UI rolls back on failure | Met | SQL tests, live check, widget tests for both rollbacks |
+| Saved list private to the user and paginated | Met | Other accounts and the creator read nothing (SQL tests, live check); pages of 20; the account-switch widget test |
+| Profile shows real data only; counts backed by real queries | Met | Counts come from `worlds` and `world_progress`; zeros when there is nothing; private counts null for anyone else |
+| Creator's drafts and published Worlds separated | Met | The Create tab groups them (Checkpoint 4); the profile lists published Worlds and links to Create for the rest |
+| Report flow validates reason and details and rate limits | Met | Server checks and limits in SQL tests; the form's own limits and messages in widget tests |
+| Reporter identity and details not exposed to creator or public | Met | SQL tests and the live check, reading the table directly as the creator |
+| Trusted moderator role is server-controlled | Met by having no role in the app | Moderation runs only in the dashboard (D-036); API roles are refused (SQL tests). The owner has not confirmed this approach |
+| Hide or unpublish removes content from discovery promptly | Met in tests | After a hide: nearby search, details, play, saving, the saved list and the profile page all drop it in the same transaction. Not run against real data |
+| Moderation action auditable and not bypassable by the creator | Met in tests | One log row per action with who, why, before and after; a refused action changes nothing; the creator cannot republish, delete or call moderation |
+| Deletion and retention behaviour documented | Documented as implemented | `docs/DATABASE.md`. Retention periods and account deletion are undecided |
+
+### Manual device verification
+None. No phone was attached on 2026-11-21. The last build on the owner's phone is Checkpoint 4's.
+
+### Known issues
+- Nothing in this checkpoint has run on a phone, and large text and TalkBack are unchecked there.
+- No moderation action has been run on the development database outside rolled-back tests. The runbook should be tried once on a test World before the pilot.
+- The SQL test files were not re-run after applying, and the dry run did not include the older files (see Database).
+- A creator whose World is hidden sees "Hidden by moderation" and nothing else: no reason, no way to appeal. A reporter is never told the outcome.
+- Reports of a World that was deleted afterwards stay in the queue until dismissed, including one per run of the live test.
+- The Discovered count includes Worlds that were unlocked and have since been unpublished or removed.
+- The saved list reloads when a World is saved or removed in this app; a change made on another device shows after pulling to refresh or reopening.
+- No Share action, no unlisted Worlds, no account deletion, no retention periods, no product events (`world_saved`, `world_reported`); the last belongs to Checkpoint 7.
+- Open from earlier checkpoints: the device checks of Checkpoints 4 and 5, the proposed unlock thresholds (D-033), `world_visits` timestamps against the privacy document, the pilot area (D-021), the application ID, custom SMTP and email confirmation, leaked-password protection.
+
+### Approval status
+Pending the owner's moderation and privacy review. Checkpoint 7 has not been started.
 
 ## Update protocol
 For each checkpoint record date, commit SHA, summary, tests and results, manual device verification, known issues and approval status. Never mark a checkpoint complete without evidence.
