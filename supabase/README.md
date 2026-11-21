@@ -91,7 +91,7 @@ select * from private.pilot_summary();
 select * from private.pilot_worlds();
 ```
 
-- A launch is one start of the app, not one person, and cannot be matched to an account.
+- A launch is one start of the app, not one person. No account is stored with it, but a launch that unlocked a World can be matched to one by comparing times with `world_progress` (D-039).
 - The steps the app reports (Explore, selecting, details, unlock attempts) can be sent by anyone who has the app's public key, and stop being recorded after 20,000 events in 24 hours. A day whose numbers look wrong may have been flooded. The steps counted from other tables (started, completed, published, saved, reported) cannot be forged this way.
 - Runs of `test_live/product_events_live_test.dart` each add one launch with three events.
 

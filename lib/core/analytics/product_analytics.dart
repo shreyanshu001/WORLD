@@ -33,10 +33,11 @@ abstract interface class ProductEventSink {
 /// itself (docs/DECISIONS.md, D-039): that Explore was opened, a World
 /// selected on it, details opened and an unlock attempted.
 ///
-/// Its methods take no position, so none can be sent. Events are tied to a
-/// random id made when the app starts, never to the account, and that id is
-/// not stored. Nothing here waits or throws: analytics must never slow down
-/// or break what the user is doing.
+/// Its methods take no position, so none can be sent. Events carry a random
+/// id made when the app starts, not the account, and that id is never stored
+/// on the device. (The server can still work out the account for a launch
+/// that unlocked a World, by time: see D-039.) Nothing here waits or throws:
+/// analytics must never slow down or break what the user is doing.
 class ProductAnalytics {
   ProductAnalytics({required ProductEventSink sink, required this.sessionId})
     : _sink = sink;

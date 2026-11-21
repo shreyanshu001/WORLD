@@ -119,7 +119,7 @@ What the pilot measures that the other tables cannot show (docs/DECISIONS.md, D-
   - `private.pilot_summary()`: accounts, creators, creators with two or more published Worlds, explorers, explorers with a second World, explorers who finished one, published Worlds.
   - `private.pilot_worlds(first_day default 30 days ago)`: per World, details opened and unlock attempts.
 - Both tables have row level security with no policies and no grants to API roles.
-- A launch is one start of the app, not one person: the same person on two days is two launches, and the launch counts cannot be joined to accounts.
+- A launch is one start of the app, not one person: the same person on two days is two launches. No account is stored with an event. A launch that unlocked a World can still be matched to an account by time, because the unlock writes that account's `world_progress` row in the same second.
 
 ## Deletion and retention (as implemented, 2026-11-21)
 What happens today. No retention periods have been decided; that is an open owner decision before public launch.

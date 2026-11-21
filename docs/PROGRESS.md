@@ -448,7 +448,7 @@ Pending the owner's moderation and privacy review. Checkpoint 7 has not been sta
 ## Checkpoint 7 record
 
 - **Date:** 2026-11-21.
-- **Branch:** `checkpoint-7-pilot-readiness`, from `checkpoint-6-saved-profile-moderation` at `ea76409`. Commits: `495233f` (events migration), `514c774` (the four events in the app), `01d15a4` (migration applied, live check), `7858e89` and `4bb5890` (large text), `7410ec4`, `221056b` and `6a3be5f` (motion and its tests), `5d15c2b` (dark-theme contrast), and the commits with this record. The branch is on GitHub up to `5d15c2b`: the owner pushed it while the work was in progress. The agent pushed nothing.
+- **Branch:** `checkpoint-7-pilot-readiness`, from `checkpoint-6-saved-profile-moderation` at `ea76409`. Commits: `495233f` (events migration), `514c774` (the four events in the app), `01d15a4` (migration applied, live check), `7858e89` and `4bb5890` (large text), `7410ec4`, `221056b` and `6a3be5f` (motion and its tests), `5d15c2b` (dark-theme contrast), and the commits with this record. The owner pushed the branch to GitHub more than once while the work was in progress. The agent pushed nothing.
 - **What this checkpoint is, and is not:** it is the part of "Beta and pilot" that is code and records: measuring the funnel, layouts at large text, contrast, motion, what the app logs, and what the providers promise. The pilot itself needs phones, testers, a chosen area and 15 to 20 curated Worlds, and has not been run. Nothing here should be read as "the pilot is ready".
 - **Started:** the owner wrote "pushed continue further" after the Checkpoint 6 report, having pushed that branch, and merged it into `main` later the same day (pull request #8). The moderation and privacy review that report asked for was not given, and D-034 to D-038 were not answered. Restrictive defaults were taken again: D-039 (product events).
 - **Asked for during the checkpoint:** the owner wrote "use good animation and transition and smothness". Taken as approval of the Motion list in `docs/UI_UX_SPECIFICATION.md` and nothing more of that section (D-040).
@@ -465,9 +465,9 @@ Pending the owner's moderation and privacy review. Checkpoint 7 has not been sta
   - Security advisor: INFO that five private tables have no policies (the two new ones among them; intended, no client access); WARN that `log_event`, `get_profile_page` and `get_world_details` can be called signed out and that signed-in users can call 19 `security definer` functions (intended: they are the API and check the caller themselves); WARN that leaked-password protection is off. Performance advisor: INFO on six unused indexes (two of them new); the WARN about two read policies on `world_assets` from Checkpoint 5, unchanged.
 
 ### Against the real backend
-- `flutter test test_live/product_events_live_test.dart` — 1 of 1. Signed out, through the app's own sink: three events accepted; an unknown event and a free-text outcome refused; `product_events`, `world_event_counts` and `pilot_summary` unreachable through the API.
-- Left behind: three events under one launch id, no per-World totals. The server clears them after 90 days.
-- **Not run again:** the authoring and player live tests, because test account A has made 19 of its 20 Worlds for the day; they can run again from about 10:50 UTC on 2026-11-21. The community live test, because nothing it covers changed and each run leaves a pending report. The last full live run is Checkpoint 6's (3 of 3).
+- `flutter test test_live/product_events_live_test.dart` — 1 of 1, twice: after applying, and in the final verification at 10:06 UTC. Signed out, through the app's own sink: three events accepted; an unknown event and a free-text outcome refused; `product_events`, `world_event_counts` and `pilot_summary` unreachable through the API.
+- Left behind: three events per run, each run under a launch id of its own; no per-World totals. The server clears them after 90 days.
+- **The other live tests** (authoring, player, community) could not run during the work: test account A had made 19 of its 20 Worlds for the day, and the limit reopens at about 10:50 UTC on 2026-11-21. The final verification finished at 10:12 UTC. A full `flutter test test_live` run was set to start at 10:52 UTC; see "Full live run" below for its result. Until that line is filled in, the last full live run is Checkpoint 6's (3 of 3).
 
 ### App
 - **Product events** (`lib/core/analytics`, `lib/core/network/supabase_product_event_sink.dart`): Explore opened (once per launch), a World selected, details opened (once per World per launch, and not the creator's own), an unlock attempted with how it ended. The methods take no position, so none can be sent, and an architecture test keeps position-holding code out of these files. Sending never waits and never throws.
@@ -479,7 +479,7 @@ Pending the owner's moderation and privacy review. Checkpoint 7 has not been sta
   - The editor's five step names were cut off (not an overflow, so the test could not see it). Above 130% the bar shows numbers with "Step 4 of 5: Content" underneath; each segment keeps its full name for screen readers.
   - Nothing changes at ordinary sizes. The test proves no overflow and that every screen can be reached and used; it cannot see text that is merely cut short, and it uses the test font, which is wider than the phone's.
 - **Contrast** (D-041): every colour pair measured. In the dark theme category names and icons were unreadable (Story 2.3:1) and now use the shade the badge already used (6.0:1 or better), with `test/shared/category_contrast_test.dart`. Three light-theme values fall slightly short and are left for the owner with proposed values.
-- **Motion** (D-040, `lib/shared/components/motion.dart`, `Motion` in `lib/app/theme/app_tokens.dart`): the preview card rises into place; Explore messages fade and their space eases; the player turns parts forward, grows its progress bar and marks a correct answer and a finished World once; going live and a sent report are marked once; World details, Saved, Create, Profile and creator pages fade from loading into content; the unlock panel eases between answers; the save button fades between its two shapes. All of it takes its duration from one place and takes none when the device is set to remove animations. The map, tab switches, page transitions and the editor's steps were deliberately left alone, and nothing loops.
+- **Motion** (D-040, `lib/shared/components/motion.dart`, `Motion` in `lib/app/theme/app_tokens.dart`): the preview card rises into place; Explore messages fade and their space eases; the player turns parts forward, grows its progress bar and marks a correct answer and a finished World once; going live and a sent report are marked once; World details, Saved, Create, Profile and creator pages fade from loading into content; the unlock panel eases between answers; the save button fades between its two shapes. All of it takes its duration from one place and takes none when the device is set to remove animations; Flutter's own page transitions, ripples, sheets and dialogs are not covered and still play. The map, tab switches, page transitions and the editor's steps were deliberately left alone, and nothing loops.
 - **What the app logs:** two lines, both to the phone's own log, both holding only the kind of error: startup failing (`lib/app/bootstrap.dart`) and the map failing to draw (`lib/core/maps/maplibre_map_adapter.dart`). No message text, account, World or position. Nothing is sent anywhere; the packages include no crash or analytics service. No global error handler was added.
 - **Operations notes** in `supabase/README.md`, from the providers' pages on 2026-11-21: the Free plan pauses a quiet project after about a week, has no backups, and holds 500 MB on a 2 GB disk; OpenFreeMap is free with no stated limits and no promise of uptime, and no fallback map is configured. Also the queries for reading the pilot.
 
@@ -487,9 +487,10 @@ Pending the owner's moderation and privacy review. Checkpoint 7 has not been sta
 - `dart format --output=none --set-exit-if-changed .` — 180 files, 0 changed.
 - `flutter analyze` — no issues.
 - `flutter test --timeout 60s` — 324 of 324 passed (51 new: 9 for product events, 1 architecture rule, 26 at 200% text, 11 for motion, 4 for contrast).
-- `flutter test test_live/product_events_live_test.dart` — 1 of 1 (real backend). The other live tests were not run, as above.
-- `flutter test test_screens --update-goldens` — 12 of 12; Explore with a selected World and details after "too far" were looked at and are unchanged at ordinary size.
-- `flutter build apk --debug --dart-define-from-file=.env` — passed. Permissions unchanged: INTERNET, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE and AndroidX's app-internal `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. No background location.
+- `flutter test test_live/product_events_live_test.dart` — 1 of 1 (real backend).
+- **Full live run:** pending at the time of writing (set to start at 10:52 UTC).
+- `flutter test test_screens --update-goldens` — 12 of 12. Five renders of the screens whose layout code changed were looked at and are as before at ordinary size: Explore with a selected World, details after "too far", the editor's content step (step names, the Incomplete chip), the finished World and the sent report.
+- `flutter build apk --debug --dart-define-from-file=.env` — passed. Permissions unchanged: INTERNET, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE and AndroidX's app-internal `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. No background location. Built at `5d15c2b`; only a code comment and documents changed afterwards.
 - Database: six test files against the applied schema: 32, 36, 74, 52, 47 and 18 checks, as above.
 
 ### Acceptance criteria (docs/FEATURE_ACCEPTANCE_CRITERIA.md, section 9)
@@ -503,7 +504,7 @@ Pending the owner's moderation and privacy review. Checkpoint 7 has not been sta
 | Text scaling, TalkBack and contrast verified | Partly | 200% text in widget tests (no overflow); contrast measured, one defect fixed, three values open (D-041). TalkBack not checked |
 | 15 to 20 curated Worlds in one walkable pilot area | Not done | The area is undecided (D-021) |
 | Testers complete the creator-to-explorer flow independently | Not done | No testers yet |
-| Funnel measured: map, details, start, completion; first publish; second discovery; repeat creators | Can be measured; nothing measured | `private.pilot_funnel`, `pilot_summary`, `pilot_worlds`; tested in SQL and against the real backend. The only data is one test launch |
+| Funnel measured: map, details, start, completion; first publish; second discovery; repeat creators | Can be measured; nothing measured | `private.pilot_funnel`, `pilot_summary`, `pilot_worlds`; tested in SQL and against the real backend. The only data is test launches |
 | No critical crash, authorization flaw or unsafe seeded content | Not established | No device use and no seeded content. Database authorization is covered by 259 SQL checks |
 | Product owner explicitly approves wider release | Not given | — |
 
@@ -521,6 +522,8 @@ None. No phone was attached on 2026-11-21 (`adb devices` lists nothing). The las
 ### Known issues
 - Nothing in Checkpoints 5, 6 or 7 has run on a phone. Whether the new motion is smooth on a real device is not known: it was tested for behaviour (it happens, it ends, it disappears when animations are removed), not for frame rate.
 - Anyone holding the app's public key can send product events. A flood can use up a day's 20,000 or inflate a day's launch counts, and a launch is not a person. The steps counted from other tables cannot be forged this way.
+- No account is stored with an event, but a launch that unlocked a World can be matched to an account by time (D-039). The first description of D-039 claimed more than that and was corrected.
+- Removing animations on the device stops the app's own animations only. Page transitions, button ripples, sheets and dialogs are drawn by Flutter and still move.
 - Old events are cleared only when the app is in use; a pilot that stops leaves its last 90 days of events in place.
 - Testers have not been told what is measured. A notice is needed before the pilot.
 - No backups exist, the project pauses after a quiet week, no one is named to operate it, and there is no fallback map (see `supabase/README.md`).
