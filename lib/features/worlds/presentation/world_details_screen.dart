@@ -278,7 +278,7 @@ class _CategoryLabel extends StatelessWidget {
     final theme = Theme.of(context);
     return Row(
       children: [
-        CategoryBadge(category: world.category, size: 28),
+        CategoryBadge(category: world.category, size: 28, named: false),
         const SizedBox(width: Space.sm),
         Text(
           world.category.label,

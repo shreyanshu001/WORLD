@@ -122,7 +122,7 @@ class _CategoryCard extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CategoryBadge(category: category, size: 56),
+                  CategoryBadge(category: category, size: 56, named: false),
                   const SizedBox(width: Space.lg),
                   Expanded(
                     child: Column(

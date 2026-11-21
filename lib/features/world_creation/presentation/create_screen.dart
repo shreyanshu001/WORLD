@@ -284,7 +284,7 @@ class _WorldTile extends StatelessWidget {
           padding: const EdgeInsets.all(Space.md),
           child: Row(
             children: [
-              CategoryBadge(category: world.category, size: 52),
+              CategoryBadge(category: world.category, size: 52, named: false),
               const SizedBox(width: Space.md),
               Expanded(
                 child: Column(

@@ -13,10 +13,19 @@ bool hasLargeText(BuildContext context) =>
 
 /// A category's icon on a soft tile of its colour.
 class CategoryBadge extends StatelessWidget {
-  const CategoryBadge({required this.category, this.size = 44, super.key});
+  const CategoryBadge({
+    required this.category,
+    this.size = 44,
+    this.named = true,
+    super.key,
+  });
 
   final WorldCategory category;
   final double size;
+
+  /// Whether a screen reader says the category's name for this badge. Set
+  /// false where the name is written beside it, or it is read out twice.
+  final bool named;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +41,7 @@ class CategoryBadge extends StatelessWidget {
         category.icon,
         size: size * 0.52,
         color: category.foregroundOn(Theme.of(context).brightness),
-        semanticLabel: category.label,
+        semanticLabel: named ? category.label : null,
       ),
     );
   }

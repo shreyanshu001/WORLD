@@ -51,7 +51,11 @@ class WorldPreviewCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CategoryBadge(category: world.category, size: 52),
+                  CategoryBadge(
+                    category: world.category,
+                    size: 52,
+                    named: false,
+                  ),
                   const SizedBox(width: Space.md),
                   Expanded(
                     child: Column(
