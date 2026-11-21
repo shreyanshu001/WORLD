@@ -4,7 +4,7 @@
 **Current checkpoint:** 6 (Saved, profile and moderation) implemented on its branch and awaiting the owner's moderation and privacy review. Checkpoints 4 and 5 are still awaiting their device checks  
 **Product direction:** Approved  
 **Documentation handoff:** Core product, journey, UX and acceptance specifications published to GitHub  
-**App implementation:** Foundation, accounts and profiles, the Explore map, World details, the World creator, on-site unlocking, the World player, saved Worlds, reporting, creator pages and profile counts. Moderation is done in the Supabase dashboard, not in the app. Share links are not built. The Checkpoint 4, 5 and 6 database migrations are applied to the development project and verified. Checkpoints 4 to 6 are on their branches; `main` holds Checkpoints 0–3.
+**App implementation:** Foundation, accounts and profiles, the Explore map, World details, the World creator, on-site unlocking, the World player, saved Worlds, reporting, creator pages and profile counts. Moderation is done in the Supabase dashboard, not in the app. Share links are not built. The Checkpoint 4, 5 and 6 database migrations are applied to the development project and verified. The owner merged Checkpoints 4 and 5 into `main` on GitHub on 2026-11-21 (pull requests #6 and #7), so `main` holds Checkpoints 0–5; Checkpoint 6 is on its branch.
 
 | Checkpoint | Status | Evidence |
 |---|---|---|
@@ -31,8 +31,8 @@
 - Checkpoint 5 has not run on a phone at all: unlocking with a real GPS reading, the permission prompt from the details screen and the player are untested on a device. No phone was attached on 2026-11-21.
 - Checkpoint 6 has not run on a phone, and no moderation action has been run for real: the moderation functions have only run inside rolled-back tests, and the runbook in `supabase/README.md` has not been followed by a person.
 - The Checkpoint 6 gate is the owner's moderation and privacy review. Five decisions taken for it are proposals (D-034 to D-038).
-- Checkpoints 4, 5 and 6 are not merged into `main`. The Checkpoint 6 branch `checkpoint-6-saved-profile-moderation` is on GitHub at its starting commit only; its Checkpoint 6 commits are local.
-- Checkpoints 4 and 5 are not merged into `main` (their branches are on GitHub). `AGENTS.md` still describes the state before Checkpoint 4 under "Before coding" and "Current task"; a correction is proposed in the Checkpoint 5 report and left to the owner.
+- Checkpoint 6 is not merged into `main`. Its branch `checkpoint-6-saved-profile-moderation` is on GitHub at its starting commit only; its Checkpoint 6 commits are local.
+- Checkpoints 4 and 5 were merged into `main` by the owner on 2026-11-21 (pull requests #6 and #7) with their device checks still open. `AGENTS.md` still describes the state before Checkpoint 4 under "Before coding" and "Current task"; a correction is proposed in the Checkpoint 5 report and left to the owner.
 - Gap G1 (unlisted Worlds by direct link) is still open; the creator does not offer "unlisted" (D-029).
 - The application ID is the placeholder `com.example.worlds`. It must be replaced before any release build.
 - Supabase region and plan are unverified. Verified: Postgres 17.12; sign-up enabled; email confirmation **off** since 2026-11-20 (`mailer_autoconfirm: true` from the public auth settings; it was `false` before).
@@ -376,7 +376,7 @@ Pending the owner's device check and approval. Checkpoint 6 has not been started
   - Apply with `apply_migration`, name `create_saved_reports_moderation`: success. Recorded version `20261121060535`. The stored statement's md5 is `aab70225993b4124fdb08bf8bdac1ebb`, the same as the committed file (23,133 characters, one statement).
   - **A test that only passed on an empty database:** `community_test.sql` first counted the whole moderation queue and the whole log. That held in the dry run, when there were no real reports, and would have failed afterwards: the live checks leave real pending reports behind, and so will real use. Found in review after applying; the three counts are now limited to the test's own Worlds.
   - Tests against the applied schema: the corrected `community_test.sql` as one rolled-back statement, with two real pending reports in the database: `WORLDS_ALL_TESTS_PASSED: community_test 47 checks`.
-  - **Not re-run after applying:** the four older SQL test files (`profiles_test`, `worlds_test`, `world_authoring_test`, `world_play_test`), and they were not part of the dry run either. That skips a step of `supabase/README.md`. The only thing this migration changes that they cover is `get_world_details`, whose earlier behaviour was exercised after applying by the live authoring and player checks (below) and whose new field is covered by `community_test.sql`. `.sql-to-run/3-tests-after-apply.sql` runs all five files in one paste in the SQL editor (expected: an error starting `WORLDS_ALL_TESTS_PASSED`, with 32, 36, 74, 52 and 47 checks).
+  - The four older test files were not part of the dry run and were first run with this migration later the same day, against the applied schema, each as a rolled-back statement: `world_authoring_test 74 checks`, `world_play_test 52 checks`, `profiles_test 32 checks`, `worlds_test 36 checks`. With `community_test`, all five files have passed against the applied schema. `.sql-to-run/3-tests-after-apply.sql` runs all five in one paste in the SQL editor.
   - Read-only checks afterwards: row level security on the three tables; one read policy each on `saved_worlds` and `world_reports`; signed-in users may select only `id`, `world_id`, `reporter_id`, `reason`, `description` and `created_at` of `world_reports`; the saving and reporting functions callable by signed-in users only; `get_profile_page` and `get_world_details` callable signed out; the six moderation functions callable by no API role.
   - Security advisor: INFO that the three private tables have no policies (intended: no client access); WARN that anyone can call `get_profile_page` and `get_world_details` and that signed-in users can call 18 `security definer` functions (intended: they are the API and check the caller themselves); WARN that leaked-password protection is off. Performance advisor: INFO on seven unused indexes; the WARN about two read policies on `world_assets` from Checkpoint 5, unchanged.
 
@@ -407,9 +407,9 @@ Pending the owner's device check and approval. Checkpoint 6 has not been started
 - `flutter test --timeout 60s` — 271 of 271 passed (35 new). New tests cover: Saved signed out, empty, populated, opening details and coming back, removal and its rollback, paging, a failed load and retry, the unavailable count, and one account never seeing another's list; saving from details with rollback, a World saved earlier, the Saved tab following a save, and the sign-in round trip from a signed-out save; the report flow, a second report, the daily limit with the form kept, a failed send and retry, no report action for the creator, and sign-in when signed out; creator pages (public fields only, opening from a World and back, paging, unknown username, failed load, no Worlds); the own profile's counts, zeros and a failed load; the server field mappings; the redirects.
 - The first run of the new tests caught two layouts that overflowed with wide text (the report menu label and the profile counts row) and a report error shown out of sight at the end of a scrolling form. All three were fixed.
 - `flutter test test_live` — 3 of 3 passed (real backend).
-- `flutter test test_screens --update-goldens` — 12 of 12; seven new renders (Saved, details with a saved World, the report form and its confirmation, Saved when empty, the own profile, a creator page). Five were looked at: Saved, details, the report form, the own profile and a creator page. The report confirmation, the empty Saved state and the restyled bookmark were rendered but not viewed.
+- `flutter test test_screens --update-goldens` — 12 of 12; seven new renders (Saved, details with a saved World, the report form and its confirmation, Saved when empty, the own profile, a creator page). All seven were looked at.
 - `flutter build apk --debug --dart-define-from-file=.env` — passed. Permissions unchanged: INTERNET, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE and AndroidX's app-internal `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. No background location.
-- Database: `community_test` 47 checks, in the dry run and again against the applied schema, as above.
+- Database: all five test files against the applied schema: 32, 36, 74, 52 and 47 checks, as above.
 
 ### Acceptance criteria (docs/FEATURE_ACCEPTANCE_CRITERIA.md, section 8)
 | Criterion | Status | Evidence |
@@ -431,7 +431,7 @@ None. No phone was attached on 2026-11-21. The last build on the owner's phone i
 ### Known issues
 - Nothing in this checkpoint has run on a phone, and large text and TalkBack are unchecked there.
 - No moderation action has been run on the development database outside rolled-back tests. The runbook should be tried once on a test World before the pilot.
-- The four older SQL test files were not run with this migration, before or after applying (see Database). One paste of `.sql-to-run/3-tests-after-apply.sql` closes that.
+- The dry run before applying covered only the new test file; the four older files ran after applying (see Database).
 - A creator whose World is hidden sees "Hidden by moderation" and nothing else: no reason, no way to appeal. A reporter is never told the outcome.
 - Reports of a World that was deleted afterwards stay in the queue until dismissed, including one per run of the live test.
 - The Discovered count includes Worlds that were unlocked and have since been unpublished or removed.
