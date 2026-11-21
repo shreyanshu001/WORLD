@@ -14,6 +14,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:worlds/core/maps/map_adapter.dart';
 import 'package:worlds/features/auth/domain/auth_user.dart';
+import 'package:worlds/features/profile/domain/profile_page.dart';
 import 'package:worlds/features/world_creation/domain/world_draft.dart';
 import 'package:worlds/features/worlds/domain/content_block.dart';
 import 'package:worlds/features/worlds/domain/world_details.dart';
@@ -24,6 +25,7 @@ import 'package:worlds/features/worlds/domain/world_status.dart';
 import 'package:worlds/shared/models/geo_point.dart';
 import 'package:worlds/shared/models/world_category.dart';
 
+import '../test/support/community_fakes.dart';
 import '../test/support/creation_fakes.dart';
 import '../test/support/explore_fakes.dart';
 import '../test/support/fakes.dart';
@@ -227,8 +229,84 @@ void main() {
   late FakeMapAdapter map;
   late FakeWorldPlayRepository play;
   late FakeLocationService location;
+  late FakeProfileRepository profiles;
+  late FakeSavedWorldsRepository saved;
 
   setUp(() {
+    profiles = FakeProfileRepository()
+      ..add(
+        testProfile(
+          alice.id,
+          'alice',
+          displayName: 'Alice',
+          bio: 'Collects harbour stories.',
+        ),
+      )
+      ..add(
+        testProfile(
+          'mira-id',
+          'mira',
+          displayName: 'Mira Chen',
+          bio: 'Writes short walks along the water.',
+        ),
+      )
+      ..publishedByUsername['mira'] = [
+        ProfileWorld(
+          id: 'w1',
+          title: 'The Lighthouse Keeper',
+          category: WorldCategory.story,
+          publishedAt: DateTime.utc(2025, 3, 9),
+        ),
+        ProfileWorld(
+          id: 'w5',
+          title: 'Tide Clock',
+          category: WorldCategory.puzzle,
+          publishedAt: DateTime.utc(2025, 2, 2),
+        ),
+        ProfileWorld(
+          id: 'w6',
+          title: 'Quay Voices',
+          category: WorldCategory.experience,
+          publishedAt: DateTime.utc(2024, 11, 18),
+        ),
+      ]
+      ..publishedByUsername['alice'] = [
+        ProfileWorld(
+          id: 'w4',
+          title: 'Market Walk',
+          category: WorldCategory.experience,
+          publishedAt: DateTime.utc(2025, 4, 1),
+        ),
+      ]
+      ..draftCounts['alice'] = 2
+      ..discoveredCounts['alice'] = 7
+      ..completedCounts['alice'] = 4;
+    saved = FakeSavedWorldsRepository(currentUserId: () => alice.id)
+      ..seed(alice.id, [
+        testSaved(
+          'w1',
+          'The Lighthouse Keeper',
+          creator: 'mira',
+          creatorDisplayName: 'Mira Chen',
+          distanceMeters: 240,
+        ),
+        testSaved(
+          'w2',
+          'Riddle of the Old Mill',
+          category: WorldCategory.puzzle,
+          creator: 'jonas',
+          creatorDisplayName: null,
+          distanceMeters: 650,
+        ),
+        testSaved(
+          'w3',
+          'Harbour Mural',
+          category: WorldCategory.art,
+          creator: 'jonas',
+          creatorDisplayName: 'Jonas',
+          distanceMeters: 1200,
+        ),
+      ]);
     worlds = FakeWorldRepository([
       testWorld(
         'w1',
@@ -303,8 +381,8 @@ void main() {
     await pumpWorldsApp(
       tester,
       auth: FakeAuthRepository(signedInAs: signedIn ? alice : null),
-      profiles: FakeProfileRepository()
-        ..add(testProfile(alice.id, 'alice', displayName: 'Alice')),
+      profiles: profiles,
+      saved: saved,
       worlds: worlds,
       authoring: authoring,
       map: map,
@@ -511,5 +589,46 @@ void main() {
     await tapText(tester, 'Continue');
     await tapText(tester, 'Finish');
     await shot(tester, '21_player_complete');
+  });
+
+  renderTest('saved and reporting', (tester) async {
+    worlds.detailsById['w1'] = worlds.detailsById['w1']!.copyWith(
+      creatorUsername: 'mira',
+      creatorDisplayName: 'Mira Chen',
+      playStatus: PlayStatus.locked,
+      isSaved: true,
+    );
+    await pump(tester);
+    await tapTab(tester, 'Saved');
+    await shot(tester, '22_saved');
+    await tapText(tester, 'The Lighthouse Keeper');
+    await shot(tester, '23_details_saved');
+    await tester.tap(find.byTooltip('More'));
+    await tester.pumpAndSettle();
+    await tapText(tester, 'Report this World');
+    await tapText(tester, 'Unsafe or private place');
+    await shot(tester, '24_report');
+    await tapText(tester, 'Send report');
+    await shot(tester, '25_report_sent');
+  });
+
+  renderTest('saved, empty', (tester) async {
+    saved.savedByUser[alice.id]!.clear();
+    await pump(tester);
+    await tapTab(tester, 'Saved');
+    await shot(tester, '26_saved_empty');
+  });
+
+  renderTest('profiles', (tester) async {
+    await pump(tester);
+    await tapTab(tester, 'Profile');
+    await shot(tester, '27_profile');
+    unawaited(
+      GoRouter.of(
+        tester.element(find.byType(NavigationBar)),
+      ).push<void>(AppRoutes.creatorPage('mira')),
+    );
+    await tester.pumpAndSettle();
+    await shot(tester, '28_creator');
   });
 }
