@@ -108,6 +108,19 @@ Functions in the `private` schema, which the Data API does not expose and API ro
 
 Each needs a moderator name (2 to 80 characters) and a note (3 to 1,000) and writes one row to `private.moderation_actions`; without them nothing changes.
 
+## Product events (Checkpoint 7; no API except `log_event`)
+What the pilot measures that the other tables cannot show (docs/DECISIONS.md, D-039). Migration `20261121081022_create_product_events.sql`.
+
+- `private.product_events (id, session_id, name, outcome, occurred_at)`: one row per event. `session_id` is a random id the app makes at launch and never stores. `name` is one of `explore_opened`, `world_marker_selected`, `world_details_opened`, `world_unlock_attempted`. `outcome` is set only for unlock attempts: `unlocked`, `too_far`, `inaccurate`, `no_location` or `failed`. There is no account, no World and no position in a row.
+- `private.world_event_counts (world_id, day, name, total)`: per World and UTC day, how often its details were opened and unlocks attempted. No launch id and no account. Only published public Worlds are counted.
+- `public.log_event(event_name, session_id, world_id default null, outcome default null) returns boolean`: the only way in, callable signed out and signed in. It refuses an unknown event or outcome (`22023`), returns `false` when an event is dropped by a limit (200 per launch, 20,000 in all per 24 hours) and `true` when it is kept. `world_id` is used for the daily total only and is not written to the event.
+- Reading, in the SQL editor only (API roles can reach none of these):
+  - `private.pilot_funnel(first_day default 30 days ago)`: per UTC day, launches that opened Explore, selected a World, opened details, attempted an unlock and unlocked one; and, from the other tables, Worlds started, completed, published, saved and reported that day.
+  - `private.pilot_summary()`: accounts, creators, creators with two or more published Worlds, explorers, explorers with a second World, explorers who finished one, published Worlds.
+  - `private.pilot_worlds(first_day default 30 days ago)`: per World, details opened and unlock attempts.
+- Both tables have row level security with no policies and no grants to API roles.
+- A launch is one start of the app, not one person: the same person on two days is two launches, and the launch counts cannot be joined to accounts.
+
 ## Deletion and retention (as implemented, 2026-11-21)
 What happens today. No retention periods have been decided; that is an open owner decision before public launch.
 
@@ -118,6 +131,7 @@ What happens today. No retention periods have been decided; that is an open owne
 - **Reports:** never deleted by the app. They keep their text and reason after the World is soft-deleted and after moderation closes them. If the reporter's account is removed the report stays without the reporter.
 - **Moderation log:** never deleted, and kept even if the World's row is.
 - **Play records:** progress, visits and answer attempts are kept indefinitely. No coordinates are stored.
+- **Product events:** events older than 90 days are deleted when a launch id the server has not seen before sends its first event, so only while the app is in use; there is no scheduled job. The per-World daily totals are kept until their World is hard-deleted.
 - **Accounts:** the app has no "delete my account". Removing a user in the Supabase dashboard cascades through their profile to their Worlds (with parts, answers, image records, others' saves, progress and reports of those Worlds), their own saves, progress, visits and answer attempts. Their image files in storage are not removed by that cascade.
 
 ## RLS
@@ -129,6 +143,7 @@ Enable RLS on every exposed table:
 - Question secrets: no client access.
 - Visits/progress/saves: user-scoped. (Checkpoint 5: visits and progress are readable by their owner only and written only by the play functions. Checkpoint 6: saves likewise, written only by `set_world_saved`.)
 - Reports: authenticated insert; reporter reads own; trusted admin reads/modifies. (Checkpoint 6: inserted only through `report_world`; the reporter reads their own rows without the moderation status; there is no admin role in the API, moderation runs in the dashboard, D-036.)
+- Product events and per-World totals (Checkpoint 7): no client access at all; written only by `log_event`, read only in the dashboard.
 Admin role comes from trusted process, never client-editable profile metadata.
 
 ## Important

@@ -44,8 +44,11 @@ Run them in the Supabase SQL editor or with MCP `execute_sql`, one file per run 
 - `tests/world_authoring_test.sql` — Checkpoint 4: saving, publishing, answer secrecy, assets, storage policies and World details.
 - `tests/world_play_test.sql` — Checkpoint 5: unlocking, playing, branching, answers and their limit, progress privacy, players' image access, unpublished and hidden Worlds.
 - `tests/community_test.sql` — Checkpoint 6: saving, reporting and their limits, privacy of saves and reports, every moderation action and its log, what a hide closes off, profile pages.
+- `tests/product_events_test.sql` — Checkpoint 7: what an event may hold, who may send and who may read, the two limits, the 90-day clearing, the per-World totals, the pilot functions.
 
-Write tests so they need no clean-up: no `delete` statements. The Supabase connection asks for confirmation before SQL it considers destructive, the editor declines that prompt without showing it, and a test file that contained two clean-up deletes was refused whole (2026-11-21), although it could not have changed anything. Give fixtures their own rows instead, so nothing has to be removed before the next check.
+To run every file against the applied schema, build one statement per file (`node tool/sql/build_editor_sql.js <latest migration> <out dir> <test name>`) and run each `3-tests-after-apply.sql`. Do this after every migration, not only for the new file: a new migration can break an older promise.
+
+Write tests so they need no clean-up: no `delete` statements. Count only your own fixtures, or the difference from a count taken first: the database holds real rows (live checks, and soon testers), and a test that counts a whole table passes only on an empty one. The Supabase connection asks for confirmation before SQL it considers destructive, the editor declines that prompt without showing it, and a test file that contained two clean-up deletes was refused whole (2026-11-21), although it could not have changed anything. Give fixtures their own rows instead, so nothing has to be removed before the next check.
 
 ### Moderation runbook
 
@@ -71,6 +74,38 @@ select * from private.moderation_actions order by acted_at desc;
 - Restoring publishes it again only if it was published when hidden and is still complete; otherwise it becomes a draft the creator can publish.
 - The reporter is never shown to the creator. The queue shows it to you.
 - The live tests leave one pending report per run for a deleted `[e2e]` World, made by the test account. Close them with `dismiss_reports`.
+
+### Reading the pilot
+
+What the pilot measures and what it deliberately does not is in docs/DECISIONS.md, D-039. In the SQL editor:
+
+```sql
+-- Day by day (UTC), the last 30 days: launches reaching each step, and what was started, finished, published, saved and reported.
+select * from private.pilot_funnel();
+select * from private.pilot_funnel('2026-12-01');   -- from a given day
+
+-- The pilot so far in one row: creators, repeat creators, explorers, second discoveries, completions.
+select * from private.pilot_summary();
+
+-- Per World: details opened and unlock attempts.
+select * from private.pilot_worlds();
+```
+
+- A launch is one start of the app, not one person, and cannot be matched to an account.
+- The steps the app reports (Explore, selecting, details, unlock attempts) can be sent by anyone who has the app's public key, and stop being recorded after 20,000 events in 24 hours. A day whose numbers look wrong may have been flooded. The steps counted from other tables (started, completed, published, saved, reported) cannot be forged this way.
+- Runs of `test_live/product_events_live_test.dart` each add one launch with three events.
+
+### Operations before the pilot (checked 2026-11-21)
+
+Facts from the providers' own pages on that date. They change; read them again before inviting testers.
+
+- **Supabase Free plan** ([pricing](https://supabase.com/pricing), [billing](https://supabase.com/docs/guides/platform/billing-on-supabase), [database size](https://supabase.com/docs/guides/platform/database-size), [pausing](https://supabase.com/kb/faqs/platform/free-project-pausing), [production checklist](https://supabase.com/docs/guides/deployment/going-into-prod)):
+  - A project is paused after about a week with too little activity. A paused project keeps its data but the app cannot reach it until someone restores it in the dashboard. A quiet week during the pilot would do this.
+  - 500 MB of database per project, on a 2 GB disk that does not grow; at 95% of the disk the database becomes read-only. Storage and egress have their own allowances on the pricing page; World images count against them.
+  - **No automatic backups and no downloadable backups.** Today a mistake in the SQL editor, or a lost project, cannot be undone. The Pro plan (from $25 a month on that date) adds daily backups kept 7 days and no pausing.
+  - Nobody is named yet as the person who watches the project, restores it if it pauses and runs moderation. That is an owner decision.
+- **OpenFreeMap map tiles** ([terms](https://openfreemap.org/tos/), [site](https://openfreemap.org), [source](https://github.com/hyperknot/openfreemap)): free, no key, no stated limit on views or requests, provided as it is with no warranty and no promise of uptime; the terms can change at any time. The attribution the app always shows, "OpenFreeMap © OpenMapTiles Data from OpenStreetMap", is the text the project asks for. There is no fallback provider configured: if the service is down the map is blank, and `MAP_STYLE_URL` and `MAP_ATTRIBUTION` are the switch to another one. The project publishes its tiles for self-hosting.
+- **Logs:** the app writes two lines to the phone's own log, each with only the kind of error (startup failed; the map could not be drawn). Nothing is sent anywhere: there is no crash or error reporting service. A crash on a tester's phone is known only if the tester says so.
 
 ### Development seed data
 
