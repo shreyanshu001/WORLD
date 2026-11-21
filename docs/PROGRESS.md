@@ -374,7 +374,9 @@ Pending the owner's device check and approval. Checkpoint 6 has not been started
   - The first dry run was declined by the connection's confirmation step, which this editor answers "no" without showing it. Two small probes that could not change anything showed the cause: `delete` statements in the test's clean-up. The test was rewritten to need no clean-up (other fixtures instead), not disguised. The migration itself was not changed.
   - Dry run, migration plus `community_test.sql` as one rolled-back statement: `WORLDS_ALL_TESTS_PASSED: community_test 47 checks`.
   - Apply with `apply_migration`, name `create_saved_reports_moderation`: success. Recorded version `20261121060535`. The stored statement's md5 is `aab70225993b4124fdb08bf8bdac1ebb`, the same as the committed file (23,133 characters, one statement).
-  - **Not re-run after applying:** the five SQL test files. `community_test.sql` ran in the dry run against the identical migration text. The four older files were not run with this migration at all; the only thing it changes that they cover is `get_world_details`, whose earlier behaviour was exercised after applying by the live authoring and player checks (below) and whose new field is covered by `community_test.sql`. `.sql-to-run/3-tests-after-apply.sql` runs all five files in one paste in the SQL editor (expected: an error starting `WORLDS_ALL_TESTS_PASSED`, with 32, 36, 74, 52 and 47 checks).
+  - **A test that only passed on an empty database:** `community_test.sql` first counted the whole moderation queue and the whole log. That held in the dry run, when there were no real reports, and would have failed afterwards: the live checks leave real pending reports behind, and so will real use. Found in review after applying; the three counts are now limited to the test's own Worlds.
+  - Tests against the applied schema: the corrected `community_test.sql` as one rolled-back statement, with two real pending reports in the database: `WORLDS_ALL_TESTS_PASSED: community_test 47 checks`.
+  - **Not re-run after applying:** the four older SQL test files (`profiles_test`, `worlds_test`, `world_authoring_test`, `world_play_test`), and they were not part of the dry run either. That skips a step of `supabase/README.md`. The only thing this migration changes that they cover is `get_world_details`, whose earlier behaviour was exercised after applying by the live authoring and player checks (below) and whose new field is covered by `community_test.sql`. `.sql-to-run/3-tests-after-apply.sql` runs all five files in one paste in the SQL editor (expected: an error starting `WORLDS_ALL_TESTS_PASSED`, with 32, 36, 74, 52 and 47 checks).
   - Read-only checks afterwards: row level security on the three tables; one read policy each on `saved_worlds` and `world_reports`; signed-in users may select only `id`, `world_id`, `reporter_id`, `reason`, `description` and `created_at` of `world_reports`; the saving and reporting functions callable by signed-in users only; `get_profile_page` and `get_world_details` callable signed out; the six moderation functions callable by no API role.
   - Security advisor: INFO that the three private tables have no policies (intended: no client access); WARN that anyone can call `get_profile_page` and `get_world_details` and that signed-in users can call 18 `security definer` functions (intended: they are the API and check the caller themselves); WARN that leaked-password protection is off. Performance advisor: INFO on seven unused indexes; the WARN about two read policies on `world_assets` from Checkpoint 5, unchanged.
 
@@ -407,7 +409,7 @@ Pending the owner's device check and approval. Checkpoint 6 has not been started
 - `flutter test test_live` — 3 of 3 passed (real backend).
 - `flutter test test_screens --update-goldens` — 12 of 12; seven new renders (Saved, details with a saved World, the report form and its confirmation, Saved when empty, the own profile, a creator page). Five were looked at: Saved, details, the report form, the own profile and a creator page. The report confirmation, the empty Saved state and the restyled bookmark were rendered but not viewed.
 - `flutter build apk --debug --dart-define-from-file=.env` — passed. Permissions unchanged: INTERNET, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE and AndroidX's app-internal `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. No background location.
-- Database: `community_test` 47 checks in the dry run, as above.
+- Database: `community_test` 47 checks, in the dry run and again against the applied schema, as above.
 
 ### Acceptance criteria (docs/FEATURE_ACCEPTANCE_CRITERIA.md, section 8)
 | Criterion | Status | Evidence |
@@ -429,7 +431,7 @@ None. No phone was attached on 2026-11-21. The last build on the owner's phone i
 ### Known issues
 - Nothing in this checkpoint has run on a phone, and large text and TalkBack are unchecked there.
 - No moderation action has been run on the development database outside rolled-back tests. The runbook should be tried once on a test World before the pilot.
-- The SQL test files were not re-run after applying, and the dry run did not include the older files (see Database).
+- The four older SQL test files were not run with this migration, before or after applying (see Database). One paste of `.sql-to-run/3-tests-after-apply.sql` closes that.
 - A creator whose World is hidden sees "Hidden by moderation" and nothing else: no reason, no way to appeal. A reporter is never told the outcome.
 - Reports of a World that was deleted afterwards stay in the queue until dismissed, including one per run of the live test.
 - The Discovered count includes Worlds that were unlocked and have since been unpublished or removed.
