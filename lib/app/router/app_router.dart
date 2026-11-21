@@ -7,6 +7,8 @@ import 'package:worlds/features/auth/application/auth_providers.dart';
 import 'package:worlds/features/auth/presentation/register_screen.dart';
 import 'package:worlds/features/auth/presentation/sign_in_screen.dart';
 import 'package:worlds/features/explore/presentation/explore_screen.dart';
+import 'package:worlds/features/moderation/presentation/report_world_screen.dart';
+import 'package:worlds/features/profile/presentation/creator_screen.dart';
 import 'package:worlds/features/profile/presentation/edit_profile_screen.dart';
 import 'package:worlds/features/profile/presentation/profile_screen.dart';
 import 'package:worlds/features/saved/presentation/saved_screen.dart';
@@ -129,6 +131,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           key: ValueKey('play-${state.pathParameters['id']}'),
           worldId: state.pathParameters['id']!,
           startOver: state.uri.queryParameters['start_over'] == '1',
+        ),
+      ),
+      // Opened on top of whichever tab asked for them.
+      GoRoute(
+        path: '/worlds/:id',
+        builder: (context, state) => WorldDetailsScreen(
+          worldId: state.pathParameters['id']!,
+          from: state.extra is GeoPoint ? state.extra! as GeoPoint : null,
+        ),
+      ),
+      GoRoute(
+        path: '/creators/:username',
+        builder: (context, state) =>
+            CreatorScreen(username: state.pathParameters['username']!),
+      ),
+      GoRoute(
+        path: '/report/:id',
+        builder: (context, state) => ReportWorldScreen(
+          worldId: state.pathParameters['id']!,
+          worldTitle: state.extra is String ? state.extra! as String : null,
         ),
       ),
       GoRoute(

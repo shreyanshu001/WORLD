@@ -8,7 +8,9 @@ import 'package:worlds/core/utils/distance_format.dart';
 import 'package:worlds/core/widgets/empty_view.dart';
 import 'package:worlds/core/widgets/error_view.dart';
 import 'package:worlds/core/widgets/loading_view.dart';
+import 'package:worlds/features/auth/application/auth_providers.dart';
 import 'package:worlds/features/explore/application/explore_focus.dart';
+import 'package:worlds/features/saved/application/saved_providers.dart';
 import 'package:worlds/features/world_player/presentation/play_panel.dart';
 import 'package:worlds/features/worlds/application/world_providers.dart';
 import 'package:worlds/features/worlds/domain/world_details.dart';
@@ -82,9 +84,27 @@ class _DetailsView extends StatelessWidget {
               child: Material(
                 color: colors.surface.withValues(alpha: 0.92),
                 shape: const CircleBorder(),
-                child: const BackButton(),
+                child: IconButton(
+                  tooltip: 'Back',
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => context.canPop()
+                      ? context.pop()
+                      : context.go(AppRoutes.explore),
+                ),
               ),
             ),
+            actions: [
+              if (world.lifecycle == WorldLifecycle.published &&
+                  !world.isCreator)
+                Padding(
+                  padding: const EdgeInsets.all(Space.sm),
+                  child: Material(
+                    color: colors.surface.withValues(alpha: 0.92),
+                    shape: const CircleBorder(),
+                    child: _MoreMenu(world: world),
+                  ),
+                ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,
@@ -140,34 +160,58 @@ class _DetailsView extends StatelessWidget {
                   _CategoryLabel(world: world),
                   const SizedBox(height: Space.sm),
                   Text(world.title, style: theme.textTheme.headlineMedium),
-                  const SizedBox(height: Space.md),
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 14,
-                        backgroundColor: colors.primarySoft,
-                        child: Text(
-                          world.creatorName
-                              .replaceFirst('@', '')
-                              .characters
-                              .first
-                              .toUpperCase(),
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: colors.primary,
-                            fontWeight: FontWeight.w700,
-                          ),
+                  const SizedBox(height: Space.xs),
+                  // Opens the public page of the creator.
+                  Semantics(
+                    button: true,
+                    label: 'By ${world.creatorName}. View their Worlds',
+                    excludeSemantics: true,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(Radii.sm),
+                      onTap: () => context.push(
+                        AppRoutes.creatorPage(world.creatorUsername),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: Space.sm),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircleAvatar(
+                              radius: 14,
+                              backgroundColor: colors.primarySoft,
+                              child: Text(
+                                world.creatorName
+                                    .replaceFirst('@', '')
+                                    .characters
+                                    .first
+                                    .toUpperCase(),
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  color: colors.primary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: Space.sm),
+                            Flexible(
+                              child: Text(
+                                'by ${world.creatorName}',
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: colors.muted,
+                                ),
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right,
+                              size: 18,
+                              color: colors.muted,
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: Space.sm),
-                      Text(
-                        'by ${world.creatorName}',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colors.muted,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: Space.lg),
+                  const SizedBox(height: Space.sm),
                   Wrap(
                     spacing: Space.sm,
                     runSpacing: Space.sm,
@@ -311,6 +355,10 @@ class _Actions extends ConsumerWidget {
             ),
             const SizedBox(width: Space.sm),
           ],
+          if (published) ...[
+            _SaveButton(world: world),
+            const SizedBox(width: Space.sm),
+          ],
           if (canEdit && published) ...[
             IconButton.outlined(
               tooltip: 'Edit World',
@@ -332,6 +380,91 @@ class _Actions extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Saves the World for later, or removes it again. The bookmark changes at
+/// once and goes back if the server refuses. Signed out, it leads to
+/// sign-in and back to this World.
+class _SaveButton extends ConsumerWidget {
+  const _SaveButton({required this.world});
+
+  final WorldDetails world;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final signedIn = ref.watch(currentUserProvider) != null;
+    final saved =
+        signedIn &&
+        (ref.watch(savedFlagsProvider)[world.id] ?? world.isSaved ?? false);
+
+    return IconButton.outlined(
+      tooltip: saved ? 'Remove from saved' : 'Save for later',
+      isSelected: saved,
+      iconSize: 24,
+      padding: const EdgeInsets.all(Space.md),
+      icon: const Icon(Icons.bookmark_outline),
+      selectedIcon: const Icon(Icons.bookmark),
+      onPressed: () async {
+        if (!signedIn) {
+          await context.push(
+            AppRoutes.signInFrom(AppRoutes.worldDetails(world.id)),
+          );
+          return;
+        }
+        final messenger = ScaffoldMessenger.of(context);
+        final failure = await ref
+            .read(savedFlagsProvider.notifier)
+            .setSaved(world.id, saved: !saved, previous: saved);
+        if (failure == null) return;
+        messenger
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(
+                saved
+                    ? "Couldn't remove it from saved. ${failure.userMessage}"
+                    : "Couldn't save this World. ${failure.userMessage}",
+              ),
+            ),
+          );
+      },
+    );
+  }
+}
+
+/// The lesser actions on a published World made by someone else.
+class _MoreMenu extends ConsumerWidget {
+  const _MoreMenu({required this.world});
+
+  final WorldDetails world;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return PopupMenuButton<void>(
+      tooltip: 'More',
+      icon: const Icon(Icons.more_vert),
+      itemBuilder: (context) => [
+        PopupMenuItem<void>(
+          onTap: () {
+            final signedIn = ref.read(currentUserProvider) != null;
+            context.push(
+              signedIn
+                  ? AppRoutes.reportWorld(world.id)
+                  : AppRoutes.signInFrom(AppRoutes.worldDetails(world.id)),
+              extra: signedIn ? world.title : null,
+            );
+          },
+          child: const Row(
+            children: [
+              Icon(Icons.flag_outlined),
+              SizedBox(width: Space.md),
+              Flexible(child: Text('Report this World')),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
