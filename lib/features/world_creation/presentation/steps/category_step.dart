@@ -131,7 +131,9 @@ class _CategoryCard extends StatelessWidget {
                         Text(
                           category.label,
                           style: theme.textTheme.titleLarge?.copyWith(
-                            color: selected ? category.color : colors.ink,
+                            color: selected
+                                ? category.foregroundOn(theme.brightness)
+                                : colors.ink,
                           ),
                         ),
                         const SizedBox(height: Space.xs),
@@ -149,7 +151,10 @@ class _CategoryCard extends StatelessWidget {
                   ),
                   if (selected) ...[
                     const SizedBox(width: Space.sm),
-                    Icon(Icons.check_circle, color: category.color),
+                    Icon(
+                      Icons.check_circle,
+                      color: category.foregroundOn(theme.brightness),
+                    ),
                   ],
                 ],
               ),

@@ -58,7 +58,9 @@ class WorldPreviewCard extends StatelessWidget {
                         Text(
                           world.category.label.toUpperCase(),
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: world.category.color,
+                            color: world.category.foregroundOn(
+                              theme.brightness,
+                            ),
                             fontWeight: FontWeight.w700,
                             letterSpacing: 1.1,
                           ),

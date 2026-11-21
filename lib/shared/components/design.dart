@@ -31,9 +31,7 @@ class CategoryBadge extends StatelessWidget {
       child: Icon(
         category.icon,
         size: size * 0.52,
-        color: dark
-            ? Color.lerp(category.color, Colors.white, 0.45)
-            : category.color,
+        color: category.foregroundOn(Theme.of(context).brightness),
         semanticLabel: category.label,
       ),
     );

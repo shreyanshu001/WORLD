@@ -283,7 +283,7 @@ class _CategoryLabel extends StatelessWidget {
         Text(
           world.category.label,
           style: theme.textTheme.labelLarge?.copyWith(
-            color: world.category.color,
+            color: world.category.foregroundOn(theme.brightness),
             fontWeight: FontWeight.w700,
           ),
         ),

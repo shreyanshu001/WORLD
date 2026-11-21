@@ -365,7 +365,11 @@ class _CategoryChips extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: ChoiceChip(
-                avatar: Icon(category.icon, size: 18, color: category.color),
+                avatar: Icon(
+                  category.icon,
+                  size: 18,
+                  color: category.foregroundOn(Theme.of(context).brightness),
+                ),
                 label: Text(category.label),
                 selected: selected == category,
                 elevation: elevation,

@@ -165,7 +165,7 @@ class _PartView extends ConsumerWidget {
                 builder: (context, value, _) => LinearProgressIndicator(
                   value: value,
                   minHeight: 5,
-                  color: session.category.color,
+                  color: session.category.foregroundOn(theme.brightness),
                   backgroundColor: colors.outline,
                   semanticsLabel: 'Progress',
                   semanticsValue: 'Part ${index + 1} of $total',
