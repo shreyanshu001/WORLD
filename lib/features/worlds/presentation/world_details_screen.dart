@@ -399,38 +399,48 @@ class _SaveButton extends ConsumerWidget {
         signedIn &&
         (ref.watch(savedFlagsProvider)[world.id] ?? world.isSaved ?? false);
 
-    return IconButton.outlined(
-      tooltip: saved ? 'Remove from saved' : 'Save for later',
-      isSelected: saved,
-      iconSize: 24,
-      padding: const EdgeInsets.all(Space.md),
-      icon: const Icon(Icons.bookmark_outline),
-      selectedIcon: const Icon(Icons.bookmark),
-      onPressed: () async {
-        if (!signedIn) {
-          await context.push(
-            AppRoutes.signInFrom(AppRoutes.worldDetails(world.id)),
-          );
-          return;
-        }
-        final messenger = ScaffoldMessenger.of(context);
-        final failure = await ref
-            .read(savedFlagsProvider.notifier)
-            .setSaved(world.id, saved: !saved, previous: saved);
-        if (failure == null) return;
-        messenger
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-              content: Text(
-                saved
-                    ? "Couldn't remove it from saved. ${failure.userMessage}"
-                    : "Couldn't save this World. ${failure.userMessage}",
-              ),
+    Future<void> toggle() async {
+      if (!signedIn) {
+        await context.push(
+          AppRoutes.signInFrom(AppRoutes.worldDetails(world.id)),
+        );
+        return;
+      }
+      final messenger = ScaffoldMessenger.of(context);
+      final failure = await ref
+          .read(savedFlagsProvider.notifier)
+          .setSaved(world.id, saved: !saved, previous: saved);
+      if (failure == null) return;
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              saved
+                  ? "Couldn't remove it from saved. ${failure.userMessage}"
+                  : "Couldn't save this World. ${failure.userMessage}",
             ),
+          ),
+        );
+    }
+
+    // Saved shows as a soft filled button, not saved as an outline: two
+    // shapes as well as two icons, so the state does not rest on colour.
+    return saved
+        ? IconButton.filledTonal(
+            tooltip: 'Remove from saved',
+            iconSize: 24,
+            padding: const EdgeInsets.all(Space.md),
+            icon: const Icon(Icons.bookmark),
+            onPressed: toggle,
+          )
+        : IconButton.outlined(
+            tooltip: 'Save for later',
+            iconSize: 24,
+            padding: const EdgeInsets.all(Space.md),
+            icon: const Icon(Icons.bookmark_outline),
+            onPressed: toggle,
           );
-      },
-    );
   }
 }
 
