@@ -19,6 +19,19 @@ void main() {
     expect(manifest, isNot(contains('FOREGROUND_SERVICE_LOCATION')));
   });
 
+  test('needs no photo, storage or camera permission', () {
+    // The system photo picker hands over the one photo the user chooses.
+    for (final permission in [
+      'READ_MEDIA_IMAGES',
+      'READ_MEDIA_VISUAL_USER_SELECTED',
+      'READ_EXTERNAL_STORAGE',
+      'WRITE_EXTERNAL_STORAGE',
+      'CAMERA',
+    ]) {
+      expect(manifest, isNot(contains(permission)), reason: permission);
+    }
+  });
+
   test('declares foreground location and internet explicitly', () {
     for (final permission in [
       'android.permission.INTERNET',

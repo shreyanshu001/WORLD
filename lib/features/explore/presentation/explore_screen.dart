@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:worlds/app/router/app_routes.dart';
+import 'package:worlds/app/theme/app_tokens.dart';
 import 'package:worlds/core/maps/map_adapter.dart';
+import 'package:worlds/core/widgets/location_explanation_dialog.dart';
 import 'package:worlds/core/maps/map_providers.dart';
 import 'package:worlds/core/maps/map_types.dart';
 import 'package:worlds/features/explore/application/explore_controller.dart';
@@ -63,38 +67,44 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
     final mapAdapter = ref.watch(mapAdapterProvider);
     final attribution = ref.watch(mapStyleProvider).attribution;
 
+    final showingMap = state.view == ExploreView.map;
+
+    // The map fills the screen; search and filters float over it. The map
+    // stays alive (offstage) while the list is shown.
     return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            _TopBar(state: state, controller: controller),
-            SizedBox(
-              height: 4,
-              child: state.loading
-                  ? const LinearProgressIndicator(
-                      semanticsLabel: 'Searching for Worlds',
-                    )
-                  : null,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Offstage(
+              offstage: !showingMap,
+              child: TickerMode(
+                enabled: showingMap,
+                child: _MapPane(
+                  state: state,
+                  controller: controller,
+                  mapAdapter: mapAdapter,
+                  initialCamera: _initialCamera,
+                  attribution: attribution,
+                ),
+              ),
             ),
-            ExploreMessages(state: state, controller: controller),
-            Expanded(
-              child: IndexedStack(
-                index: state.view == ExploreView.map ? 0 : 1,
+          ),
+          Positioned.fill(
+            child: SafeArea(
+              bottom: false,
+              child: Column(
                 children: [
-                  _MapPane(
-                    state: state,
-                    controller: controller,
-                    mapAdapter: mapAdapter,
-                    initialCamera: _initialCamera,
-                    attribution: attribution,
-                  ),
-                  WorldList(state: state, controller: controller),
+                  _TopBar(state: state, controller: controller),
+                  ExploreMessages(state: state, controller: controller),
+                  if (!showingMap)
+                    Expanded(
+                      child: WorldList(state: state, controller: controller),
+                    ),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -112,20 +122,25 @@ class _TopBar extends StatelessWidget {
     final showingMap = state.view == ExploreView.map;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 4, 0),
+      padding: const EdgeInsets.fromLTRB(Space.md, Space.sm, Space.md, 0),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
               Expanded(
-                child: _SearchField(onChanged: controller.updateSearchText),
+                child: _Floating(
+                  radius: Radii.lg,
+                  child: _SearchField(onChanged: controller.updateSearchText),
+                ),
               ),
-              IconButton(
+              const SizedBox(width: Space.sm),
+              _RoundButton(
                 tooltip: 'Find Worlds near me',
                 onPressed: locating
                     ? null
                     : () => _findWorldsNearMe(context, controller),
-                icon: locating
+                child: locating
                     ? const SizedBox.square(
                         dimension: 20,
                         child: CircularProgressIndicator(
@@ -135,21 +150,90 @@ class _TopBar extends StatelessWidget {
                       )
                     : const Icon(Icons.my_location),
               ),
-              IconButton(
+              const SizedBox(width: Space.sm),
+              _RoundButton(
                 tooltip: showingMap ? 'Show as list' : 'Show on map',
                 onPressed: () => controller.setView(
                   showingMap ? ExploreView.list : ExploreView.map,
                 ),
-                icon: Icon(showingMap ? Icons.view_list : Icons.map_outlined),
+                child: Icon(
+                  showingMap ? Icons.view_agenda_outlined : Icons.map_outlined,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: Space.sm + 2),
           _CategoryChips(
             selected: state.category,
             onSelected: controller.selectCategory,
+            floating: showingMap,
+          ),
+          SizedBox(
+            height: Space.sm,
+            child: state.loading
+                ? const Padding(
+                    padding: EdgeInsets.only(top: Space.xs),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.all(Radius.circular(2)),
+                      child: LinearProgressIndicator(
+                        minHeight: 3,
+                        semanticsLabel: 'Searching for Worlds',
+                      ),
+                    ),
+                  )
+                : null,
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// A raised surface that stays legible over the map.
+class _Floating extends StatelessWidget {
+  const _Floating({required this.child, this.radius = Radii.md});
+
+  final Widget child;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.of(context).surface,
+      elevation: 3,
+      shadowColor: Colors.black38,
+      borderRadius: BorderRadius.circular(radius),
+      clipBehavior: Clip.antiAlias,
+      child: child,
+    );
+  }
+}
+
+class _RoundButton extends StatelessWidget {
+  const _RoundButton({
+    required this.tooltip,
+    required this.onPressed,
+    required this.child,
+  });
+
+  final String tooltip;
+  final VoidCallback? onPressed;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.of(context).surface,
+      elevation: 3,
+      shadowColor: Colors.black38,
+      shape: const CircleBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: IconButton(
+        tooltip: tooltip,
+        onPressed: onPressed,
+        color: AppColors.of(context).primary,
+        padding: const EdgeInsets.all(Space.md),
+        icon: child,
       ),
     );
   }
@@ -163,29 +247,15 @@ Future<void> _findWorldsNearMe(
 ) async {
   if (await controller.shouldExplainLocation()) {
     if (!context.mounted) return;
-    final agreed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        icon: const Icon(Icons.my_location),
-        title: const Text('Find Worlds near you'),
-        content: const Text(
+    final agreed = await confirmLocationUse(
+      context,
+      title: 'Find Worlds near you',
+      message:
           'WORLDS uses your location only when you tap this button, to show '
           'Worlds around you. It is not tracked in the background and is '
           'never shown to other people.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Not now'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Continue'),
-          ),
-        ],
-      ),
     );
-    if (agreed != true) return;
+    if (!agreed) return;
   }
   await controller.locate();
 }
@@ -220,8 +290,11 @@ class _SearchFieldState extends State<_SearchField> {
       decoration: InputDecoration(
         hintText: 'Search Worlds by title',
         prefixIcon: const Icon(Icons.search),
-        isDense: true,
-        border: const OutlineInputBorder(),
+        filled: false,
+        border: InputBorder.none,
+        enabledBorder: InputBorder.none,
+        focusedBorder: InputBorder.none,
+        contentPadding: const EdgeInsets.symmetric(vertical: Space.lg),
         suffixIcon: _controller.text.isEmpty
             ? null
             : IconButton(
@@ -239,23 +312,36 @@ class _SearchFieldState extends State<_SearchField> {
 }
 
 class _CategoryChips extends StatelessWidget {
-  const _CategoryChips({required this.selected, required this.onSelected});
+  const _CategoryChips({
+    required this.selected,
+    required this.onSelected,
+    required this.floating,
+  });
 
   final WorldCategory? selected;
   final ValueChanged<WorldCategory?> onSelected;
 
+  /// Over the map, chips get a shadow so they stay readable.
+  final bool floating;
+
   @override
   Widget build(BuildContext context) {
+    final elevation = floating ? 2.0 : 0.0;
     return SizedBox(
-      height: 40,
+      height: 44,
       child: ListView(
         scrollDirection: Axis.horizontal,
+        clipBehavior: Clip.none,
+        // Only five chips: build them all so none is rebuilt while scrolling.
+        cacheExtent: 1000,
         children: [
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: ChoiceChip(
               label: const Text('All'),
               selected: selected == null,
+              elevation: elevation,
+              shadowColor: Colors.black38,
               onSelected: (_) => onSelected(null),
             ),
           ),
@@ -266,6 +352,8 @@ class _CategoryChips extends StatelessWidget {
                 avatar: Icon(category.icon, size: 18, color: category.color),
                 label: Text(category.label),
                 selected: selected == category,
+                elevation: elevation,
+                shadowColor: Colors.black38,
                 onSelected: (_) => onSelected(category),
               ),
             ),
@@ -332,6 +420,10 @@ class _MapPane extends StatelessWidget {
                     world: selected,
                     fromUserLocation: state.centerIsUserLocation,
                     onClose: () => controller.selectWorld(null),
+                    onOpen: () => context.push(
+                      AppRoutes.worldDetails(selected.id),
+                      extra: state.userLocation,
+                    ),
                   ),
                 ),
               _MapAttribution(text: attribution),
@@ -355,11 +447,11 @@ class _MapAttribution extends StatelessWidget {
     return Align(
       alignment: Alignment.bottomLeft,
       child: Container(
-        margin: const EdgeInsets.all(4),
+        margin: const EdgeInsets.fromLTRB(Space.sm, 0, Space.sm, Space.xs),
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surface.withValues(alpha: 0.85),
-          borderRadius: BorderRadius.circular(4),
+          color: AppColors.of(context).surface.withValues(alpha: 0.85),
+          borderRadius: BorderRadius.circular(6),
         ),
         child: Text(text, style: theme.textTheme.labelSmall),
       ),

@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:worlds/app/theme/app_tokens.dart';
 import 'package:worlds/core/utils/distance_format.dart';
 import 'package:worlds/features/worlds/domain/world_preview.dart';
 import 'package:worlds/shared/components/category_style.dart';
+import 'package:worlds/shared/components/design.dart';
 
-/// Summary of the selected World. Opening the full World arrives in
-/// Checkpoint 4.
+/// Summary of the selected World. Tapping it opens the World's details.
 class WorldPreviewCard extends StatelessWidget {
   const WorldPreviewCard({
     required this.world,
     required this.fromUserLocation,
     required this.onClose,
+    required this.onOpen,
     super.key,
   });
 
@@ -18,51 +20,107 @@ class WorldPreviewCard extends StatelessWidget {
   /// Whether the distance is from the user rather than from the map centre.
   final bool fromUserLocation;
   final VoidCallback onClose;
+  final VoidCallback onOpen;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = AppColors.of(context);
     final distance = formatDistance(world.distanceMeters);
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 4, 16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Icon(world.category.icon, color: world.category.color),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
+
+    return Material(
+      color: colors.surface,
+      elevation: 6,
+      shadowColor: Colors.black45,
+      borderRadius: BorderRadius.circular(Radii.lg),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onOpen,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            Space.lg,
+            Space.lg,
+            Space.sm,
+            Space.lg,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(world.title, style: theme.textTheme.titleMedium),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${world.category.label} · by ${world.creatorName}',
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    fromUserLocation
-                        ? '$distance away'
-                        : '$distance from the map centre',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                  CategoryBadge(category: world.category, size: 52),
+                  const SizedBox(width: Space.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          world.category.label.toUpperCase(),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: world.category.color,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.1,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          world.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'by ${world.creatorName}',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colors.muted,
+                          ),
+                        ),
+                      ],
                     ),
+                  ),
+                  IconButton(
+                    tooltip: 'Close',
+                    visualDensity: VisualDensity.compact,
+                    icon: Icon(Icons.close, color: colors.muted),
+                    onPressed: onClose,
                   ),
                 ],
               ),
-            ),
-            IconButton(
-              tooltip: 'Close',
-              icon: const Icon(Icons.close),
-              onPressed: onClose,
-            ),
-          ],
+              const SizedBox(height: Space.md),
+              Padding(
+                padding: const EdgeInsets.only(right: Space.sm),
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: InfoChip(
+                        icon: fromUserLocation
+                            ? Icons.near_me_outlined
+                            : Icons.place_outlined,
+                        label: fromUserLocation
+                            ? '$distance away'
+                            : '$distance from the map centre',
+                        color: colors.accent,
+                        background: colors.accent.withValues(alpha: 0.12),
+                      ),
+                    ),
+                    const SizedBox(width: Space.sm),
+                    FilledButton(
+                      onPressed: onOpen,
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(0, 44),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: Space.lg,
+                        ),
+                      ),
+                      child: const Text('View details'),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

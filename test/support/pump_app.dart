@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:worlds/app/app.dart';
 import 'package:worlds/core/location/location_providers.dart';
+import 'package:worlds/core/maps/map_adapter.dart';
 import 'package:worlds/core/maps/map_providers.dart';
+import 'package:worlds/core/media/media_providers.dart';
+import 'package:worlds/features/world_creation/application/authoring_providers.dart';
 import 'package:worlds/features/auth/application/auth_providers.dart';
 import 'package:worlds/features/explore/application/explore_controller.dart';
 import 'package:worlds/features/profile/application/profile_providers.dart';
 import 'package:worlds/features/worlds/application/world_providers.dart';
 import 'package:worlds/shared/models/geo_point.dart';
 
+import 'creation_fakes.dart';
 import 'explore_fakes.dart';
 import 'fakes.dart';
 
@@ -22,7 +27,14 @@ Future<void> pumpWorldsApp(
   FakeWorldRepository? worlds,
   FakeLocationService? location,
   FakeMapAdapter? map,
+
+  /// Replaces [map] as the drawn map, for screen renders.
+  MapAdapter? mapAdapter,
+  FakeWorldMediaRepository? media,
+  FakeWorldAuthoringRepository? authoring,
+  FakeImagePickerService? picker,
   GeoPoint? exploreDefaultCenter,
+  List<Override> extraOverrides = const [],
 
   /// Set false when something keeps animating (such as a search held open).
   bool settle = true,
@@ -37,10 +49,22 @@ Future<void> pumpWorldsApp(
         worldRepositoryProvider.overrideWithValue(
           worlds ?? FakeWorldRepository(),
         ),
+        worldMediaRepositoryProvider.overrideWithValue(
+          media ?? FakeWorldMediaRepository(),
+        ),
+        worldAuthoringRepositoryProvider.overrideWithValue(
+          authoring ?? FakeWorldAuthoringRepository(),
+        ),
+        imagePickerServiceProvider.overrideWithValue(
+          picker ?? FakeImagePickerService(),
+        ),
+        ...extraOverrides,
         locationServiceProvider.overrideWithValue(
           location ?? FakeLocationService(),
         ),
-        mapAdapterProvider.overrideWithValue(map ?? FakeMapAdapter()),
+        mapAdapterProvider.overrideWithValue(
+          mapAdapter ?? map ?? FakeMapAdapter(),
+        ),
         exploreDefaultCenterProvider.overrideWithValue(exploreDefaultCenter),
       ],
       retry: noAutomaticRetry,
@@ -53,6 +77,14 @@ Future<void> pumpWorldsApp(
     await tester.pump();
     await tester.pump();
   }
+}
+
+/// Sizes the test screen like a common Android phone (411 × 891 dp) instead
+/// of the default 800 × 600.
+void usePhoneScreen(WidgetTester tester) {
+  tester.view.physicalSize = const Size(1080, 2340);
+  tester.view.devicePixelRatio = 2.625;
+  addTearDown(tester.view.reset);
 }
 
 /// Moves the app through the real lifecycle sequence to the background and

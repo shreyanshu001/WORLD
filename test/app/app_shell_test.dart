@@ -51,7 +51,7 @@ void main() {
     expect(find.text('Saved is not built yet'), findsOneWidget);
 
     await tapTab(tester, 'Create');
-    expect(find.text('Create is not built yet'), findsOneWidget);
+    expect(find.text('Create your first World'), findsOneWidget);
 
     await tapTab(tester, 'Profile');
     expect(find.text('@alice'), findsOneWidget);

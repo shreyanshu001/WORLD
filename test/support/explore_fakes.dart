@@ -1,11 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:worlds/core/errors/app_failure.dart';
 import 'package:worlds/core/location/location_service.dart';
 import 'package:worlds/core/maps/map_adapter.dart';
 import 'package:worlds/core/maps/map_types.dart';
+import 'package:worlds/features/worlds/domain/world_details.dart';
 import 'package:worlds/features/worlds/domain/world_preview.dart';
 import 'package:worlds/features/worlds/domain/world_repository.dart';
+import 'package:worlds/features/worlds/domain/world_status.dart';
 import 'package:worlds/shared/models/geo_point.dart';
 import 'package:worlds/shared/models/world_category.dart';
 
@@ -30,12 +33,66 @@ WorldPreview testWorld(
   creatorDisplayName: creatorDisplayName,
 );
 
+/// Details for a published public World, for tests.
+WorldDetails testDetails(
+  String id,
+  String title,
+  WorldCategory category, {
+  String? description = 'A short walk along the harbour.',
+  double? distanceMeters,
+  String? coverPath,
+  int blockCount = 3,
+  WorldStatus status = WorldStatus.published,
+  DateTime? publishedAt,
+  bool isCreator = false,
+  int unlockRadiusMeters = 50,
+}) => WorldDetails(
+  id: id,
+  title: title,
+  description: description,
+  category: category,
+  unlockRadiusMeters: unlockRadiusMeters,
+  latitude: 51.5,
+  longitude: -0.12,
+  distanceMeters: distanceMeters,
+  creatorUsername: 'alice',
+  creatorDisplayName: 'Alice',
+  coverPath: coverPath,
+  blockCount: blockCount,
+  status: status,
+  publishedAt:
+      publishedAt ??
+      (status == WorldStatus.published ? DateTime.utc(2026, 11, 20) : null),
+  isCreator: isCreator,
+);
+
 /// In-memory [WorldRepository] that filters like the server does.
 class FakeWorldRepository implements WorldRepository {
   FakeWorldRepository([List<WorldPreview>? worlds]) : worlds = worlds ?? [];
 
   List<WorldPreview> worlds;
   final queries = <NearbyQuery>[];
+
+  /// Details by World id; missing ids are not found.
+  final detailsById = <String, WorldDetails>{};
+  final detailsRequests = <({String worldId, GeoPoint? from})>[];
+
+  /// Thrown, then cleared, by the next details request.
+  Object? nextDetailsError;
+
+  @override
+  Future<WorldDetails> details(String worldId, {GeoPoint? from}) async {
+    detailsRequests.add((worldId: worldId, from: from));
+    await Future<void>.delayed(Duration.zero);
+    final error = nextDetailsError;
+    if (error != null) {
+      nextDetailsError = null;
+      throw error;
+    }
+    final found = detailsById[worldId];
+    if (found == null) throw const AppFailure.notFound();
+    return found;
+  }
 
   /// Thrown, then cleared, by the next search.
   Object? nextError;
@@ -66,6 +123,18 @@ class FakeWorldRepository implements WorldRepository {
               (text == null || world.title.toLowerCase().contains(text)),
         )
         .toList();
+  }
+}
+
+/// [WorldMediaRepository] that signs nothing: every image fails to load, so
+/// widgets fall back to their placeholders.
+class FakeWorldMediaRepository implements WorldMediaRepository {
+  final requested = <String>[];
+
+  @override
+  Future<Uri> imageUrl(String storagePath) async {
+    requested.add(storagePath);
+    throw const AppFailure.notFound();
   }
 }
 
@@ -143,10 +212,14 @@ class _FakeMap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Below the floating search bar and filters, as on a phone screen.
     return SingleChildScrollView(
+      padding: const EdgeInsets.only(top: 260),
       child: Column(
         children: [
           if (config.userLocation != null) const Text('user location shown'),
+          for (final area in config.areas)
+            Text('area ${area.radiusMeters.round()} m'),
           for (final marker in config.markers)
             TextButton(
               key: ValueKey('marker-${marker.id}'),

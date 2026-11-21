@@ -15,9 +15,13 @@ PostgreSQL + PostGIS. All schema changes must be committed migrations.
   - `creator_id` references `profiles`. Title 3–80 characters, trimmed; description at most 2,000 (proposed limits, D-020). A published World must have `published_at`.
   - One select policy: published public Worlds for everyone, plus creators' own non-deleted Worlds. Unlisted Worlds are not readable yet (gap G1, Checkpoint 4).
   - `cover_asset_id` has no foreign key until `world_assets` exists (Checkpoint 4).
+  Changed in Checkpoint 4 (`supabase/migrations/20261120090000_create_world_authoring.sql`): `location` may be empty while the World is a draft (or deleted); `cover_asset_id` references `world_assets`. Clients still cannot write the table; all changes go through the functions below.
 - **world_assets**: id, world_id, owner_id, unique storage_path, mime_type, size_bytes, created_at.
+  Implemented in Checkpoint 4. Paths are `<owner>/<world>/<asset>.<jpg|png|webp>` in the private `world-media` bucket (5 MB, JPEG/PNG/WebP). Readable by the owner, and by anyone for the cover of a published public World. Rows are created only by `register_world_asset`, after the stored object is checked.
 - **world_content_blocks**: id, world_id, block_type, position, schema_version, content jsonb, timestamps; unique(world_id, position). Never put question answers in content.
+  Implemented in Checkpoint 4. Position 0–29; schema version 1; the unique position constraint is deferred so a reorder can happen in one transaction. Readable by the World's creator only (D-024). Content keys are whitelisted per type by `save_world`, so an `answer` key is rejected.
 - **world_question_secrets**: block_id PK/FK, answer_hash, normalization_version. No direct client SELECT; only trusted validation function can access.
+  Implemented in Checkpoint 4 as `private.world_question_secrets`: in the schema the Data API does not expose, with row level security on and no policies or grants. bcrypt hash of the answer normalised by `private.normalize_answer` (version 1, D-026).
 - **world_visits**: world_id, user_id, first/last visited timestamps, visit_count; composite PK.
 - **world_progress**: world_id, user_id, current_block_id, status in_progress/completed, validated progress jsonb, started_at/completed_at/updated_at; composite PK.
 - **saved_worlds**: world_id, user_id, created_at; composite PK.
@@ -41,12 +45,27 @@ Implemented in Checkpoint 3 (`supabase/migrations/20261120050626_create_worlds.s
 ## Publish RPC
 Transactional operation verifies auth owner, required metadata/location, cover and asset ownership, block schema/size/count, story destinations in same World, at least one meaningful block and secret presence for question blocks. Then sets published status/time and returns safe public representation.
 
+Implemented in Checkpoint 4 as a set of `security definer` functions, each checking `auth.uid()` itself and callable by signed-in users only:
+
+| Function | Purpose |
+| --- | --- |
+| `save_world(world jsonb, question_answers jsonb)` | Creates or replaces the World and its whole block list in one transaction. App-chosen ids make retries safe; block ids belonging to another World are refused. Answers are hashed and never returned. A published World must stay publishable. 20 new Worlds per account per day. |
+| `get_world_draft(world_id)` | The creator's editable copy: fields, blocks with `has_answer`, assets. |
+| `publish_world(world_id)` | Publishes, or returns `problems` (codes such as `location_required`, `answer_required`, `choice_destination_invalid`) and changes nothing. Publishing again succeeds, so a retry is safe. |
+| `unpublish_world(world_id)` | Back to draft; the publish date is kept ("Unpublished"). |
+| `delete_world(world_id)` | Soft delete. |
+| `register_world_asset(asset_id, world_id, storage_path)` | Records an uploaded file after checking owner, folder, declared type, extension and size. Repeatable. |
+| `forget_world_asset(asset_id)` | Releases an unused asset and returns its path for deletion from storage. |
+| `get_world_details(world_id, from_lat, from_lon)` | Callable signed out. Safe details of a published public World (or the caller's own): no blocks, only a count; distance computed by the server. |
+
+Errors: 42501 not allowed (signed out, or hidden by moderation); P0002 not found, also for other people's Worlds; 22023 invalid content; WR429 a creation limit.
+
 ## RLS
 Enable RLS on every exposed table:
 - Profiles: safe public read; owner update.
 - Worlds: public read published/public; creator manages own.
-- Blocks: readable only if parent accessible; creator writes own.
-- Assets: owner-scoped writes; read only when referenced by accessible World.
+- Blocks: readable only if parent accessible; creator writes own. (Checkpoint 4: creator-only reads until the player exists, D-024; writes only through `save_world`.)
+- Assets: owner-scoped writes; read only when referenced by accessible World. (Checkpoint 4: owner, plus the cover of a published public World; storage objects follow the same rule.)
 - Question secrets: no client access.
 - Visits/progress/saves: user-scoped.
 - Reports: authenticated insert; reporter reads own; trusted admin reads/modifies.

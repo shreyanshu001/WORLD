@@ -66,6 +66,7 @@ Added on 2026-11-20 with the owner's go-ahead for Checkpoint 1. Versions are fro
 | `flutter_lints` (dev) | 6.0.0 | Lints | |
 | `maplibre_gl` | 0.27.1 | Maps | Added in Checkpoint 3 (D-016). Bundles MapLibre Native Android 13.5.0; needs Java 21 to build. Used only in `lib/core/maps` |
 | `geolocator` | 14.1.2 | Location | Added in Checkpoint 3. Its location foreground service is removed from the manifest. Used only in `lib/core/location` |
+| `image_picker` | 1.2.3 (Android implementation 0.8.13+17) | Media | Added in Checkpoint 4 (D-028). Uses Android's system photo picker; declares no permissions. Resizes and re-encodes, so `flutter_image_compress` was not added. Used only in `lib/core/media` |
 
 `flutter pub add` without a version picked `flutter_riverpod` 2.6.1 on this SDK, so the constraint is set explicitly to `^3.3.2`. `json_annotation`, `freezed` and `json_serializable` are pinned to the versions verified together in the Checkpoint 0 spike; newer `freezed` 3.2.5 and `json_serializable` 6.14.1 also resolve but were not verified.
 

@@ -24,6 +24,24 @@ void main() {
       );
     });
 
+    test("signed-out users are sent to sign in before the creator's pages", () {
+      for (final location in ['/create/new?id=abc', '/create/worlds/abc']) {
+        expect(
+          authRedirect(signedIn: false, uri: uri(location)),
+          AppRoutes.signInFrom('/create'),
+          reason: location,
+        );
+        expect(authRedirect(signedIn: true, uri: uri(location)), isNull);
+      }
+    });
+
+    test('World details stay open to everyone', () {
+      expect(
+        authRedirect(signedIn: false, uri: uri('/explore/worlds/abc')),
+        isNull,
+      );
+    });
+
     test('other pages are left alone', () {
       for (final location in ['/explore', '/profile', '/saved', '/create']) {
         expect(authRedirect(signedIn: false, uri: uri(location)), isNull);

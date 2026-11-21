@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:worlds/app/theme/app_tokens.dart';
 import 'package:worlds/core/errors/app_failure.dart';
 import 'package:worlds/features/explore/application/explore_controller.dart';
 import 'package:worlds/features/explore/application/explore_state.dart';
@@ -20,7 +21,7 @@ class ExploreMessages extends StatelessWidget {
     final messages = <Widget>[?_locationMessage(), ?_resultsMessage()];
     if (messages.isEmpty) return const SizedBox.shrink();
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
       child: Column(mainAxisSize: MainAxisSize.min, children: messages),
     );
   }
@@ -110,33 +111,53 @@ class _MessageBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final foreground = isError
-        ? scheme.onErrorContainer
-        : scheme.onSecondaryContainer;
+    final colors = AppColors.of(context);
+    final accent = isError ? colors.danger : colors.primary;
     return Semantics(
       liveRegion: true,
-      child: Card(
-        margin: const EdgeInsets.only(bottom: 4),
-        color: isError ? scheme.errorContainer : scheme.secondaryContainer,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
-          child: Row(
-            children: [
-              Icon(icon, color: foreground),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(text, style: TextStyle(color: foreground)),
-              ),
-              if (actionLabel != null && onAction != null)
-                TextButton(onPressed: onAction, child: Text(actionLabel!)),
-              if (onDismiss != null)
-                IconButton(
-                  tooltip: 'Dismiss',
-                  icon: Icon(Icons.close, color: foreground),
-                  onPressed: onDismiss,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: Space.sm),
+        child: Material(
+          color: colors.surface,
+          elevation: 3,
+          shadowColor: Colors.black38,
+          borderRadius: BorderRadius.circular(Radii.md),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              Space.md,
+              Space.sm,
+              Space.xs,
+              Space.sm,
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(Space.sm),
+                  decoration: BoxDecoration(
+                    color: isError ? colors.dangerSoft : colors.primarySoft,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, size: 20, color: accent),
                 ),
-            ],
+                const SizedBox(width: Space.md),
+                Expanded(
+                  child: Text(
+                    text,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: colors.ink),
+                  ),
+                ),
+                if (actionLabel != null && onAction != null)
+                  TextButton(onPressed: onAction, child: Text(actionLabel!)),
+                if (onDismiss != null)
+                  IconButton(
+                    tooltip: 'Dismiss',
+                    icon: Icon(Icons.close, color: colors.muted),
+                    onPressed: onDismiss,
+                  ),
+              ],
+            ),
           ),
         ),
       ),

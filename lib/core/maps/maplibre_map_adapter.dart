@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:worlds/core/maps/geo_circle.dart';
 import 'package:worlds/core/maps/map_adapter.dart';
 import 'package:worlds/core/maps/map_types.dart';
 import 'package:worlds/shared/models/geo_point.dart';
@@ -44,6 +45,7 @@ class _MapLibreMapViewState extends State<_MapLibreMapView> {
 
   int? _appliedCameraRequestId;
   List<MapMarker>? _appliedMarkers;
+  List<MapArea>? _appliedAreas;
   String? _appliedSelectedId;
   GeoPoint? _appliedUserLocation;
 
@@ -70,6 +72,7 @@ class _MapLibreMapViewState extends State<_MapLibreMapView> {
     // reload removes them, so apply everything again.
     _styleLoaded = true;
     _appliedMarkers = null;
+    _appliedAreas = null;
     _scheduleSync();
   }
 
@@ -119,6 +122,31 @@ class _MapLibreMapViewState extends State<_MapLibreMapView> {
         ),
       );
       if (_disposed) return;
+    }
+
+    if (_appliedAreas == null || !listEquals(_appliedAreas, config.areas)) {
+      await controller.clearFills();
+      if (_disposed) return;
+      for (final area in config.areas) {
+        await controller.addFill(
+          FillOptions(
+            geometry: [
+              [
+                for (final point in circlePolygon(
+                  area.center,
+                  area.radiusMeters,
+                ))
+                  _latLng(point),
+              ],
+            ],
+            fillColor: area.colorHex,
+            fillOpacity: 0.2,
+            fillOutlineColor: area.colorHex,
+          ),
+        );
+        if (_disposed) return;
+      }
+      _appliedAreas = config.areas;
     }
 
     final unchanged =
