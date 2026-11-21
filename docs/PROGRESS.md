@@ -402,9 +402,9 @@ Pending the owner's device check and approval. Checkpoint 6 has not been started
 - No Share action and no unlisted Worlds (D-038). No moderator screens (D-036).
 
 ### Tests and results (2026-11-21, after all changes)
-- `dart format --output=none --set-exit-if-changed .` — 169 files, 0 changed.
+- `dart format --output=none --set-exit-if-changed .` — 170 files, 0 changed.
 - `flutter analyze` — no issues.
-- `flutter test --timeout 60s` — 271 of 271 passed (35 new). New tests cover: Saved signed out, empty, populated, opening details and coming back, removal and its rollback, paging, a failed load and retry, the unavailable count, and one account never seeing another's list; saving from details with rollback, a World saved earlier, the Saved tab following a save, and the sign-in round trip from a signed-out save; the report flow, a second report, the daily limit with the form kept, a failed send and retry, no report action for the creator, and sign-in when signed out; creator pages (public fields only, opening from a World and back, paging, unknown username, failed load, no Worlds); the own profile's counts, zeros and a failed load; the server field mappings; the redirects.
+- `flutter test --timeout 60s` — 273 of 273 passed (37 new; two of them, added after the report, run the new screens at 200% text). New tests cover: Saved signed out, empty, populated, opening details and coming back, removal and its rollback, paging, a failed load and retry, the unavailable count, and one account never seeing another's list; saving from details with rollback, a World saved earlier, the Saved tab following a save, and the sign-in round trip from a signed-out save; the report flow, a second report, the daily limit with the form kept, a failed send and retry, no report action for the creator, and sign-in when signed out; creator pages (public fields only, opening from a World and back, paging, unknown username, failed load, no Worlds); the own profile's counts, zeros and a failed load; the server field mappings; the redirects.
 - The first run of the new tests caught two layouts that overflowed with wide text (the report menu label and the profile counts row) and a report error shown out of sight at the end of a scrolling form. All three were fixed.
 - `flutter test test_live` — 3 of 3 passed (real backend).
 - `flutter test test_screens --update-goldens` — 12 of 12; seven new renders (Saved, details with a saved World, the report form and its confirmation, Saved when empty, the own profile, a creator page). All seven were looked at.
@@ -429,7 +429,7 @@ Pending the owner's device check and approval. Checkpoint 6 has not been started
 None. No phone was attached on 2026-11-21. The last build on the owner's phone is Checkpoint 4's.
 
 ### Known issues
-- Nothing in this checkpoint has run on a phone, and large text and TalkBack are unchecked there.
+- Nothing in this checkpoint has run on a phone. Large text was checked in widget tests only (Saved, details, the report form, a creator page and the own profile lay out without overflow at 200%); TalkBack is unchecked.
 - No moderation action has been run on the development database outside rolled-back tests. The runbook should be tried once on a test World before the pilot.
 - The dry run before applying covered only the new test file; the four older files ran after applying (see Database).
 - A creator whose World is hidden sees "Hidden by moderation" and nothing else: no reason, no way to appeal. A reporter is never told the outcome.
