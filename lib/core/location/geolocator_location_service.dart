@@ -43,6 +43,29 @@ class GeolocatorLocationService implements LocationService {
   }
 
   @override
+  Future<LocationFix> currentFix({required Duration timeLimit}) async {
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: timeLimit,
+        ),
+      );
+      return LocationFix(
+        point: GeoPoint(
+          latitude: position.latitude,
+          longitude: position.longitude,
+        ),
+        accuracyMeters: position.accuracy,
+      );
+    } on PermissionDeniedException {
+      throw const AppFailure.permissionDenied();
+    } on Object {
+      throw const AppFailure.locationUnavailable();
+    }
+  }
+
+  @override
   Future<void> openAppSettings() => Geolocator.openAppSettings();
 
   @override

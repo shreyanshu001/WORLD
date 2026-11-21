@@ -9,6 +9,7 @@ import 'package:worlds/core/widgets/empty_view.dart';
 import 'package:worlds/core/widgets/error_view.dart';
 import 'package:worlds/core/widgets/loading_view.dart';
 import 'package:worlds/features/explore/application/explore_focus.dart';
+import 'package:worlds/features/world_player/presentation/play_panel.dart';
 import 'package:worlds/features/worlds/application/world_providers.dart';
 import 'package:worlds/features/worlds/domain/world_details.dart';
 import 'package:worlds/features/worlds/domain/world_status.dart';
@@ -20,7 +21,7 @@ import 'package:worlds/shared/models/geo_point.dart';
 /// Everything a visitor may know about a World before playing it.
 ///
 /// Content blocks are not shown here: they stay hidden until the World is
-/// unlocked. [from] is the user's own position, when they have shared one,
+/// unlocked on site. [from] is the user's own position, when they have shared one,
 /// so the server can say how far away the World is.
 class WorldDetailsScreen extends ConsumerWidget {
   const WorldDetailsScreen({required this.worldId, this.from, super.key});
@@ -201,7 +202,7 @@ class _DetailsView extends StatelessWidget {
                     Text(description, style: theme.textTheme.bodyLarge),
                   ],
                   const SizedBox(height: Space.xl),
-                  _LockPanel(world: world),
+                  PlayPanel(world: world),
                 ],
               ),
             ),
@@ -279,69 +280,6 @@ class _CreatorStatus extends StatelessWidget {
   }
 }
 
-/// Explains the unlock rule like a note in a field journal. Unlocking and
-/// playing arrive in a later checkpoint, so this never offers a Start
-/// action.
-class _LockPanel extends StatelessWidget {
-  const _LockPanel({required this.world});
-
-  final WorldDetails world;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = AppColors.of(context);
-    final distance = world.distanceMeters;
-    final distanceText = distance == null
-        ? 'Use "Find Worlds near me" on Explore to see how far away it is.'
-        : "You're ${formatDistance(distance)} away.";
-
-    return Container(
-      padding: const EdgeInsets.all(Space.lg),
-      decoration: BoxDecoration(
-        color: colors.primarySoft,
-        borderRadius: BorderRadius.circular(Radii.lg),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(Space.sm + 2),
-            decoration: BoxDecoration(
-              color: colors.surface,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.lock_outline, color: colors.primary),
-          ),
-          const SizedBox(width: Space.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Locked', style: theme.textTheme.titleMedium),
-                const SizedBox(height: Space.xs),
-                Text(
-                  'Unlocks within ${world.unlockRadiusMeters} m of its place '
-                  'on the map. $distanceText',
-                  style: theme.textTheme.bodyMedium,
-                ),
-                const SizedBox(height: Space.sm),
-                Text(
-                  'The content stays hidden until then. Unlocking and playing '
-                  "Worlds isn't available in the app yet.",
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colors.muted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _Actions extends ConsumerWidget {
   const _Actions({required this.world});
 
@@ -350,35 +288,48 @@ class _Actions extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final point = world.point;
-    final onMap = point != null && world.lifecycle == WorldLifecycle.published;
+    final published = world.lifecycle == WorldLifecycle.published;
+    final onMap = point != null && published;
     final canEdit = world.isCreator && world.lifecycle != WorldLifecycle.hidden;
     if (!onMap && !canEdit) return const SizedBox.shrink();
 
     return BottomActionBar(
       child: Row(
         children: [
-          if (canEdit)
-            Expanded(
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.edit_outlined),
-                label: const Text('Edit World'),
-                onPressed: () => context.go(AppRoutes.editWorld(world.id)),
-              ),
+          if (onMap) ...[
+            IconButton.outlined(
+              tooltip: 'Show on map',
+              iconSize: 24,
+              padding: const EdgeInsets.all(Space.md),
+              icon: const Icon(Icons.map_outlined),
+              onPressed: () {
+                ref
+                    .read(exploreFocusProvider.notifier)
+                    .focus(worldId: world.id, point: point);
+                context.go(AppRoutes.explore);
+              },
             ),
-          if (canEdit && onMap) const SizedBox(width: 12),
-          if (onMap)
-            Expanded(
-              child: FilledButton.icon(
-                icon: const Icon(Icons.map_outlined),
-                label: const Text('Show on map'),
-                onPressed: () {
-                  ref
-                      .read(exploreFocusProvider.notifier)
-                      .focus(worldId: world.id, point: point);
-                  context.go(AppRoutes.explore);
-                },
-              ),
+            const SizedBox(width: Space.sm),
+          ],
+          if (canEdit && published) ...[
+            IconButton.outlined(
+              tooltip: 'Edit World',
+              iconSize: 24,
+              padding: const EdgeInsets.all(Space.md),
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () => context.go(AppRoutes.editWorld(world.id)),
             ),
+            const SizedBox(width: Space.sm),
+          ],
+          Expanded(
+            child: published
+                ? PlayActionButton(world: world)
+                : FilledButton.icon(
+                    icon: const Icon(Icons.edit_outlined),
+                    label: const Text('Edit World'),
+                    onPressed: () => context.go(AppRoutes.editWorld(world.id)),
+                  ),
+          ),
         ],
       ),
     );

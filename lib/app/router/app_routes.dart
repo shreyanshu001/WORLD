@@ -15,6 +15,12 @@ abstract final class AppRoutes {
   static String newWorld(String worldId) =>
       Uri(path: '$create/new', queryParameters: {'id': worldId}).toString();
 
+  /// The full-screen player for an unlocked World.
+  static String play(String worldId, {bool startOver = false}) => Uri(
+    path: '/play/$worldId',
+    queryParameters: startOver ? {'start_over': '1'} : null,
+  ).toString();
+
   /// The creator's editor for an existing World.
   static String editWorld(String worldId) => '$create/worlds/$worldId';
 
@@ -58,6 +64,12 @@ String? authRedirect({required bool signedIn, required Uri uri}) {
   // explains why and offers sign-in.
   if (!signedIn && path.startsWith('${AppRoutes.create}/')) {
     return AppRoutes.signInFrom(AppRoutes.create);
+  }
+  // Playing needs an account (D-032); come back to the World's details.
+  if (!signedIn && path.startsWith('/play/')) {
+    return AppRoutes.signInFrom(
+      AppRoutes.worldDetails(path.substring('/play/'.length)),
+    );
   }
   return null;
 }

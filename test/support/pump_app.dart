@@ -8,6 +8,7 @@ import 'package:worlds/core/maps/map_adapter.dart';
 import 'package:worlds/core/maps/map_providers.dart';
 import 'package:worlds/core/media/media_providers.dart';
 import 'package:worlds/features/world_creation/application/authoring_providers.dart';
+import 'package:worlds/features/world_player/application/play_providers.dart';
 import 'package:worlds/features/auth/application/auth_providers.dart';
 import 'package:worlds/features/explore/application/explore_controller.dart';
 import 'package:worlds/features/profile/application/profile_providers.dart';
@@ -16,6 +17,7 @@ import 'package:worlds/shared/models/geo_point.dart';
 
 import 'creation_fakes.dart';
 import 'explore_fakes.dart';
+import 'play_fakes.dart';
 import 'fakes.dart';
 
 /// Pumps the whole app with in-memory repositories, a fake map and a fake
@@ -33,6 +35,7 @@ Future<void> pumpWorldsApp(
   FakeWorldMediaRepository? media,
   FakeWorldAuthoringRepository? authoring,
   FakeImagePickerService? picker,
+  FakeWorldPlayRepository? play,
   GeoPoint? exploreDefaultCenter,
   List<Override> extraOverrides = const [],
 
@@ -57,6 +60,9 @@ Future<void> pumpWorldsApp(
         ),
         imagePickerServiceProvider.overrideWithValue(
           picker ?? FakeImagePickerService(),
+        ),
+        worldPlayRepositoryProvider.overrideWithValue(
+          play ?? FakeWorldPlayRepository(),
         ),
         ...extraOverrides,
         locationServiceProvider.overrideWithValue(

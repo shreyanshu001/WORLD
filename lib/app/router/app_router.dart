@@ -12,6 +12,7 @@ import 'package:worlds/features/profile/presentation/profile_screen.dart';
 import 'package:worlds/features/saved/presentation/saved_screen.dart';
 import 'package:worlds/features/world_creation/presentation/create_screen.dart';
 import 'package:worlds/features/world_creation/presentation/world_editor_screen.dart';
+import 'package:worlds/features/world_player/presentation/player_screen.dart';
 import 'package:worlds/features/worlds/presentation/world_details_screen.dart';
 import 'package:worlds/shared/models/geo_point.dart';
 
@@ -120,6 +121,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
+      ),
+      // Full screen, above the tabs: playing is reading first.
+      GoRoute(
+        path: '/play/:id',
+        builder: (context, state) => PlayerScreen(
+          key: ValueKey('play-${state.pathParameters['id']}'),
+          worldId: state.pathParameters['id']!,
+          startOver: state.uri.queryParameters['start_over'] == '1',
+        ),
       ),
       GoRoute(
         path: AppRoutes.signIn,

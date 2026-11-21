@@ -19,7 +19,8 @@ mixin _$WorldDetails {
  double? get latitude; double? get longitude;/// From the position the app passed, computed by the server.
  double? get distanceMeters; String get creatorUsername; String? get creatorDisplayName;/// Storage path of the cover image, if there is one.
  String? get coverPath; int get blockCount; WorldStatus get status; DateTime? get publishedAt;/// Whether the signed-in user created this World.
- bool get isCreator;
+ bool get isCreator;/// Where the signed-in user stands with it; null when signed out.
+ PlayStatus? get playStatus;
 /// Create a copy of WorldDetails
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -32,16 +33,16 @@ $WorldDetailsCopyWith<WorldDetails> get copyWith => _$WorldDetailsCopyWithImpl<W
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorldDetails&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.category, category) || other.category == category)&&(identical(other.unlockRadiusMeters, unlockRadiusMeters) || other.unlockRadiusMeters == unlockRadiusMeters)&&(identical(other.latitude, latitude) || other.latitude == latitude)&&(identical(other.longitude, longitude) || other.longitude == longitude)&&(identical(other.distanceMeters, distanceMeters) || other.distanceMeters == distanceMeters)&&(identical(other.creatorUsername, creatorUsername) || other.creatorUsername == creatorUsername)&&(identical(other.creatorDisplayName, creatorDisplayName) || other.creatorDisplayName == creatorDisplayName)&&(identical(other.coverPath, coverPath) || other.coverPath == coverPath)&&(identical(other.blockCount, blockCount) || other.blockCount == blockCount)&&(identical(other.status, status) || other.status == status)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.isCreator, isCreator) || other.isCreator == isCreator));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorldDetails&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.category, category) || other.category == category)&&(identical(other.unlockRadiusMeters, unlockRadiusMeters) || other.unlockRadiusMeters == unlockRadiusMeters)&&(identical(other.latitude, latitude) || other.latitude == latitude)&&(identical(other.longitude, longitude) || other.longitude == longitude)&&(identical(other.distanceMeters, distanceMeters) || other.distanceMeters == distanceMeters)&&(identical(other.creatorUsername, creatorUsername) || other.creatorUsername == creatorUsername)&&(identical(other.creatorDisplayName, creatorDisplayName) || other.creatorDisplayName == creatorDisplayName)&&(identical(other.coverPath, coverPath) || other.coverPath == coverPath)&&(identical(other.blockCount, blockCount) || other.blockCount == blockCount)&&(identical(other.status, status) || other.status == status)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.isCreator, isCreator) || other.isCreator == isCreator)&&(identical(other.playStatus, playStatus) || other.playStatus == playStatus));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,title,description,category,unlockRadiusMeters,latitude,longitude,distanceMeters,creatorUsername,creatorDisplayName,coverPath,blockCount,status,publishedAt,isCreator);
+int get hashCode => Object.hash(runtimeType,id,title,description,category,unlockRadiusMeters,latitude,longitude,distanceMeters,creatorUsername,creatorDisplayName,coverPath,blockCount,status,publishedAt,isCreator,playStatus);
 
 @override
 String toString() {
-  return 'WorldDetails(id: $id, title: $title, description: $description, category: $category, unlockRadiusMeters: $unlockRadiusMeters, latitude: $latitude, longitude: $longitude, distanceMeters: $distanceMeters, creatorUsername: $creatorUsername, creatorDisplayName: $creatorDisplayName, coverPath: $coverPath, blockCount: $blockCount, status: $status, publishedAt: $publishedAt, isCreator: $isCreator)';
+  return 'WorldDetails(id: $id, title: $title, description: $description, category: $category, unlockRadiusMeters: $unlockRadiusMeters, latitude: $latitude, longitude: $longitude, distanceMeters: $distanceMeters, creatorUsername: $creatorUsername, creatorDisplayName: $creatorDisplayName, coverPath: $coverPath, blockCount: $blockCount, status: $status, publishedAt: $publishedAt, isCreator: $isCreator, playStatus: $playStatus)';
 }
 
 
@@ -52,7 +53,7 @@ abstract mixin class $WorldDetailsCopyWith<$Res>  {
   factory $WorldDetailsCopyWith(WorldDetails value, $Res Function(WorldDetails) _then) = _$WorldDetailsCopyWithImpl;
 @useResult
 $Res call({
- String id, String title, String? description, WorldCategory category, int unlockRadiusMeters, double? latitude, double? longitude, double? distanceMeters, String creatorUsername, String? creatorDisplayName, String? coverPath, int blockCount, WorldStatus status, DateTime? publishedAt, bool isCreator
+ String id, String title, String? description, WorldCategory category, int unlockRadiusMeters, double? latitude, double? longitude, double? distanceMeters, String creatorUsername, String? creatorDisplayName, String? coverPath, int blockCount, WorldStatus status, DateTime? publishedAt, bool isCreator, PlayStatus? playStatus
 });
 
 
@@ -69,7 +70,7 @@ class _$WorldDetailsCopyWithImpl<$Res>
 
 /// Create a copy of WorldDetails
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? description = freezed,Object? category = null,Object? unlockRadiusMeters = null,Object? latitude = freezed,Object? longitude = freezed,Object? distanceMeters = freezed,Object? creatorUsername = null,Object? creatorDisplayName = freezed,Object? coverPath = freezed,Object? blockCount = null,Object? status = null,Object? publishedAt = freezed,Object? isCreator = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? description = freezed,Object? category = null,Object? unlockRadiusMeters = null,Object? latitude = freezed,Object? longitude = freezed,Object? distanceMeters = freezed,Object? creatorUsername = null,Object? creatorDisplayName = freezed,Object? coverPath = freezed,Object? blockCount = null,Object? status = null,Object? publishedAt = freezed,Object? isCreator = null,Object? playStatus = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -86,7 +87,8 @@ as String?,blockCount: null == blockCount ? _self.blockCount : blockCount // ign
 as int,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as WorldStatus,publishedAt: freezed == publishedAt ? _self.publishedAt : publishedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,isCreator: null == isCreator ? _self.isCreator : isCreator // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,playStatus: freezed == playStatus ? _self.playStatus : playStatus // ignore: cast_nullable_to_non_nullable
+as PlayStatus?,
   ));
 }
 
@@ -171,10 +173,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String title,  String? description,  WorldCategory category,  int unlockRadiusMeters,  double? latitude,  double? longitude,  double? distanceMeters,  String creatorUsername,  String? creatorDisplayName,  String? coverPath,  int blockCount,  WorldStatus status,  DateTime? publishedAt,  bool isCreator)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String title,  String? description,  WorldCategory category,  int unlockRadiusMeters,  double? latitude,  double? longitude,  double? distanceMeters,  String creatorUsername,  String? creatorDisplayName,  String? coverPath,  int blockCount,  WorldStatus status,  DateTime? publishedAt,  bool isCreator,  PlayStatus? playStatus)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _WorldDetails() when $default != null:
-return $default(_that.id,_that.title,_that.description,_that.category,_that.unlockRadiusMeters,_that.latitude,_that.longitude,_that.distanceMeters,_that.creatorUsername,_that.creatorDisplayName,_that.coverPath,_that.blockCount,_that.status,_that.publishedAt,_that.isCreator);case _:
+return $default(_that.id,_that.title,_that.description,_that.category,_that.unlockRadiusMeters,_that.latitude,_that.longitude,_that.distanceMeters,_that.creatorUsername,_that.creatorDisplayName,_that.coverPath,_that.blockCount,_that.status,_that.publishedAt,_that.isCreator,_that.playStatus);case _:
   return orElse();
 
 }
@@ -192,10 +194,10 @@ return $default(_that.id,_that.title,_that.description,_that.category,_that.unlo
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  String? description,  WorldCategory category,  int unlockRadiusMeters,  double? latitude,  double? longitude,  double? distanceMeters,  String creatorUsername,  String? creatorDisplayName,  String? coverPath,  int blockCount,  WorldStatus status,  DateTime? publishedAt,  bool isCreator)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  String? description,  WorldCategory category,  int unlockRadiusMeters,  double? latitude,  double? longitude,  double? distanceMeters,  String creatorUsername,  String? creatorDisplayName,  String? coverPath,  int blockCount,  WorldStatus status,  DateTime? publishedAt,  bool isCreator,  PlayStatus? playStatus)  $default,) {final _that = this;
 switch (_that) {
 case _WorldDetails():
-return $default(_that.id,_that.title,_that.description,_that.category,_that.unlockRadiusMeters,_that.latitude,_that.longitude,_that.distanceMeters,_that.creatorUsername,_that.creatorDisplayName,_that.coverPath,_that.blockCount,_that.status,_that.publishedAt,_that.isCreator);case _:
+return $default(_that.id,_that.title,_that.description,_that.category,_that.unlockRadiusMeters,_that.latitude,_that.longitude,_that.distanceMeters,_that.creatorUsername,_that.creatorDisplayName,_that.coverPath,_that.blockCount,_that.status,_that.publishedAt,_that.isCreator,_that.playStatus);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -212,10 +214,10 @@ return $default(_that.id,_that.title,_that.description,_that.category,_that.unlo
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String title,  String? description,  WorldCategory category,  int unlockRadiusMeters,  double? latitude,  double? longitude,  double? distanceMeters,  String creatorUsername,  String? creatorDisplayName,  String? coverPath,  int blockCount,  WorldStatus status,  DateTime? publishedAt,  bool isCreator)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String title,  String? description,  WorldCategory category,  int unlockRadiusMeters,  double? latitude,  double? longitude,  double? distanceMeters,  String creatorUsername,  String? creatorDisplayName,  String? coverPath,  int blockCount,  WorldStatus status,  DateTime? publishedAt,  bool isCreator,  PlayStatus? playStatus)?  $default,) {final _that = this;
 switch (_that) {
 case _WorldDetails() when $default != null:
-return $default(_that.id,_that.title,_that.description,_that.category,_that.unlockRadiusMeters,_that.latitude,_that.longitude,_that.distanceMeters,_that.creatorUsername,_that.creatorDisplayName,_that.coverPath,_that.blockCount,_that.status,_that.publishedAt,_that.isCreator);case _:
+return $default(_that.id,_that.title,_that.description,_that.category,_that.unlockRadiusMeters,_that.latitude,_that.longitude,_that.distanceMeters,_that.creatorUsername,_that.creatorDisplayName,_that.coverPath,_that.blockCount,_that.status,_that.publishedAt,_that.isCreator,_that.playStatus);case _:
   return null;
 
 }
@@ -227,7 +229,7 @@ return $default(_that.id,_that.title,_that.description,_that.category,_that.unlo
 @JsonSerializable()
 
 class _WorldDetails extends WorldDetails {
-  const _WorldDetails({required this.id, required this.title, this.description, required this.category, required this.unlockRadiusMeters, this.latitude, this.longitude, this.distanceMeters, required this.creatorUsername, this.creatorDisplayName, this.coverPath, required this.blockCount, required this.status, this.publishedAt, this.isCreator = false}): super._();
+  const _WorldDetails({required this.id, required this.title, this.description, required this.category, required this.unlockRadiusMeters, this.latitude, this.longitude, this.distanceMeters, required this.creatorUsername, this.creatorDisplayName, this.coverPath, required this.blockCount, required this.status, this.publishedAt, this.isCreator = false, this.playStatus}): super._();
   factory _WorldDetails.fromJson(Map<String, dynamic> json) => _$WorldDetailsFromJson(json);
 
 @override final  String id;
@@ -249,6 +251,8 @@ class _WorldDetails extends WorldDetails {
 @override final  DateTime? publishedAt;
 /// Whether the signed-in user created this World.
 @override@JsonKey() final  bool isCreator;
+/// Where the signed-in user stands with it; null when signed out.
+@override final  PlayStatus? playStatus;
 
 /// Create a copy of WorldDetails
 /// with the given fields replaced by the non-null parameter values.
@@ -263,16 +267,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _WorldDetails&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.category, category) || other.category == category)&&(identical(other.unlockRadiusMeters, unlockRadiusMeters) || other.unlockRadiusMeters == unlockRadiusMeters)&&(identical(other.latitude, latitude) || other.latitude == latitude)&&(identical(other.longitude, longitude) || other.longitude == longitude)&&(identical(other.distanceMeters, distanceMeters) || other.distanceMeters == distanceMeters)&&(identical(other.creatorUsername, creatorUsername) || other.creatorUsername == creatorUsername)&&(identical(other.creatorDisplayName, creatorDisplayName) || other.creatorDisplayName == creatorDisplayName)&&(identical(other.coverPath, coverPath) || other.coverPath == coverPath)&&(identical(other.blockCount, blockCount) || other.blockCount == blockCount)&&(identical(other.status, status) || other.status == status)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.isCreator, isCreator) || other.isCreator == isCreator));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _WorldDetails&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.category, category) || other.category == category)&&(identical(other.unlockRadiusMeters, unlockRadiusMeters) || other.unlockRadiusMeters == unlockRadiusMeters)&&(identical(other.latitude, latitude) || other.latitude == latitude)&&(identical(other.longitude, longitude) || other.longitude == longitude)&&(identical(other.distanceMeters, distanceMeters) || other.distanceMeters == distanceMeters)&&(identical(other.creatorUsername, creatorUsername) || other.creatorUsername == creatorUsername)&&(identical(other.creatorDisplayName, creatorDisplayName) || other.creatorDisplayName == creatorDisplayName)&&(identical(other.coverPath, coverPath) || other.coverPath == coverPath)&&(identical(other.blockCount, blockCount) || other.blockCount == blockCount)&&(identical(other.status, status) || other.status == status)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.isCreator, isCreator) || other.isCreator == isCreator)&&(identical(other.playStatus, playStatus) || other.playStatus == playStatus));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,title,description,category,unlockRadiusMeters,latitude,longitude,distanceMeters,creatorUsername,creatorDisplayName,coverPath,blockCount,status,publishedAt,isCreator);
+int get hashCode => Object.hash(runtimeType,id,title,description,category,unlockRadiusMeters,latitude,longitude,distanceMeters,creatorUsername,creatorDisplayName,coverPath,blockCount,status,publishedAt,isCreator,playStatus);
 
 @override
 String toString() {
-  return 'WorldDetails(id: $id, title: $title, description: $description, category: $category, unlockRadiusMeters: $unlockRadiusMeters, latitude: $latitude, longitude: $longitude, distanceMeters: $distanceMeters, creatorUsername: $creatorUsername, creatorDisplayName: $creatorDisplayName, coverPath: $coverPath, blockCount: $blockCount, status: $status, publishedAt: $publishedAt, isCreator: $isCreator)';
+  return 'WorldDetails(id: $id, title: $title, description: $description, category: $category, unlockRadiusMeters: $unlockRadiusMeters, latitude: $latitude, longitude: $longitude, distanceMeters: $distanceMeters, creatorUsername: $creatorUsername, creatorDisplayName: $creatorDisplayName, coverPath: $coverPath, blockCount: $blockCount, status: $status, publishedAt: $publishedAt, isCreator: $isCreator, playStatus: $playStatus)';
 }
 
 
@@ -283,7 +287,7 @@ abstract mixin class _$WorldDetailsCopyWith<$Res> implements $WorldDetailsCopyWi
   factory _$WorldDetailsCopyWith(_WorldDetails value, $Res Function(_WorldDetails) _then) = __$WorldDetailsCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String title, String? description, WorldCategory category, int unlockRadiusMeters, double? latitude, double? longitude, double? distanceMeters, String creatorUsername, String? creatorDisplayName, String? coverPath, int blockCount, WorldStatus status, DateTime? publishedAt, bool isCreator
+ String id, String title, String? description, WorldCategory category, int unlockRadiusMeters, double? latitude, double? longitude, double? distanceMeters, String creatorUsername, String? creatorDisplayName, String? coverPath, int blockCount, WorldStatus status, DateTime? publishedAt, bool isCreator, PlayStatus? playStatus
 });
 
 
@@ -300,7 +304,7 @@ class __$WorldDetailsCopyWithImpl<$Res>
 
 /// Create a copy of WorldDetails
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? description = freezed,Object? category = null,Object? unlockRadiusMeters = null,Object? latitude = freezed,Object? longitude = freezed,Object? distanceMeters = freezed,Object? creatorUsername = null,Object? creatorDisplayName = freezed,Object? coverPath = freezed,Object? blockCount = null,Object? status = null,Object? publishedAt = freezed,Object? isCreator = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? description = freezed,Object? category = null,Object? unlockRadiusMeters = null,Object? latitude = freezed,Object? longitude = freezed,Object? distanceMeters = freezed,Object? creatorUsername = null,Object? creatorDisplayName = freezed,Object? coverPath = freezed,Object? blockCount = null,Object? status = null,Object? publishedAt = freezed,Object? isCreator = null,Object? playStatus = freezed,}) {
   return _then(_WorldDetails(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -317,7 +321,8 @@ as String?,blockCount: null == blockCount ? _self.blockCount : blockCount // ign
 as int,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as WorldStatus,publishedAt: freezed == publishedAt ? _self.publishedAt : publishedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,isCreator: null == isCreator ? _self.isCreator : isCreator // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,playStatus: freezed == playStatus ? _self.playStatus : playStatus // ignore: cast_nullable_to_non_nullable
+as PlayStatus?,
   ));
 }
 

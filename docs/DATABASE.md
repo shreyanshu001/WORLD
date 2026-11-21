@@ -18,12 +18,15 @@ PostgreSQL + PostGIS. All schema changes must be committed migrations.
   Changed in Checkpoint 4 (`supabase/migrations/20261120090000_create_world_authoring.sql`): `location` may be empty while the World is a draft (or deleted); `cover_asset_id` references `world_assets`. Clients still cannot write the table; all changes go through the functions below.
 - **world_assets**: id, world_id, owner_id, unique storage_path, mime_type, size_bytes, created_at.
   Implemented in Checkpoint 4. Paths are `<owner>/<world>/<asset>.<jpg|png|webp>` in the private `world-media` bucket (5 MB, JPEG/PNG/WebP). Readable by the owner, and by anyone for the cover of a published public World. Rows are created only by `register_world_asset`, after the stored object is checked.
+  Changed in Checkpoint 5: an account that unlocked a published public World can also read the images its parts use (a second select policy that calls `is_unlocked_world_image`). Images no part uses stay with their owner.
 - **world_content_blocks**: id, world_id, block_type, position, schema_version, content jsonb, timestamps; unique(world_id, position). Never put question answers in content.
   Implemented in Checkpoint 4. Position 0–29; schema version 1; the unique position constraint is deferred so a reorder can happen in one transaction. Readable by the World's creator only (D-024). Content keys are whitelisted per type by `save_world`, so an `answer` key is rejected.
 - **world_question_secrets**: block_id PK/FK, answer_hash, normalization_version. No direct client SELECT; only trusted validation function can access.
   Implemented in Checkpoint 4 as `private.world_question_secrets`: in the schema the Data API does not expose, with row level security on and no policies or grants. bcrypt hash of the answer normalised by `private.normalize_answer` (version 1, D-026).
 - **world_visits**: world_id, user_id, first/last visited timestamps, visit_count; composite PK.
+  Implemented in Checkpoint 5 (`supabase/migrations/20261121051737_create_world_play.sql`): one row per account and World, counting successful on-site unlock checks. No positions are stored. Readable by its owner only; written only by `unlock_world`.
 - **world_progress**: world_id, user_id, current_block_id, status in_progress/completed, validated progress jsonb, started_at/completed_at/updated_at; composite PK.
+  Implemented in Checkpoint 5 with two validated arrays instead of one jsonb value: `path` (parts visited, at most 300) and `answered` (questions answered correctly), plus `completion_count`. Created by a successful unlock; changed only by the play functions; readable by its owner only; signed-out users have no access. Answer attempts live in `private.world_answer_attempts` for the attempt limit, with no API access.
 - **saved_worlds**: world_id, user_id, created_at; composite PK.
 - **world_reports**: id, world_id, reporter_id, reason, description, status pending/reviewed/actioned/dismissed, created_at. Prevent duplicate pending reports per reporter/World.
 
@@ -60,14 +63,31 @@ Implemented in Checkpoint 4 as a set of `security definer` functions, each check
 
 Errors: 42501 not allowed (signed out, or hidden by moderation); P0002 not found, also for other people's Worlds; 22023 invalid content; WR429 a creation limit.
 
+## Play RPCs
+Implemented in Checkpoint 5, all `security definer`, signed-in users only (D-032), rules in D-033:
+
+| Function | Purpose |
+| --- | --- |
+| `unlock_world(world_id, latitude, longitude, accuracy_meters)` | Checks one fresh reading: `unlocked` (creates progress, counts a visit), `too_far` or `inaccurate`. |
+| `get_world_play(world_id)` | Parts in order without answers or success messages, the images they use, and progress. WR403 before unlocking. |
+| `advance_world(world_id, from_block_id, option_id)` | One validated step; `stale` when the player had already moved on; completion counted once. |
+| `answer_question(world_id, block_id, answer)` | Checks the normalised answer against the stored hash; five wrong per ten minutes, then `rate_limited`. Never returns the answer. |
+| `restart_world(world_id)` | Back to the first part; questions must be answered again. |
+
+`get_world_details` also returns `play_status` (`locked`, `in_progress`, `completed`; null when signed out).
+
+`is_unlocked_world_image(asset_id)` answers whether the caller may see an image as a player: a part of a published public World they unlocked uses it. It exists for the `world_assets` policy, because players cannot read parts directly; it reveals only what `get_world_play` already lists for that caller. Storage objects follow `world_assets`, so signed image addresses work for exactly those images.
+
+Errors: 42501 not signed in; P0002 not found, unpublished, hidden or deleted; WR403 not unlocked yet; 22023 an invalid step or position.
+
 ## RLS
 Enable RLS on every exposed table:
 - Profiles: safe public read; owner update.
 - Worlds: public read published/public; creator manages own.
 - Blocks: readable only if parent accessible; creator writes own. (Checkpoint 4: creator-only reads until the player exists, D-024; writes only through `save_world`.)
-- Assets: owner-scoped writes; read only when referenced by accessible World. (Checkpoint 4: owner, plus the cover of a published public World; storage objects follow the same rule.)
+- Assets: owner-scoped writes; read only when referenced by accessible World. (Checkpoint 4: owner, plus the cover of a published public World; storage objects follow the same rule. Checkpoint 5: plus, for accounts that unlocked the World, the images its parts use while it is published.)
 - Question secrets: no client access.
-- Visits/progress/saves: user-scoped.
+- Visits/progress/saves: user-scoped. (Checkpoint 5: visits and progress are readable by their owner only and written only by the play functions.)
 - Reports: authenticated insert; reporter reads own; trusted admin reads/modifies.
 Admin role comes from trusted process, never client-editable profile metadata.
 
