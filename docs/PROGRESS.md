@@ -1,10 +1,10 @@
 # WORLDS — Implementation progress
 
 **Phase:** MVP implementation  
-**Current checkpoint:** 4 (World details and creator) in progress, approved by the owner on 2026-11-20  
+**Current checkpoint:** 5 (Experience player) implemented on its branch and awaiting the owner's device check and approval. Checkpoint 4 (approved to start by the owner on 2026-11-20) is also awaiting its device check  
 **Product direction:** Approved  
 **Documentation handoff:** Core product, journey, UX and acceptance specifications published to GitHub  
-**App implementation:** Foundation, accounts and profiles, the Explore map, World details and the World creator. Playing Worlds is not built yet. The Checkpoint 4 database migration is applied to the development project and verified.
+**App implementation:** Foundation, accounts and profiles, the Explore map, World details, the World creator, on-site unlocking and the World player. Saved Worlds, reporting and moderation are not built yet. The Checkpoint 4 and 5 database migrations are applied to the development project and verified. Checkpoints 4 and 5 are on their branches; `main` holds Checkpoints 0–3.
 
 | Checkpoint | Status | Evidence |
 |---|---|---|
@@ -14,7 +14,7 @@
 | 2. Backend and identity | Implemented; device test and security review pending | See "Checkpoint 2 record" below |
 | 3. Explore map | Implemented; real-device map check pending | See "Checkpoint 3 record" below |
 | 4. World details and creator | Implemented (4A–4G); migration applied and tested; two-account API check passed; owner device check pending | See "Checkpoint 4 record" below |
-| 5. Experience player | Not started | — |
+| 5. Experience player | Implemented; migration applied and tested; account A to account B check passed through the app's own data layer; no device verification | See "Checkpoint 5 record" below |
 | 6. Saved/profile/moderation | Not started | — |
 | 7. Beta and pilot | Not started | — |
 
@@ -26,8 +26,10 @@
 - The Checkpoint 2 security review has not been explicitly given.
 - Checkpoint 3's map package and tile provider were adopted on recommendation when the owner said "continue" (D-016, D-017); the owner has not chosen them explicitly.
 - The pilot area, and so the Explore default centre, is undecided (D-021).
-- Data-changing SQL through the Supabase connection needs an approval prompt that this editor declines automatically, so schema changes are run by the owner in the Supabase SQL editor from prepared files (see `supabase/README.md`).
+- Schema changes through the Supabase connection: in Checkpoint 4 its approval prompt was declined by the editor, so the owner ran prepared files in the Supabase SQL editor. In Checkpoint 5 the connection ran single statements again (dry run, apply and tests all went through it); requests made of several statements were still refused. The prepared files are now one statement each (see `supabase/README.md`).
 - Checkpoint 4 has not been checked on a phone by the owner: the creator, place picker, photo picker and details screen are unseen on a real screen.
+- Checkpoint 5 has not run on a phone at all: unlocking with a real GPS reading, the permission prompt from the details screen and the player are untested on a device. No phone was attached on 2026-11-21.
+- Checkpoints 4 and 5 are not merged into `main` (their branches are on GitHub). `AGENTS.md` still describes the state before Checkpoint 4 under "Before coding" and "Current task"; a correction is proposed in the Checkpoint 5 report and left to the owner.
 - Gap G1 (unlisted Worlds by direct link) is still open; the creator does not offer "unlisted" (D-029).
 - The application ID is the placeholder `com.example.worlds`. It must be replaced before any release build.
 - Supabase region and plan are unverified. Verified: Postgres 17.12; sign-up enabled; email confirmation **off** since 2026-11-20 (`mailer_autoconfirm: true` from the public auth settings; it was `false` before).
@@ -257,11 +259,99 @@ The redesigned build (`4d6875e`) with the applied backend was installed on the o
 - No thumbnails: images are resized on the phone to 2,048 px only.
 - Leaked-password protection is off in Supabase Auth (security advisor WARN); turning it on is a dashboard setting and may need a paid plan.
 - Two soft-deleted test Worlds from the 4G check remain in the database, invisible to everyone; the two test accounts remain for Checkpoint 5.
-- Unlisted Worlds (G1) and the play-account decision (D-022) remain open.
-- The visual design is still the Material 3 baseline; the "living atlas" direction is not approved.
+- Unlisted Worlds (G1) remain open. The play-account decision was made later the same day (D-032).
+- Corrected 2026-11-21: this list said the visual design was still the Material 3 baseline. That was written before the redesign recorded under "After review"; the "living atlas" direction was adopted at the owner's request as D-031, with its exact values still open to the owner's review.
 
 ### Approval status
 Pending the owner's device check and approval. The Checkpoint 4 gate (publish with account A, verify as account B) passed at the API level with the real backend.
+
+## Checkpoint 5 record
+
+- **Dates:** 2026-11-20 (implementation) and 2026-11-21 (database applied, review fixes, these records).
+- **Branch:** `checkpoint-5-world-player`, from `checkpoint-4-world-creator` at `98ad78d`. Commits `bd7a479` (player, unlocking, migration), `ddc612a` (screen renders, live check) and `e662d8e` (decisions and schema notes) are on GitHub; the commit that carries this record is local.
+- **Started:** work began on 2026-11-20, the day the owner decided that unlocking and playing need an account (D-032). The unlock and play rules were chosen by the implementation and are recorded as proposed (D-033). The session of 2026-11-21 continued at the owner's "continue"; it had no record of the wording of the approval to start, so none is quoted here.
+- **Baseline on 2026-11-21, before any change:** `dart format --output=none --set-exit-if-changed .` 147 files, 0 changed; `flutter analyze` no issues; `flutter test --timeout 60s` 230 of 230. Database: four migrations; the play migration was committed but not applied.
+
+### Database
+- `supabase/migrations/20261121051737_create_world_play.sql` (committed first as `20261121090000_…`, renamed to the version Supabase recorded):
+  - `world_progress` (current part, `path`, `answered`, completion count) and `world_visits`, readable by their owner only, written only by the functions; `private.world_answer_attempts` with no API access. Row level security on all three.
+  - `unlock_world`, `get_world_play`, `advance_world`, `answer_question`, `restart_world`: signed-in users only, each checking `auth.uid()` and that the World is published and public. `get_world_details` now also returns `play_status`.
+  - `is_unlocked_world_image` and a second read policy on `world_assets`: an account that unlocked a published World can read the images its parts use.
+- **Changed on 2026-11-21, before applying** (the migration had never been run, so it was still editable):
+  - The first version let a player read every image registered to an unlocked World, including ones no part uses, and gave signed-out users a `select` grant on `world_progress` to make its policy work. Now players read only the images the parts use, the Checkpoint 4 policy is left as it was, and signed-out users have no access to progress.
+  - `supabase/tests/world_play_test.sql` gained checks for that, for a World hidden by moderation (content, restart, answers, details and images all refused to a player who had unlocked it), for resuming after a fresh load, and for the grants of every play function.
+- **A test that could not pass:** the first dry run stopped at `FAIL puzzle: the answer or its success message was served`. The committed test searched the play content for "keeper", and its fixture World is titled "Keeper Riddle". The functions were right; the test now searches for the answer and the success message. This also shows the SQL had not been executed anywhere before 2026-11-21.
+- **Applied on 2026-11-21 through the Supabase connection** (D-015):
+  - Dry run, migration plus `world_play_test.sql` as one rolled-back statement: `WORLDS_ALL_TESTS_PASSED: world_play_test 52 checks`. The three older test files were not part of the dry run; they ran after applying.
+  - Apply with `apply_migration`, name `create_world_play`: success. Recorded version `20261121051737`. The stored statement's md5 is `df539f313babd8796475bab352bd12d7`, the same as the committed file (23,922 characters, one statement).
+  - Tests against the applied schema, each file as one rolled-back statement: `world_authoring_test 74 checks`, `world_play_test 52 checks`, `profiles_test 32 checks`, `worlds_test 36 checks`.
+  - Every test statement carried the md5 of the committed file and would have refused to run if its text differed.
+  - Read-only checks afterwards: row level security on the three new tables; the two read policies on `world_assets`; the five play functions and `is_unlocked_world_image` callable by signed-in users only; `get_world_details` still callable signed out.
+  - Security advisor: INFO that `private.world_answer_attempts` and `private.world_question_secrets` have no policies (intended: no client access); WARN that signed-in users can call 14 `security definer` functions and anyone can call `get_world_details` (intended: they are the API and check the caller themselves); WARN that leaked-password protection is off in Auth settings.
+  - Performance advisor: INFO on four unused indexes (little data yet); WARN that `world_assets` has two permissive read policies for signed-in users. That is the price of keeping the players' rule separate from the Checkpoint 4 policy; with at most 40 images per World it costs nothing measurable.
+- **Tooling:** `tool/sql/build_editor_sql.js` now writes each file as one statement that verifies its own text (md5) before running, and reports a failure by its message alone.
+
+### Account A to account B (the Checkpoint 5 gate, at the level of the app's data layer)
+`flutter test test_live` — 2 of 2 passed against the development project, with the two labelled test accounts and a test World far out at sea. `test_live/play_repository_live_test.dart` uses the app's own repositories:
+- A uploads two pictures, saves and publishes a puzzle (text, picture, question, ending); one picture is used by a part, the other is not.
+- B sees it as locked and is refused its content and its picture; an unlock from about 222 m away is "too far"; an unlock at its place succeeds and details then say "in progress".
+- B receives four parts without the answer or the success message, and the one picture the parts use. B fetches that picture through Storage with a signed address (HTTP 200) and is refused the unused one.
+- B steps forward; a repeated step changes nothing; the question cannot be skipped; a wrong answer leaves 4 tries; the right answer in other case and spacing returns the success message.
+- B finishes; finishing again counts once; details say "completed"; a fresh load still says completed; starting again keeps the count.
+- After A unpublishes, B gets "not available" and the picture is refused again. A releases both pictures and deletes the World.
+- Left behind in the development database: soft-deleted test Worlds (invisible to everyone) and, for test account B, a progress row, a visit row and two answer attempts per run; no files.
+
+### App
+- **Details** (`lib/features/world_player/presentation/play_panel.dart`): a locked or unlocked panel and one main action that matches the real state: "Sign in to unlock", "Check my location" (then "Check again"), "Start", "Continue" or "Play again". Before Android's prompt, a dialog says one reading is taken now, not stored, not tracked and not shown to others. Too far (with the distance and radius), a vague reading (over 100 m, refused before asking the server), permission refused, blocked (opens Settings), location off, no fix and server failure each have their own message and a way to try again.
+- **Location** (`lib/core/location`): `currentFix` takes one high-accuracy reading with its uncertainty and a 20-second limit. No streams, no background use.
+- **Player** (`lib/features/world_player`): full screen above the tabs at `/play/:id`; one part at a time on the renderer shared with the creator's preview; a thin progress bar and "Part n of m"; story options as cards; an answer field with tries left; Continue or Finish at the bottom; a completion screen with "Find another World" and "Play again". The app never moves on by itself: every step, answer and restart is the server's.
+- **Sign-in:** opening the player signed out leads to sign-in and back to the World's details.
+- **Fixed on 2026-11-21 after reading the code against the journeys:**
+  - After too many wrong answers the answer field stayed closed until the player was reopened. It now reopens when the server's pause ends.
+  - A failed "Play again" on the completion screen showed nothing. It now says so and can be tried again.
+  - If the creator changed the World while someone played it, the player could sit on a spinner for ever. It now loads the World again, and a place it cannot show offers "Try again". A failed reload is reported like a failed step.
+
+### Tests and results (2026-11-21, after all changes)
+- `dart format --output=none --set-exit-if-changed .` — 147 files, 0 changed.
+- `flutter analyze` — no issues.
+- `flutter test --timeout 60s` — 236 of 236 passed. Player and unlocking tests cover: a branching story to its end and again; a puzzle with a hint, a wrong and a right answer; the pause after too many tries and its end; a failed step, a stale step, a failed catch-up; a World changed mid-play; a place the app cannot show; a failed "Play again"; picture and artwork parts with the images they use; locked, unavailable and resumed Worlds; the explanation before the prompt, too far, a vague reading, refused permission, Continue and Play again on details; the sign-in redirect.
+- `flutter test test_live` — 2 of 2 passed (real backend), run again after the picture checks were added.
+- `flutter build apk --debug --dart-define-from-file=.env` — passed. Permissions in the built APK are the same as in Checkpoint 4: INTERNET, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE and AndroidX's app-internal `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. No background location, storage, media or camera permission.
+- Database: 32, 36, 74 and 52 checks, as above.
+
+### Acceptance criteria (docs/FEATURE_ACCEPTANCE_CRITERIA.md, section 7)
+| Criterion | Status | Evidence |
+| --- | --- | --- |
+| Only server-authorized content | Met | `get_world_play` refuses before unlocking (WR403) and for unpublished, hidden or deleted Worlds; SQL tests and the live check |
+| Renderer supports the six part types | Met in tests; real pictures not seen on a screen | Shared `BlockView`, used by the creator's preview and the player; player tests show text, picture, artwork, choice, question and ending parts (pictures as placeholders). The live check proves a player can fetch a part's picture from Storage |
+| Valid choices only | Met | `advance_world` takes an option id and finds the destination itself, in the same World and later in the list; unknown options refused |
+| Answers checked by the server, limited, never sent | Met | Hash comparison in `answer_question`; five wrong per ten minutes; payload checks in SQL tests and the live check |
+| Fresh foreground reading at unlock; uncertainty and retry explicit | Met in tests; not on a device | One reading on tap; over 100 m refused with advice; "Check again" |
+| Account requirement decided and documented first | Met | D-032 |
+| Progress server-confirmed and resumed | Met at the API level | A fresh load returns the server's place (SQL test, live check, widget test). Killing the app on a phone, reinstalling and signing in again are not tested |
+| Duplicate steps and completion idempotent | Met | Stale steps change nothing; completion counted once (SQL tests, live check) |
+| Unpublished and hidden behaviour consistent and tested | Met | Both refuse content, steps, answers, restart and images; details stay open only to the creator |
+| Complete flow for creator A and explorer B | Met through the app's data layer; not on devices | `flutter test test_live` |
+
+### Manual device verification
+None for Checkpoint 5. `adb devices` listed no device on 2026-11-21. The last build installed on the owner's phone is Checkpoint 4's (`4d6875e`), which has no player. Unlocking depends on a real GPS reading, so this is the largest untested part of the checkpoint.
+
+### Known issues
+- Unlocking and the player have never run on a phone. The 100 m accuracy limit and the 25 m allowance are untested in the field; indoors or between tall buildings a phone may not reach 100 m.
+- GPS is a convenience gate. A spoofed position unlocks a World; nothing claims otherwise.
+- `world_visits` keeps, per account and World, the first and last time an unlock succeeded and a count. No coordinates are stored, but a row does say that the account was at that World's place at those times. Review against `docs/SECURITY_AND_PRIVACY.md` before the pilot.
+- "Part n of m" and the progress bar count every part, including branches the reader did not take.
+- Reopening the player on a question already answered shows "Correct!" rather than the creator's success message.
+- "Play again" from the details screen shows the completion screen for a moment before the first part.
+- There is no way back to an earlier part, and the completion screen has no save or share action (Checkpoint 6).
+- If the creator removes the part a player is on, that player restarts from the first part and answers questions again.
+- A part type or schema version the installed app does not know stops the player with a general error; there is no "update the app" message.
+- Answer attempts are kept for the limit and never cleaned up. The limit is per account, and accounts are free to create while email confirmation is off.
+- The design-review renders in `test_screens/` were not regenerated after the 2026-11-21 fixes; those fixes only add messages to failure states.
+- Open from earlier checkpoints: unlisted Worlds (G1), the pilot area (D-021), the application ID, custom SMTP and email confirmation, leaked-password protection.
+
+### Approval status
+Pending the owner's device check and approval. Checkpoint 6 has not been started.
 
 ## Update protocol
 For each checkpoint record date, commit SHA, summary, tests and results, manual device verification, known issues and approval status. Never mark a checkpoint complete without evidence.
