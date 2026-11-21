@@ -88,29 +88,29 @@ class _DetailsView extends StatelessWidget {
             pinned: true,
             expandedHeight: 300,
             backgroundColor: colors.canvas,
-            leading: Padding(
-              padding: const EdgeInsets.all(Space.sm),
-              child: Material(
-                color: colors.surface.withValues(alpha: 0.92),
-                shape: const CircleBorder(),
-                child: IconButton(
-                  tooltip: 'Back',
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => context.canPop()
-                      ? context.pop()
-                      : context.go(AppRoutes.explore),
+            // The round buttons over the cover are 40 dp to look at and
+            // 48 dp to touch: the button draws its own disc and keeps the
+            // touch area round it.
+            leading: Center(
+              child: IconButton(
+                tooltip: 'Back',
+                style: IconButton.styleFrom(
+                  backgroundColor: colors.surface.withValues(alpha: 0.92),
                 ),
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.canPop()
+                    ? context.pop()
+                    : context.go(AppRoutes.explore),
               ),
             ),
             actions: [
               if (world.lifecycle == WorldLifecycle.published &&
                   !world.isCreator)
                 Padding(
-                  padding: const EdgeInsets.all(Space.sm),
-                  child: Material(
-                    color: colors.surface.withValues(alpha: 0.92),
-                    shape: const CircleBorder(),
-                    child: _MoreMenu(world: world),
+                  padding: const EdgeInsets.only(right: Space.xs),
+                  child: _MoreMenu(
+                    world: world,
+                    background: colors.surface.withValues(alpha: 0.92),
                   ),
                 ),
             ],
@@ -462,14 +462,18 @@ class _SaveButton extends ConsumerWidget {
 
 /// The lesser actions on a published World made by someone else.
 class _MoreMenu extends ConsumerWidget {
-  const _MoreMenu({required this.world});
+  const _MoreMenu({required this.world, required this.background});
 
   final WorldDetails world;
+
+  /// The disc behind the icon, so it shows on any cover.
+  final Color background;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return PopupMenuButton<void>(
       tooltip: 'More',
+      style: IconButton.styleFrom(backgroundColor: background),
       icon: const Icon(Icons.more_vert),
       itemBuilder: (context) => [
         PopupMenuItem<void>(

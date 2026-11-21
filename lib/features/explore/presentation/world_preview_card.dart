@@ -37,10 +37,12 @@ class WorldPreviewCard extends StatelessWidget {
       child: InkWell(
         onTap: onOpen,
         child: Padding(
+          // The right inset is small because the close button brings its
+          // own: it is 48 dp to touch, round a 24 dp cross.
           padding: const EdgeInsets.fromLTRB(
             Space.lg,
             Space.lg,
-            Space.sm,
+            Space.xs,
             Space.lg,
           ),
           child: Column(
@@ -84,7 +86,6 @@ class WorldPreviewCard extends StatelessWidget {
                   ),
                   IconButton(
                     tooltip: 'Close',
-                    visualDensity: VisualDensity.compact,
                     icon: Icon(Icons.close, color: colors.muted),
                     onPressed: onClose,
                   ),
@@ -92,7 +93,7 @@ class WorldPreviewCard extends StatelessWidget {
               ),
               const SizedBox(height: Space.md),
               Padding(
-                padding: const EdgeInsets.only(right: Space.sm),
+                padding: const EdgeInsets.only(right: Space.md),
                 // The button drops under the distance when both cannot
                 // share a line (large text, a narrow screen).
                 child: Wrap(

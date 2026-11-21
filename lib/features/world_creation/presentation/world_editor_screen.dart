@@ -330,12 +330,15 @@ class _StepBar extends ConsumerWidget {
                 onTap: hasDraft || item == EditorStep.category
                     ? () => ref.read(provider.notifier).goTo(item)
                     : null,
-                child: Padding(
+                // Each step is a button: at least 48 dp tall to touch.
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 48),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 3,
                     vertical: Space.sm,
                   ),
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       AnimatedContainer(
