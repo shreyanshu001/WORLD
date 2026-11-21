@@ -439,7 +439,13 @@ void main() {
       );
       await tapText(tester, 'Add a part');
       await tapText(tester, 'Choice');
-      await tapText(tester, '5. Publish');
+      // Five step names cannot share a line at this size: the bar shows
+      // numbers, and names the current step in full.
+      expect(find.text('Step 4 of 5: Content'), findsOneWidget);
+      expect(find.text('4. Content'), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('step-review')));
+      await tester.pumpAndSettle();
+      expect(find.text('Step 5 of 5: Publish'), findsOneWidget);
       await reach(tester, find.text('Preview as an explorer'));
       expect(find.text('Preview as an explorer'), findsOneWidget);
     });
@@ -489,7 +495,8 @@ void main() {
       await pump(tester);
       await tapTab(tester, 'Create');
       await tapText(tester, longTitle);
-      await tapText(tester, '5. Publish');
+      await tester.tap(find.byKey(const ValueKey('step-review')));
+      await tester.pumpAndSettle();
       await tapText(tester, 'Preview as an explorer');
       await tapText(tester, 'Continue');
       expect(find.text('Climb the stairs first'), findsOneWidget);
