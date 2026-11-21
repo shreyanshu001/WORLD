@@ -31,7 +31,7 @@
 - Checkpoint 5 has not run on a phone at all: unlocking with a real GPS reading, the permission prompt from the details screen and the player are untested on a device. No phone was attached on 2026-11-21.
 - Checkpoint 6 has not run on a phone, and no moderation action has been run for real: the moderation functions have only run inside rolled-back tests, and the runbook in `supabase/README.md` has not been followed by a person.
 - The Checkpoint 6 gate is the owner's moderation and privacy review. Five decisions taken for it are proposals (D-034 to D-038).
-- Checkpoints 4, 5 and 6 are not merged into `main`. The Checkpoint 6 branch `checkpoint-6-saved-profile-moderation` is local only.
+- Checkpoints 4, 5 and 6 are not merged into `main`. The Checkpoint 6 branch `checkpoint-6-saved-profile-moderation` is on GitHub at its starting commit only; its Checkpoint 6 commits are local.
 - Checkpoints 4 and 5 are not merged into `main` (their branches are on GitHub). `AGENTS.md` still describes the state before Checkpoint 4 under "Before coding" and "Current task"; a correction is proposed in the Checkpoint 5 report and left to the owner.
 - Gap G1 (unlisted Worlds by direct link) is still open; the creator does not offer "unlisted" (D-029).
 - The application ID is the placeholder `com.example.worlds`. It must be replaced before any release build.
@@ -361,7 +361,7 @@ Pending the owner's device check and approval. Checkpoint 6 has not been started
 ## Checkpoint 6 record
 
 - **Date:** 2026-11-21.
-- **Branch:** `checkpoint-6-saved-profile-moderation`, from `checkpoint-5-world-player` at `3081614`. Commits: `05b3158` (database), `3ac2386` (data layer, live check), `5011b0b` (screens and tests), `fd2df92` (renders), `07ef6a1` (bookmark style), `3002b62` (decisions, schema notes, runbook), plus this record. All local, not pushed.
+- **Branch:** `checkpoint-6-saved-profile-moderation`, from `checkpoint-5-world-player` at `3081614`. Commits: `05b3158` (database), `3ac2386` (data layer, live check), `5011b0b` (screens and tests), `fd2df92` (renders), `07ef6a1` (bookmark style), `3002b62` (decisions, schema notes, runbook), `eb496d1` and later (this record). The branch was published to GitHub at its starting commit `3081614`; the Checkpoint 6 commits are local, not pushed.
 - **Started:** the owner wrote "pushed continue further" after the Checkpoint 5 report, having pushed that branch. The device checks of Checkpoints 4 and 5 and the decisions listed in that report were still open. Where the documents leave a choice, restrictive defaults were taken and recorded as proposals: D-034 (saved Worlds), D-035 (reports), D-036 (moderation in the dashboard only), D-037 (profile pages and counts), D-038 (no share links yet).
 - **Baseline before coding:** the Checkpoint 5 results at `3081614`, run earlier the same day: 147 files formatted with none changed, no analysis issues, 236 of 236 tests, live tests 2 of 2.
 
