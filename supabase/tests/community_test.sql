@@ -393,10 +393,12 @@ begin
   ---------------------------------------------------------------------------
   -- Moderation (as the project owner in the SQL editor)
   ---------------------------------------------------------------------------
+  -- (Counted for the fixture Worlds only: the real queue and log may hold
+  -- rows of their own.)
   select count(*), min(q.reporter) into found_count, value
   from private.moderation_queue() as q where q.world_id = w1;
   if found_count <> 1 or value <> 'ctest_saver'
-     or (select count(*) from private.moderation_queue()) <> 2 then
+     or (select count(*) from private.moderation_queue() as q where q.world_id in (w1, w2)) <> 2 then
     raise exception 'FAIL queue: expected one pending report of w1 by the saver, two in all';
   end if;
   checks := checks + 1;
@@ -505,7 +507,7 @@ begin
   perform private.dismiss_reports(w2, 'owner', 'Not a violation');
   if (select status from public.world_reports where world_id = w2) <> 'dismissed'
      or (select status from public.worlds where id = w2) <> 'published'
-     or (select count(*) from private.moderation_queue()) <> 0 then
+     or (select count(*) from private.moderation_queue() as q where q.world_id in (w1, w2)) <> 0 then
     raise exception 'FAIL moderation: dismiss';
   end if;
   checks := checks + 1;
@@ -523,7 +525,7 @@ begin
   reset role;
 
   select count(*), string_agg(a.action, ',' order by a.id) into found_count, value
-  from private.moderation_actions as a;
+  from private.moderation_actions as a where a.world_id in (w1, w2);
   if found_count <> 4 or value <> 'hide,restore,dismiss_reports,remove' then
     raise exception 'FAIL moderation: the log should hold the four actions, got %', value;
   end if;
