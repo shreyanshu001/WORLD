@@ -268,7 +268,7 @@ Pending the owner's device check and approval. The Checkpoint 4 gate (publish wi
 ## Checkpoint 5 record
 
 - **Dates:** 2026-11-20 (implementation) and 2026-11-21 (database applied, review fixes, these records).
-- **Branch:** `checkpoint-5-world-player`, from `checkpoint-4-world-creator` at `98ad78d`. Commits `bd7a479` (player, unlocking, migration), `ddc612a` (screen renders, live check) and `e662d8e` (decisions and schema notes) are on GitHub; the commit that carries this record is local.
+- **Branch:** `checkpoint-5-world-player`, from `checkpoint-4-world-creator` at `98ad78d`. Commits `bd7a479` (player, unlocking, migration), `ddc612a` (screen renders, live check) and `e662d8e` (decisions and schema notes) are on GitHub. `5dfeb6d` (image access, applied migration, player fixes, tests) and the documentation commits after it, starting with `cc4a273`, are local and not pushed, so the branch on GitHub still holds the first version of the migration under its old file name.
 - **Started:** work began on 2026-11-20, the day the owner decided that unlocking and playing need an account (D-032). The unlock and play rules were chosen by the implementation and are recorded as proposed (D-033). The session of 2026-11-21 continued at the owner's "continue"; it had no record of the wording of the approval to start, so none is quoted here.
 - **Baseline on 2026-11-21, before any change:** `dart format --output=none --set-exit-if-changed .` 147 files, 0 changed; `flutter analyze` no issues; `flutter test --timeout 60s` 230 of 230. Database: four migrations; the play migration was committed but not applied.
 
@@ -299,7 +299,7 @@ Pending the owner's device check and approval. The Checkpoint 4 gate (publish wi
 - B steps forward; a repeated step changes nothing; the question cannot be skipped; a wrong answer leaves 4 tries; the right answer in other case and spacing returns the success message.
 - B finishes; finishing again counts once; details say "completed"; a fresh load still says completed; starting again keeps the count.
 - After A unpublishes, B gets "not available" and the picture is refused again. A releases both pictures and deletes the World.
-- Left behind in the development database: soft-deleted test Worlds (invisible to everyone) and, for test account B, a progress row, a visit row and two answer attempts per run; no files.
+- Left behind in the development database, counted on 2026-11-21 after the last run: 13 soft-deleted test Worlds (invisible to everyone; they include earlier checkpoints' runs), 3 progress rows, 3 visit rows and 4 answer attempts of test account B, no files and no image records.
 
 ### App
 - **Details** (`lib/features/world_player/presentation/play_panel.dart`): a locked or unlocked panel and one main action that matches the real state: "Sign in to unlock", "Check my location" (then "Check again"), "Start", "Continue" or "Play again". Before Android's prompt, a dialog says one reading is taken now, not stored, not tracked and not shown to others. Too far (with the distance and radius), a vague reading (over 100 m, refused before asking the server), permission refused, blocked (opens Settings), location off, no fix and server failure each have their own message and a way to try again.
@@ -347,7 +347,9 @@ None for Checkpoint 5. `adb devices` listed no device on 2026-11-21. The last bu
 - If the creator removes the part a player is on, that player restarts from the first part and answers questions again.
 - A part type or schema version the installed app does not know stops the player with a general error; there is no "update the app" message.
 - Answer attempts are kept for the limit and never cleaned up. The limit is per account, and accounts are free to create while email confirmation is off.
-- The design-review renders in `test_screens/` were not regenerated after the 2026-11-21 fixes; those fixes only add messages to failure states.
+- The design-review renders were regenerated on 2026-11-21 (`flutter test test_screens --update-goldens`, 9 of 9). They show the normal states only, not the failure states the fixes touch. Run without `--update-goldens`, that script compares against whatever images are on the machine and is not a test.
+- The player and the unlock panel have not been checked with large text or TalkBack.
+- No mutation check was run for the play SQL tests (weakening a rule to see a test fail), as Checkpoints 2 and 3 had. The tests did fail once for a real reason, the wrong check described above.
 - Open from earlier checkpoints: unlisted Worlds (G1), the pilot area (D-021), the application ID, custom SMTP and email confirmation, leaked-password protection.
 
 ### Approval status
