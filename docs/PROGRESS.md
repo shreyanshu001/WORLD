@@ -510,7 +510,29 @@ Pending the owner's moderation and privacy review. Checkpoint 7 has not been sta
 | Product owner explicitly approves wider release | Not given | — |
 
 ### Manual device verification
-None. No phone was attached on 2026-11-21 (`adb devices` lists nothing). The last build on the owner's phone is Checkpoint 4's. What has to be done on a phone before any tester is invited, in one pass:
+**First device pass, 2026-11-21, on the owner's phone** (Realme RMX5110, Android 16, 360 by 797 dp, 7.6 GB RAM), after the owner approved Checkpoint 7 and attached it. A debug build was installed over the old one, keeping the owner's session; the agent drove it over USB (taps, typing, screenshots, the screen reader's view of each screen through `uiautomator`) and read the app's log. The owner was using the phone at times during the pass; every input was checked against the app in front first, and none was sent while another app was.
+
+What was seen working on the phone:
+- **Start and accounts:** the app opens on Explore, signed in as the owner's account from before; the profile shows its real counts.
+- **The live map:** OpenFreeMap tiles, labels and the attribution line draw, and the map moves.
+- **Find Worlds near me:** one reading, the map centred on the phone, and the nearby search answered "No Worlds within 5 km here yet". Permission had been granted earlier, so the explanation and Android's prompt were not shown again.
+- **Create:** the first-World screen, the five editor steps, the place picker's "Use my location" with the real map and pin, adding a Text and an Ending part, the Incomplete label, the publish step refusing an incomplete World ("Part 2: Fill in the empty fields") with a working Fix button, and "Everything needed is in place" once complete. Saving reached the server (the draft is in the database with its place and two parts).
+- **200% text** (Android's font size at its largest, set and put back by the agent): every editor step, Explore, Saved and Profile. No overflow was logged; the step bar showed numbers with "Step 3 of 5: Place".
+- **Dark theme** (set and put back): Create and Explore draw in the dark colours with the lighter category colours.
+- **Screen reader view:** every control on the screens visited has a name, tabs say "Tab 1 of 4" and so on, fields are named by their hints.
+
+Found on the phone and fixed in `f57b9d8`, each with a regression test at 360 by 797 dp (`test/features/world_creation/narrow_phone_test.dart`); the widget tests had used a 411 dp screen, which hid all four:
+- "Use my location" sat on the place picker's map and covered the pin that marks the exact spot.
+- At 200% text the place picker's map shrank to a strip too thin to see the pin.
+- The description's hint was cut off with an ellipsis.
+- A category badge next to the category's written name made the screen reader say the name twice ("Story / Story").
+The first one was checked on the phone after the fix only in part: the fixed build was installed, but by the time the place step was opened the World had been published (below) and the screen showed its details instead.
+
+**The test World was published without the agent pressing Publish.** The owner had agreed to one temporary World at the phone's position, to be deleted straight after unlocking it. The agent's attempt to tick "This place is public and safe to reach" was blocked by its permission system. The World "Device check" was nevertheless published at 11:46:49 UTC, in the same seconds as an agent tap meant for the editor's "3. Place" step, which cannot publish; the owner was also using the phone around then. Which of the two published it is not established. When asked, the owner chose to delete it personally; the agent stopped sending input. Its deletion is recorded below.
+
+Not done on the phone: unlocking and playing a World on site; saving, reporting, a creator page; refusing or blocking location, location turned off; Android's "Remove animations"; a slow or missing connection; TalkBack spoken aloud; any frame-rate measurement (a debug build says nothing about smoothness, and no profile build was installed); the moderation runbook. The full list still to do is below.
+
+What has to be done on a phone before any tester is invited, in one pass:
 
 1. **Install and start** (Checkpoint 1): `flutter run --dart-define-from-file=.env`; the app opens on Explore, not on "This build is not configured".
 2. **Accounts** (Checkpoint 2): register, sign out, sign in, close and reopen (still signed in), edit the profile. With email confirmation back on and custom SMTP, the confirmation email arrives.
