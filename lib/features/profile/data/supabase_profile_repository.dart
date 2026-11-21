@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:worlds/core/errors/app_failure.dart';
 import 'package:worlds/core/network/backend_failure.dart';
 import 'package:worlds/features/profile/domain/profile.dart';
+import 'package:worlds/features/profile/domain/profile_page.dart';
 import 'package:worlds/features/profile/domain/profile_repository.dart';
 
 /// [ProfileRepository] backed by the `public.profiles` table.
@@ -55,6 +56,23 @@ class SupabaseProfileRepository implements ProfileRepository {
       // the username.
       if (error.code == '23505') throw const AppFailure.usernameTaken();
       throw failureFromError(error);
+    } on Object catch (error) {
+      throw failureFromError(error);
+    }
+  }
+
+  @override
+  Future<ProfilePage> page(String username, {int offset = 0}) async {
+    try {
+      final json = await _client.rpc<Map<String, dynamic>>(
+        'get_profile_page',
+        params: {
+          'profile_username': username,
+          'page_size': ProfileRepository.worldsPageSize,
+          'page_offset': offset,
+        },
+      );
+      return ProfilePage.fromJson(json);
     } on Object catch (error) {
       throw failureFromError(error);
     }

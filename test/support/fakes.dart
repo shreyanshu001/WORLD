@@ -4,6 +4,7 @@ import 'package:worlds/core/errors/app_failure.dart';
 import 'package:worlds/features/auth/domain/auth_repository.dart';
 import 'package:worlds/features/auth/domain/auth_user.dart';
 import 'package:worlds/features/profile/domain/profile.dart';
+import 'package:worlds/features/profile/domain/profile_page.dart';
 import 'package:worlds/features/profile/domain/profile_repository.dart';
 
 /// A profile with fixed timestamps, for tests.
@@ -117,7 +118,55 @@ class FakeProfileRepository implements ProfileRepository {
 
   int updateCount = 0;
 
+  /// Who is asking for a [page], as the server knows from the session.
+  String? Function()? currentUserId;
+
+  /// Published Worlds by username, newest first.
+  final publishedByUsername = <String, List<ProfileWorld>>{};
+
+  /// Private counts by username, shown to the owner only.
+  final draftCounts = <String, int>{};
+  final discoveredCounts = <String, int>{};
+  final completedCounts = <String, int>{};
+
+  /// Worlds per [page]; small values let tests page with few Worlds.
+  int worldsPageSize = ProfileRepository.worldsPageSize;
+
+  /// Thrown, then cleared, by the next [page] call.
+  Object? nextPageError;
+
+  final pageRequests = <({String username, int offset})>[];
+
   void add(Profile profile) => profiles[profile.id] = profile;
+
+  @override
+  Future<ProfilePage> page(String username, {int offset = 0}) async {
+    pageRequests.add((username: username, offset: offset));
+    await Future<void>.delayed(Duration.zero);
+    if (nextPageError case final error?) {
+      nextPageError = null;
+      throw error;
+    }
+    final profile = profiles.values
+        .where((profile) => profile.username == username)
+        .firstOrNull;
+    if (profile == null) throw const AppFailure.notFound();
+    final own = currentUserId?.call() == profile.id;
+    final worlds = publishedByUsername[username] ?? const <ProfileWorld>[];
+    final shown = worlds.skip(offset).take(worldsPageSize).toList();
+    return ProfilePage(
+      username: profile.username,
+      displayName: profile.displayName,
+      bio: profile.bio,
+      isOwn: own,
+      publishedCount: worlds.length,
+      draftCount: own ? draftCounts[username] ?? 0 : null,
+      discoveredCount: own ? discoveredCounts[username] ?? 0 : null,
+      completedCount: own ? completedCounts[username] ?? 0 : null,
+      worlds: shown,
+      hasMore: offset + shown.length < worlds.length,
+    );
+  }
 
   @override
   Future<Profile> fetchProfile(String userId) async {

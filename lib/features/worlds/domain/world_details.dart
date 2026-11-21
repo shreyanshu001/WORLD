@@ -48,6 +48,9 @@ abstract class WorldDetails with _$WorldDetails {
 
     /// Where the signed-in user stands with it; null when signed out.
     PlayStatus? playStatus,
+
+    /// Whether the signed-in user saved it; null when signed out.
+    bool? isSaved,
   }) = _WorldDetails;
 
   const WorldDetails._();
