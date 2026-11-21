@@ -88,6 +88,28 @@ void main() {
     },
   );
 
+  test('analytics code imports nothing that holds a position', () {
+    const forbidden = [
+      'package:worlds/core/location/',
+      'package:worlds/core/maps/',
+      'package:worlds/shared/models/geo_point.dart',
+      'package:geolocator/',
+      'package:maplibre_gl/',
+    ];
+    final offenders = [
+      for (final source in sources)
+        if (source.path.startsWith('lib/core/analytics/') ||
+            source.path == 'lib/core/network/supabase_product_event_sink.dart')
+          for (final import in importsOf(source.text))
+            if (forbidden.any(import.startsWith)) '${source.path}: $import',
+    ];
+    expect(offenders, isEmpty);
+    expect(
+      sources.where((s) => s.path.startsWith('lib/core/analytics/')),
+      isNotEmpty,
+    );
+  });
+
   test('domain code and shared models import no Flutter or SDK packages', () {
     const forbidden = [
       'package:flutter/',

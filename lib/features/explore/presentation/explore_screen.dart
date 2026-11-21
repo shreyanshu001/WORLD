@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:worlds/core/analytics/analytics_providers.dart';
 import 'package:go_router/go_router.dart';
 import 'package:worlds/app/router/app_routes.dart';
 import 'package:worlds/app/theme/app_tokens.dart';
@@ -41,6 +42,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    ref.read(productAnalyticsProvider).exploreOpened();
     final center = ref.read(exploreControllerProvider).searchCenter;
     _initialCamera = center == null
         ? ExploreScreen.worldViewCamera
