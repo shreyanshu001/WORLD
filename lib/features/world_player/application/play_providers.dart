@@ -228,13 +228,23 @@ class PlayerController extends Notifier<PlayerState> {
 
   final String worldId;
 
+  /// Lifts the "too many tries" notice when the server's pause is over.
+  Timer? _pauseTimer;
+
   @override
   PlayerState build() {
+    ref.onDispose(() => _pauseTimer?.cancel());
     scheduleMicrotask(load);
     return const PlayerState(loading: true);
   }
 
   WorldPlayRepository get _repository => ref.read(worldPlayRepositoryProvider);
+
+  /// Whether the server's progress points at a part this session does not
+  /// have, because the creator changed the World after it was loaded.
+  static bool _outOfDate(PlaySession session, PlayProgress progress) =>
+      !progress.completed &&
+      !session.blocks.any((block) => block.id == progress.currentBlockId);
 
   Future<void> load() async {
     if (!ref.mounted) return;
@@ -246,6 +256,19 @@ class PlayerController extends Notifier<PlayerState> {
     } on Object catch (error) {
       if (!ref.mounted) return;
       state = state.copyWith(loading: false, loadFailure: _failure(error));
+    }
+  }
+
+  /// Loads the World again after a step showed this copy is behind. A
+  /// failure is reported like a failed step, so the same button retries.
+  Future<void> _catchUp() async {
+    try {
+      final session = await _repository.load(worldId);
+      if (ref.mounted) state = PlayerState(session: session);
+    } on Object catch (error) {
+      if (ref.mounted) {
+        state = state.copyWith(busy: false, stepFailure: _failure(error));
+      }
     }
   }
 
@@ -267,9 +290,10 @@ class PlayerController extends Notifier<PlayerState> {
         optionId: optionId,
       );
       if (!ref.mounted) return;
-      if (result.stale) {
-        // The server had already moved on: show where it really is.
-        await load();
+      if (result.stale || _outOfDate(session, result.progress)) {
+        // The server had already moved on, or the World has changed since
+        // it was loaded: show where it really is.
+        await _catchUp();
         return;
       }
       state = PlayerState(session: session.copyWith(progress: result.progress));
@@ -305,6 +329,16 @@ class PlayerController extends Notifier<PlayerState> {
             : session,
         answer: result,
       );
+      _pauseTimer?.cancel();
+      if (result is AnswerRateLimited) {
+        // The pause ends by itself; without this the answer field would
+        // stay closed until the player was reopened.
+        _pauseTimer = Timer(result.retryAfter, () {
+          if (ref.mounted && state.answer is AnswerRateLimited) {
+            state = state.copyWith(clearAnswer: true);
+          }
+        });
+      }
     } on Object catch (error) {
       if (ref.mounted) {
         state = state.copyWith(busy: false, stepFailure: _failure(error));
@@ -319,6 +353,10 @@ class PlayerController extends Notifier<PlayerState> {
     try {
       final progress = await _repository.restart(worldId);
       if (!ref.mounted) return;
+      if (_outOfDate(session, progress)) {
+        await _catchUp();
+        return;
+      }
       state = PlayerState(session: session.copyWith(progress: progress));
       _refreshDetails();
     } on Object catch (error) {

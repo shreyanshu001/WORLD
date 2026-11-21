@@ -1,6 +1,6 @@
 -- Tests for playing Worlds: unlock_world, get_world_play, advance_world,
--- answer_question, restart_world, progress privacy, players' image access
--- and the play status in get_world_details.
+-- answer_question, restart_world, progress privacy, players' image access,
+-- unpublished and hidden Worlds, and the play status in get_world_details.
 --
 -- How to run: execute this whole file as one statement. It always ends by
 -- raising an exception, which rolls back everything it did.
@@ -35,7 +35,10 @@ declare
   p_image constant uuid := '33000000-0000-4000-8000-000000000003';
   p_end constant uuid := '33000000-0000-4000-8000-000000000004';
   p_asset constant uuid := '34000000-0000-4000-8000-000000000001';
+  -- Registered for the puzzle, but no part uses it.
+  p_unused constant uuid := '34000000-0000-4000-8000-000000000002';
   asset_path text;
+  unused_path text;
   checks integer := 0;
   result jsonb;
   found_count integer;
@@ -53,6 +56,7 @@ begin
      'play-other@worlds.test', '{"username": "ptest_other"}', now(), now());
 
   asset_path := creator::text || '/' || pw::text || '/' || p_asset::text || '.jpg';
+  unused_path := creator::text || '/' || pw::text || '/' || p_unused::text || '.jpg';
 
   set local role authenticated;
   perform set_config('request.jwt.claims', claims_creator, true);
@@ -83,11 +87,14 @@ begin
   reset role;
 
   insert into storage.objects (bucket_id, name, owner_id, metadata)
-  values ('world-media', asset_path, creator::text, '{"mimetype": "image/jpeg", "size": 2048}');
+  values
+    ('world-media', asset_path, creator::text, '{"mimetype": "image/jpeg", "size": 2048}'),
+    ('world-media', unused_path, creator::text, '{"mimetype": "image/jpeg", "size": 2048}');
 
   set local role authenticated;
   perform set_config('request.jwt.claims', claims_creator, true);
   perform public.register_world_asset(p_asset, pw, asset_path);
+  perform public.register_world_asset(p_unused, pw, unused_path);
   perform public.save_world(jsonb_build_object(
     'id', pw, 'category', 'puzzle', 'title', 'Keeper Riddle', 'description', 'Who kept it?',
     'latitude', lat + 0.001, 'longitude', lon, 'unlock_radius_meters', 50,
@@ -120,7 +127,12 @@ begin
 
   if has_function_privilege('anon', 'public.unlock_world(uuid, double precision, double precision, double precision)', 'EXECUTE')
      or has_function_privilege('anon', 'public.get_world_play(uuid)', 'EXECUTE')
+     or has_function_privilege('anon', 'public.advance_world(uuid, uuid, uuid)', 'EXECUTE')
      or has_function_privilege('anon', 'public.answer_question(uuid, uuid, text)', 'EXECUTE')
+     or has_function_privilege('anon', 'public.restart_world(uuid)', 'EXECUTE')
+     or has_function_privilege('anon', 'public.is_unlocked_world_image(uuid)', 'EXECUTE')
+     or has_table_privilege('anon', 'public.world_progress', 'SELECT')
+     or has_table_privilege('anon', 'public.world_visits', 'SELECT')
      or has_table_privilege('authenticated', 'public.world_progress', 'UPDATE')
      or has_table_privilege('authenticated', 'public.world_progress', 'INSERT')
      or has_table_privilege('authenticated', 'private.world_answer_attempts', 'SELECT') then
@@ -284,6 +296,14 @@ begin
   end if;
   checks := checks + 1;
 
+  -- Opening the World again (a restarted app) resumes at the same part.
+  result := public.get_world_play(sw);
+  if result #>> '{progress,current_block_id}' <> s_right::text
+     or result #> '{progress,path}' <> jsonb_build_array(s_intro, s_choice, s_right) then
+    raise exception 'FAIL resume: a fresh load should report the current part: %', result;
+  end if;
+  checks := checks + 1;
+
   perform public.advance_world(sw, s_right);
   result := public.advance_world(sw, s_right_end);
   if (result ->> 'completed')::boolean is not true
@@ -336,8 +356,21 @@ begin
   end if;
   checks := checks + 1;
 
+  -- ...but only the images its parts use.
+  select count(*) into found_count from storage.objects where name = unused_path;
+  if found_count <> 0 then
+    raise exception 'FAIL image: an image no part uses is readable by a player';
+  end if;
+  select count(*) into found_count from public.world_assets where world_id = pw;
+  if found_count <> 1 then
+    raise exception 'FAIL image: a player should see 1 asset row of the puzzle, saw %', found_count;
+  end if;
+  checks := checks + 1;
+
+  -- (The title "Keeper Riddle" is public; the answer is "lighthouse keeper".)
   result := public.get_world_play(pw);
-  if result::text ~* 'keeper|right, the keeper' then
+  if result::text ~* 'lighthouse keeper|right, the keeper'
+     or (result #> '{blocks,1,content}') ? 'success_message' then
     raise exception 'FAIL puzzle: the answer or its success message was served';
   end if;
   if result #>> '{blocks,1,content,hint}' <> 'Two words'
@@ -426,6 +459,12 @@ begin
     when sqlstate 'WR403' then checks := checks + 1;
   end;
 
+  select count(*) into found_count from storage.objects where name in (asset_path, unused_path);
+  if found_count <> 0 or public.is_unlocked_world_image(p_asset) then
+    raise exception 'FAIL privacy: an image is readable by an account that never unlocked';
+  end if;
+  checks := checks + 1;
+
   begin
     perform 1 from private.world_answer_attempts;
     raise exception 'FAIL privacy: answer attempts were readable';
@@ -470,6 +509,46 @@ begin
   exception
     when no_data_found then checks := checks + 1;
   end;
+  reset role;
+
+  ---------------------------------------------------------------------------
+  -- Worlds hidden by moderation: closed to players who had unlocked them,
+  -- content, images and details alike
+  ---------------------------------------------------------------------------
+  update public.worlds set status = 'hidden' where id = pw;
+
+  set local role authenticated;
+  perform set_config('request.jwt.claims', claims_player, true);
+  begin
+    perform public.get_world_play(pw);
+    raise exception 'FAIL hidden: content still served';
+  exception
+    when no_data_found then checks := checks + 1;
+  end;
+  begin
+    perform public.restart_world(pw);
+    raise exception 'FAIL hidden: still restartable';
+  exception
+    when no_data_found then checks := checks + 1;
+  end;
+  begin
+    perform public.answer_question(pw, p_question, 'Lighthouse Keeper');
+    raise exception 'FAIL hidden: answers still checked';
+  exception
+    when no_data_found then checks := checks + 1;
+  end;
+  begin
+    perform public.get_world_details(pw);
+    raise exception 'FAIL hidden: details still served to a player';
+  exception
+    when no_data_found then checks := checks + 1;
+  end;
+
+  select count(*) into found_count from storage.objects where name = asset_path;
+  if found_count <> 0 then
+    raise exception 'FAIL hidden: a block image is still readable by a player';
+  end if;
+  checks := checks + 1;
   reset role;
 
   raise exception 'WORLDS_TESTS_PASSED world_play_test: % checks', checks;

@@ -76,6 +76,17 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     if (session.progress.completed) {
       return _CompletionView(worldId: widget.worldId, session: session);
     }
+    if (session.currentBlock == null) {
+      // The server's place is a part this copy does not have. Loading again
+      // gets the World as it is now.
+      return Scaffold(
+        appBar: AppBar(leading: const _CloseButton()),
+        body: ErrorView(
+          message: "We lost your place in this World. Let's find it again.",
+          onRetry: ref.read(provider.notifier).load,
+        ),
+      );
+    }
     return _PartView(worldId: widget.worldId, session: session);
   }
 }
@@ -107,7 +118,8 @@ class _PartView extends ConsumerWidget {
     );
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
-    final block = session.currentBlock;
+    // The screen shows this view only when the current part is known.
+    final block = session.currentBlock!;
     final index = session.currentIndex;
     final total = session.blocks.length;
 
@@ -139,66 +151,64 @@ class _PartView extends ConsumerWidget {
           ),
         ),
       ),
-      body: block == null
-          ? const LoadingView(label: 'Opening part')
-          : AnimatedSwitcher(
-              duration: const Duration(milliseconds: 260),
-              switchInCurve: Curves.easeOutCubic,
-              transitionBuilder: (child, animation) => FadeTransition(
-                opacity: animation,
-                child: SlideTransition(
-                  position: Tween(
-                    begin: const Offset(0.06, 0),
-                    end: Offset.zero,
-                  ).animate(animation),
-                  child: child,
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 260),
+        switchInCurve: Curves.easeOutCubic,
+        transitionBuilder: (child, animation) => FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween(
+              begin: const Offset(0.06, 0),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          ),
+        ),
+        layoutBuilder: (current, previous) =>
+            Stack(fit: StackFit.expand, children: [...previous, ?current]),
+        child: SingleChildScrollView(
+          key: ValueKey(block.id),
+          padding: const EdgeInsets.fromLTRB(
+            Space.xl,
+            Space.lg,
+            Space.xl,
+            Space.xl,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'PART ${index + 1} OF $total',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: colors.muted,
+                  letterSpacing: 1.1,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              layoutBuilder: (current, previous) => Stack(
-                fit: StackFit.expand,
-                children: [...previous, ?current],
+              const SizedBox(height: Space.md),
+              BlockView(
+                block: block,
+                assetPath: (id) => session.assetPaths[id],
               ),
-              child: SingleChildScrollView(
-                key: ValueKey(block.id),
-                padding: const EdgeInsets.fromLTRB(
-                  Space.xl,
-                  Space.lg,
-                  Space.xl,
-                  Space.xl,
+              const SizedBox(height: Space.xl),
+              if (block is StoryChoiceBlock)
+                _Choices(worldId: worldId, block: block, busy: busy),
+              if (block is QuestionBlock)
+                _AnswerArea(
+                  key: ValueKey('answer-${block.id}'),
+                  worldId: worldId,
+                  block: block,
+                  answered: session.progress.answered.contains(block.id),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      'PART ${index + 1} OF $total',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: colors.muted,
-                        letterSpacing: 1.1,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: Space.md),
-                    BlockView(
-                      block: block,
-                      assetPath: (id) => session.assetPaths[id],
-                    ),
-                    const SizedBox(height: Space.xl),
-                    if (block is StoryChoiceBlock)
-                      _Choices(worldId: worldId, block: block, busy: busy),
-                    if (block is QuestionBlock)
-                      _AnswerArea(
-                        key: ValueKey('answer-${block.id}'),
-                        worldId: worldId,
-                        block: block,
-                        answered: session.progress.answered.contains(block.id),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-      bottomNavigationBar: block == null
-          ? null
-          : _StepBar(worldId: worldId, block: block, session: session),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: _StepBar(
+        worldId: worldId,
+        block: block,
+        session: session,
+      ),
     );
   }
 }
@@ -509,6 +519,17 @@ class _CompletionView extends ConsumerWidget {
                       icon: const Icon(Icons.replay),
                       label: const Text('Play again'),
                     ),
+                    if (state.stepFailure case final failure?) ...[
+                      const SizedBox(height: Space.md),
+                      Semantics(
+                        liveRegion: true,
+                        child: Text(
+                          "That didn't go through. ${failure.userMessage}",
+                          style: TextStyle(color: colors.danger),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

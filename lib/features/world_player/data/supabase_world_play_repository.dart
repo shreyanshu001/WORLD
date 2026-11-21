@@ -7,7 +7,7 @@ import 'package:worlds/features/worlds/domain/content_block_codec.dart';
 import 'package:worlds/shared/models/world_category.dart';
 
 /// [WorldPlayRepository] backed by the database functions in
-/// `20261121090000_create_world_play.sql`. Positions travel in request
+/// `20261121051737_create_world_play.sql`. Positions travel in request
 /// bodies (remote procedure calls are POST requests), never in URLs.
 class SupabaseWorldPlayRepository implements WorldPlayRepository {
   SupabaseWorldPlayRepository(this._client);

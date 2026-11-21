@@ -40,12 +40,27 @@ List<ContentBlock> testPuzzleBlocks() => const [
   ContentBlock.completion(id: 'p-end', title: 'Solved', message: 'Well done.'),
 ];
 
+/// An experience: a picture, an artwork, then the end.
+List<ContentBlock> testGalleryBlocks() => const [
+  ContentBlock.image(id: 'g-photo', assetId: 'a-photo', caption: 'The quay'),
+  ContentBlock.artwork(
+    id: 'g-art',
+    assetId: 'a-art',
+    title: 'Harbour Mural',
+    description: 'Painted by the fishing crews.',
+  ),
+  ContentBlock.completion(id: 'g-end', title: 'The end', message: 'Thanks.'),
+];
+
 /// In-memory [WorldPlayRepository] that follows the server's rules: steps
 /// only from the current part, choices to their destinations, questions
 /// answered first, five wrong answers then a pause, idempotent completion.
 class FakeWorldPlayRepository implements WorldPlayRepository {
   final blocksByWorld = <String, List<ContentBlock>>{};
   final titles = <String, String>{};
+
+  /// Storage paths of the images each World's parts use, by asset id.
+  final assetPathsByWorld = <String, Map<String, String>>{};
   final progress = <String, PlayProgress>{};
   final answers = <String, String>{};
   final successMessages = <String, String>{};
@@ -61,6 +76,7 @@ class FakeWorldPlayRepository implements WorldPlayRepository {
   /// Thrown, then cleared, by the next call of that kind.
   Object? nextLoadError;
   Object? nextStepError;
+  Object? nextRestartError;
 
   /// The next step reports "stale" without changing anything.
   bool nextStepStale = false;
@@ -115,6 +131,7 @@ class FakeWorldPlayRepository implements WorldPlayRepository {
       title: titles[worldId]!,
       category: WorldCategory.story,
       blocks: blocks,
+      assetPaths: assetPathsByWorld[worldId] ?? const {},
       progress: current,
     );
   }
@@ -200,6 +217,10 @@ class FakeWorldPlayRepository implements WorldPlayRepository {
   @override
   Future<PlayProgress> restart(String worldId) async {
     await _tick();
+    if (nextRestartError case final error?) {
+      nextRestartError = null;
+      throw error;
+    }
     final previous = progress[worldId]!;
     final first = blocksByWorld[worldId]!.first.id;
     return progress[worldId] = PlayProgress(

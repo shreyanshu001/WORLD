@@ -59,10 +59,7 @@ alter table public.world_visits enable row level security;
 
 revoke all on table public.world_progress from anon, authenticated;
 revoke all on table public.world_visits from anon, authenticated;
--- anon gets select only because the world_assets policy below looks here
--- and table privileges are checked even inside policies; with no policy
--- for anon, it reads no rows.
-grant select on table public.world_progress to anon, authenticated;
+grant select on table public.world_progress to authenticated;
 grant select on table public.world_visits to authenticated;
 
 create policy "Users read their own progress"
@@ -95,34 +92,47 @@ alter table private.world_answer_attempts enable row level security;
 revoke all on table private.world_answer_attempts from public, anon, authenticated;
 
 ---------------------------------------------------------------------------
--- Players can see the images of Worlds they unlocked (block images and the
--- cover), while the World is published.
+-- Players can see the images that the parts of a World they unlocked use,
+-- while that World is published. Covers of published Worlds are already
+-- public; an image no part uses stays with its owner.
+--
+-- Players cannot read parts themselves, so this check runs with the
+-- owner's rights. It tells a caller only whether they may see an image that
+-- get_world_play already lists for them.
 ---------------------------------------------------------------------------
-drop policy "Owners, and anyone for covers of published public Worlds, read assets"
-  on public.world_assets;
+create function public.is_unlocked_world_image(asset_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.world_assets as a
+    join public.worlds as w on w.id = a.world_id
+    join public.world_progress as p on p.world_id = w.id
+    where a.id = $1
+      and p.user_id = (select auth.uid())
+      and w.status = 'published'
+      and w.visibility = 'public'
+      and exists (
+        select 1
+        from public.world_content_blocks as b
+        where b.world_id = w.id
+          and b.content ->> 'asset_id' = a.id::text
+      )
+  );
+$$;
 
-create policy "Owners, anyone for public covers, and players for unlocked Worlds read assets"
+revoke all on function public.is_unlocked_world_image(uuid) from public, anon, authenticated;
+grant execute on function public.is_unlocked_world_image(uuid) to authenticated;
+
+create policy "Players read the images used by Worlds they unlocked"
   on public.world_assets
   for select
-  to anon, authenticated
-  using (
-    (select auth.uid()) = owner_id
-    or exists (
-      select 1
-      from public.worlds as w
-      where w.cover_asset_id = world_assets.id
-        and w.status = 'published'
-        and w.visibility = 'public'
-    )
-    or exists (
-      select 1
-      from public.world_progress as p
-      join public.worlds as w on w.id = p.world_id
-      where p.world_id = world_assets.world_id
-        and p.user_id = (select auth.uid())
-        and w.status = 'published'
-    )
-  );
+  to authenticated
+  using (public.is_unlocked_world_image(id));
 
 ---------------------------------------------------------------------------
 -- Helpers (private)
