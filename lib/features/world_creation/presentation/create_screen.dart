@@ -16,6 +16,7 @@ import 'package:worlds/features/worlds/domain/world_status.dart';
 import 'package:worlds/features/worlds/presentation/status_pill.dart';
 import 'package:worlds/shared/components/design.dart';
 import 'package:worlds/shared/models/world_category.dart';
+import 'package:worlds/shared/components/motion.dart';
 
 /// The Create tab: the creator's own Worlds and a way to start a new one.
 class CreateScreen extends ConsumerWidget {
@@ -67,23 +68,33 @@ class _MyWorlds extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final worlds = ref.watch(myWorldsProvider);
-    return switch (worlds) {
-      AsyncData(:final value) when value.isEmpty => const _FirstWorld(),
-      AsyncData(:final value) => RefreshIndicator(
-        onRefresh: () => ref.refresh(myWorldsProvider.future),
-        child: _WorldGroups(worlds: value),
-      ),
-      AsyncError(:final error) => ErrorView(
-        message: messageForError(error),
-        onRetry: () => ref.invalidate(myWorldsProvider),
-      ),
-      _ => const LoadingView(label: 'Loading your Worlds'),
-    };
+    // Loading fades into the list, or into what there is instead of one.
+    return StateSwitcher(
+      child: switch (worlds) {
+        AsyncData(:final value) when value.isEmpty => const _FirstWorld(
+          key: ValueKey('empty'),
+        ),
+        AsyncData(:final value) => RefreshIndicator(
+          key: const ValueKey('list'),
+          onRefresh: () => ref.refresh(myWorldsProvider.future),
+          child: _WorldGroups(worlds: value),
+        ),
+        AsyncError(:final error) => ErrorView(
+          key: const ValueKey('error'),
+          message: messageForError(error),
+          onRetry: () => ref.invalidate(myWorldsProvider),
+        ),
+        _ => const LoadingView(
+          key: ValueKey('loading'),
+          label: 'Loading your Worlds',
+        ),
+      },
+    );
   }
 }
 
 class _FirstWorld extends StatelessWidget {
-  const _FirstWorld();
+  const _FirstWorld({super.key});
 
   @override
   Widget build(BuildContext context) {

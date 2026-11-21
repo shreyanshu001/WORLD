@@ -339,7 +339,7 @@ class _StepBar extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
+                        duration: Motion.of(context, Motion.quick),
                         height: 5,
                         decoration: BoxDecoration(
                           color: index <= step.index

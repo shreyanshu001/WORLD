@@ -8,6 +8,7 @@ import 'package:worlds/core/utils/distance_format.dart';
 import 'package:worlds/core/widgets/location_explanation_dialog.dart';
 import 'package:worlds/features/world_player/application/play_providers.dart';
 import 'package:worlds/features/worlds/domain/world_details.dart';
+import 'package:worlds/shared/components/motion.dart';
 
 /// Where the user stands with a World on its details screen: locked (with
 /// the unlock rule and any unlock problem) or unlocked.
@@ -161,57 +162,71 @@ class _Panel extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
+    // Each answer to "am I there?" changes the panel's colour, icon and
+    // length. They ease from one to the next, so the button under the panel
+    // moves instead of jumping.
     return Semantics(
       liveRegion: liveRegion,
-      child: Container(
+      child: AnimatedContainer(
+        duration: Motion.of(context, Motion.standard),
+        curve: Motion.enter,
         padding: const EdgeInsets.all(Space.lg),
         decoration: BoxDecoration(
           color: background,
           borderRadius: BorderRadius.circular(Radii.lg),
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: colors.surface,
-                shape: BoxShape.circle,
+        child: AnimatedSize(
+          duration: Motion.of(context, Motion.standard),
+          curve: Motion.enter,
+          alignment: Alignment.topCenter,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: colors.surface,
+                  shape: BoxShape.circle,
+                ),
+                child: StateSwitcher(
+                  alignment: Alignment.center,
+                  child: busy
+                      ? Padding(
+                          key: const ValueKey('busy'),
+                          padding: const EdgeInsets.all(Space.md),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: iconColor,
+                          ),
+                        )
+                      : Icon(icon, key: ValueKey(icon), color: iconColor),
+                ),
               ),
-              child: busy
-                  ? Padding(
-                      padding: const EdgeInsets.all(Space.md),
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: iconColor,
+              const SizedBox(width: Space.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: theme.textTheme.titleMedium),
+                    const SizedBox(height: Space.xs),
+                    Text(body, style: textStyle ?? theme.textTheme.bodyMedium),
+                    if (action != null && onAction != null)
+                      TextButton(onPressed: onAction, child: Text(action!)),
+                    if (footnote != null) ...[
+                      const SizedBox(height: Space.sm),
+                      Text(
+                        footnote!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colors.muted,
+                        ),
                       ),
-                    )
-                  : Icon(icon, color: iconColor),
-            ),
-            const SizedBox(width: Space.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: theme.textTheme.titleMedium),
-                  const SizedBox(height: Space.xs),
-                  Text(body, style: textStyle ?? theme.textTheme.bodyMedium),
-                  if (action != null && onAction != null)
-                    TextButton(onPressed: onAction, child: Text(action!)),
-                  if (footnote != null) ...[
-                    const SizedBox(height: Space.sm),
-                    Text(
-                      footnote!,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colors.muted,
-                      ),
-                    ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -19,6 +19,7 @@ import 'package:worlds/features/worlds/presentation/world_cover.dart';
 import 'package:worlds/shared/components/category_style.dart';
 import 'package:worlds/shared/components/design.dart';
 import 'package:worlds/shared/models/geo_point.dart';
+import 'package:worlds/shared/components/motion.dart';
 
 /// Everything a visitor may know about a World before playing it.
 ///
@@ -36,32 +37,40 @@ class WorldDetailsScreen extends ConsumerWidget {
     final request = (worldId: worldId, from: from);
     final details = ref.watch(worldDetailsProvider(request));
 
-    return switch (details) {
-      AsyncData(:final value) => _DetailsView(world: value),
-      AsyncError(:final error) => Scaffold(
-        appBar: AppBar(),
-        body: error is NotFoundFailure
-            ? const EmptyView(
-                icon: Icons.travel_explore,
-                title: "This World isn't available",
-                message:
-                    'It may have been unpublished or removed by its creator.',
-              )
-            : ErrorView(
-                message: messageForError(error),
-                onRetry: () => ref.invalidate(worldDetailsProvider(request)),
-              ),
-      ),
-      _ => Scaffold(
-        appBar: AppBar(),
-        body: const LoadingView(label: 'Loading World'),
-      ),
-    };
+    // Loading fades into the World, or into what went wrong.
+    return StateSwitcher(
+      child: switch (details) {
+        AsyncData(:final value) => _DetailsView(
+          key: const ValueKey('details'),
+          world: value,
+        ),
+        AsyncError(:final error) => Scaffold(
+          key: const ValueKey('unavailable'),
+          appBar: AppBar(),
+          body: error is NotFoundFailure
+              ? const EmptyView(
+                  icon: Icons.travel_explore,
+                  title: "This World isn't available",
+                  message:
+                      'It may have been unpublished or removed by its creator.',
+                )
+              : ErrorView(
+                  message: messageForError(error),
+                  onRetry: () => ref.invalidate(worldDetailsProvider(request)),
+                ),
+        ),
+        _ => Scaffold(
+          key: const ValueKey('loading'),
+          appBar: AppBar(),
+          body: const LoadingView(label: 'Loading World'),
+        ),
+      },
+    );
   }
 }
 
 class _DetailsView extends StatelessWidget {
-  const _DetailsView({required this.world});
+  const _DetailsView({required this.world, super.key});
 
   final WorldDetails world;
 
@@ -426,21 +435,28 @@ class _SaveButton extends ConsumerWidget {
 
     // Saved shows as a soft filled button, not saved as an outline: two
     // shapes as well as two icons, so the state does not rest on colour.
-    return saved
-        ? IconButton.filledTonal(
-            tooltip: 'Remove from saved',
-            iconSize: 24,
-            padding: const EdgeInsets.all(Space.md),
-            icon: const Icon(Icons.bookmark),
-            onPressed: toggle,
-          )
-        : IconButton.outlined(
-            tooltip: 'Save for later',
-            iconSize: 24,
-            padding: const EdgeInsets.all(Space.md),
-            icon: const Icon(Icons.bookmark_outline),
-            onPressed: toggle,
-          );
+    // One fades into the other.
+    return StateSwitcher(
+      fill: false,
+      alignment: Alignment.center,
+      child: saved
+          ? IconButton.filledTonal(
+              key: const ValueKey('saved'),
+              tooltip: 'Remove from saved',
+              iconSize: 24,
+              padding: const EdgeInsets.all(Space.md),
+              icon: const Icon(Icons.bookmark),
+              onPressed: toggle,
+            )
+          : IconButton.outlined(
+              key: const ValueKey('not-saved'),
+              tooltip: 'Save for later',
+              iconSize: 24,
+              padding: const EdgeInsets.all(Space.md),
+              icon: const Icon(Icons.bookmark_outline),
+              onPressed: toggle,
+            ),
+    );
   }
 }
 

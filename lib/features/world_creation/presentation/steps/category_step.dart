@@ -98,7 +98,7 @@ class _CategoryCard extends StatelessWidget {
       selected: selected,
       button: true,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+        duration: Motion.of(context, Motion.quick),
         decoration: BoxDecoration(
           color: selected
               ? Color.alphaBlend(
