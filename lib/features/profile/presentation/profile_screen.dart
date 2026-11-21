@@ -9,6 +9,7 @@ import 'package:worlds/features/auth/application/auth_providers.dart';
 import 'package:worlds/features/auth/presentation/sign_in_prompt.dart';
 import 'package:worlds/features/profile/application/profile_providers.dart';
 import 'package:worlds/features/profile/domain/profile.dart';
+import 'package:worlds/features/profile/presentation/profile_worlds.dart';
 
 /// The Profile tab: a sign-in prompt when signed out, otherwise the user's
 /// own profile.
@@ -110,7 +111,9 @@ class _ProfileDetails extends ConsumerWidget {
           const SizedBox(height: 16),
           Text(bio, style: theme.textTheme.bodyLarge),
         ],
-        const SizedBox(height: 32),
+        const SizedBox(height: 24),
+        _OwnActivity(username: profile.username),
+        const SizedBox(height: 24),
         FilledButton.tonal(
           onPressed: () => context.go(AppRoutes.editProfile),
           child: const Text('Edit profile'),
@@ -132,6 +135,93 @@ class _ProfileDetails extends ConsumerWidget {
         ],
       ],
     );
+  }
+}
+
+/// What the signed-in user has made and done, counted by the server: no
+/// number is shown that a query does not back.
+class _OwnActivity extends ConsumerWidget {
+  const _OwnActivity({required this.username});
+
+  final String username;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final state = ref.watch(profilePageProvider(username));
+
+    return switch (state) {
+      AsyncData(:final value) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Each count gets a third of the row, whatever the text size.
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: ProfileStat(
+                  value: value.page.publishedCount,
+                  label: 'Published',
+                ),
+              ),
+              Expanded(
+                child: ProfileStat(
+                  value: value.page.discoveredCount ?? 0,
+                  label: 'Discovered',
+                ),
+              ),
+              Expanded(
+                child: ProfileStat(
+                  value: value.page.completedCount ?? 0,
+                  label: 'Completed',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Text('Your published Worlds', style: theme.textTheme.titleMedium),
+          const SizedBox(height: 8),
+          ProfileWorldsList(username: username),
+          if ((value.page.draftCount ?? 0) > 0)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.edit_note),
+              title: Text(
+                value.page.draftCount == 1
+                    ? '1 World not published'
+                    : '${value.page.draftCount} Worlds not published',
+              ),
+              subtitle: const Text(
+                'Drafts and unpublished Worlds are in Create.',
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.go(AppRoutes.create),
+            ),
+        ],
+      ),
+      AsyncError(:final error) => Column(
+        children: [
+          Text(
+            "Couldn't load your Worlds. ${messageForError(error)}",
+            style: TextStyle(color: theme.colorScheme.error),
+            textAlign: TextAlign.center,
+          ),
+          TextButton(
+            onPressed: () => ref.invalidate(profilePageProvider(username)),
+            child: const Text('Try again'),
+          ),
+        ],
+      ),
+      _ => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Center(
+          child: SizedBox.square(
+            dimension: 24,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      ),
+    };
   }
 }
 

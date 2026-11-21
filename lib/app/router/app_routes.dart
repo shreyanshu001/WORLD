@@ -21,6 +21,16 @@ abstract final class AppRoutes {
     queryParameters: startOver ? {'start_over': '1'} : null,
   ).toString();
 
+  /// The details of a World as a full page above the tabs, opened from
+  /// Saved and from creator pages. Back returns to where it was opened.
+  static String worldPage(String worldId) => '/worlds/$worldId';
+
+  /// The public page of a creator.
+  static String creatorPage(String username) => '/creators/$username';
+
+  /// The form for reporting a World.
+  static String reportWorld(String worldId) => '/report/$worldId';
+
   /// The creator's editor for an existing World.
   static String editWorld(String worldId) => '$create/worlds/$worldId';
 
@@ -69,6 +79,12 @@ String? authRedirect({required bool signedIn, required Uri uri}) {
   if (!signedIn && path.startsWith('/play/')) {
     return AppRoutes.signInFrom(
       AppRoutes.worldDetails(path.substring('/play/'.length)),
+    );
+  }
+  // Reporting needs an account; come back to the details of the World.
+  if (!signedIn && path.startsWith('/report/')) {
+    return AppRoutes.signInFrom(
+      AppRoutes.worldDetails(path.substring('/report/'.length)),
     );
   }
   return null;

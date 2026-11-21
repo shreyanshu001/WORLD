@@ -26,6 +26,7 @@ _WorldDetails _$WorldDetailsFromJson(Map<String, dynamic> json) =>
           : DateTime.parse(json['published_at'] as String),
       isCreator: json['is_creator'] as bool? ?? false,
       playStatus: $enumDecodeNullable(_$PlayStatusEnumMap, json['play_status']),
+      isSaved: json['is_saved'] as bool?,
     );
 
 Map<String, dynamic> _$WorldDetailsToJson(_WorldDetails instance) =>
@@ -46,6 +47,7 @@ Map<String, dynamic> _$WorldDetailsToJson(_WorldDetails instance) =>
       'published_at': instance.publishedAt?.toIso8601String(),
       'is_creator': instance.isCreator,
       'play_status': _$PlayStatusEnumMap[instance.playStatus],
+      'is_saved': instance.isSaved,
     };
 
 const _$WorldCategoryEnumMap = {

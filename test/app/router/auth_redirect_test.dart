@@ -43,6 +43,22 @@ void main() {
       expect(authRedirect(signedIn: true, uri: uri('/play/abc')), isNull);
     });
 
+    test(
+      'signed-out reporters are sent to sign in, then back to the World',
+      () {
+        expect(
+          authRedirect(signedIn: false, uri: uri('/report/abc')),
+          AppRoutes.signInFrom('/explore/worlds/abc'),
+        );
+        expect(authRedirect(signedIn: true, uri: uri('/report/abc')), isNull);
+      },
+    );
+
+    test('full-page details and creator pages stay open to everyone', () {
+      expect(authRedirect(signedIn: false, uri: uri('/worlds/abc')), isNull);
+      expect(authRedirect(signedIn: false, uri: uri('/creators/cara')), isNull);
+    });
+
     test('World details stay open to everyone', () {
       expect(
         authRedirect(signedIn: false, uri: uri('/explore/worlds/abc')),
