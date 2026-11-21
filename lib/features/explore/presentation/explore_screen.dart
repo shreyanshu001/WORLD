@@ -97,11 +97,24 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
               child: Column(
                 children: [
                   _TopBar(state: state, controller: controller),
-                  ExploreMessages(state: state, controller: controller),
-                  if (!showingMap)
+                  // Over the map, messages scroll if they cannot all fit
+                  // (large text, a small screen). They take only the room
+                  // they need, so the map under them stays reachable.
+                  if (showingMap)
+                    Flexible(
+                      child: SingleChildScrollView(
+                        child: ExploreMessages(
+                          state: state,
+                          controller: controller,
+                        ),
+                      ),
+                    )
+                  else ...[
+                    ExploreMessages(state: state, controller: controller),
                     Expanded(
                       child: WorldList(state: state, controller: controller),
                     ),
+                  ],
                 ],
               ),
             ),

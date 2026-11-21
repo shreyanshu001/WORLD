@@ -91,21 +91,23 @@ class WorldPreviewCard extends StatelessWidget {
               const SizedBox(height: Space.md),
               Padding(
                 padding: const EdgeInsets.only(right: Space.sm),
-                child: Row(
+                // The button drops under the distance when both cannot
+                // share a line (large text, a narrow screen).
+                child: Wrap(
+                  spacing: Space.sm,
+                  runSpacing: Space.sm,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Flexible(
-                      child: InfoChip(
-                        icon: fromUserLocation
-                            ? Icons.near_me_outlined
-                            : Icons.place_outlined,
-                        label: fromUserLocation
-                            ? '$distance away'
-                            : '$distance from the map centre',
-                        color: colors.accent,
-                        background: colors.accent.withValues(alpha: 0.12),
-                      ),
+                    InfoChip(
+                      icon: fromUserLocation
+                          ? Icons.near_me_outlined
+                          : Icons.place_outlined,
+                      label: fromUserLocation
+                          ? '$distance away'
+                          : '$distance from the map centre',
+                      color: colors.accent,
+                      background: colors.accent.withValues(alpha: 0.12),
                     ),
-                    const SizedBox(width: Space.sm),
                     FilledButton(
                       onPressed: onOpen,
                       style: FilledButton.styleFrom(

@@ -5,6 +5,12 @@ import 'package:worlds/app/theme/app_tokens.dart';
 import 'package:worlds/shared/components/category_style.dart';
 import 'package:worlds/shared/models/world_category.dart';
 
+/// Whether text is set large (above 130%). A row that puts a label or a
+/// button beside running text then leaves that text a column a few letters
+/// wide, so such rows stack instead.
+bool hasLargeText(BuildContext context) =>
+    MediaQuery.textScalerOf(context).scale(10) > 13;
+
 /// A category's icon on a soft tile of its colour.
 class CategoryBadge extends StatelessWidget {
   const CategoryBadge({required this.category, this.size = 44, super.key});

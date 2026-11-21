@@ -71,6 +71,17 @@ class _BlockEditorCardState extends ConsumerState<BlockEditorCard> {
       }
     });
 
+    final incompleteChip = incomplete
+        ? InfoChip(
+            label: 'Incomplete',
+            icon: Icons.error_outline,
+            color: colors.danger,
+            background: colors.dangerSoft,
+          )
+        : null;
+    // At large text sizes the chip goes under the heading, not beside it.
+    final chipBelow = hasLargeText(context);
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
@@ -120,15 +131,10 @@ class _BlockEditorCardState extends ConsumerState<BlockEditorCard> {
                     ],
                   ),
                 ),
-                if (incomplete)
+                if (incompleteChip != null && !chipBelow)
                   Padding(
                     padding: const EdgeInsets.only(right: Space.xs),
-                    child: InfoChip(
-                      label: 'Incomplete',
-                      icon: Icons.error_outline,
-                      color: colors.danger,
-                      background: colors.dangerSoft,
-                    ),
+                    child: incompleteChip,
                   ),
                 PopupMenuButton<_BlockAction>(
                   tooltip: 'Part ${widget.index + 1} options',
@@ -162,6 +168,14 @@ class _BlockEditorCardState extends ConsumerState<BlockEditorCard> {
                 ),
               ],
             ),
+            if (incompleteChip != null && chipBelow)
+              Padding(
+                padding: const EdgeInsets.only(left: 12, bottom: Space.sm),
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: incompleteChip,
+                ),
+              ),
             Padding(
               padding: const EdgeInsets.only(left: 12),
               child: _fields(block, controller),
