@@ -28,7 +28,10 @@ PostgreSQL + PostGIS. All schema changes must be committed migrations.
 - **world_progress**: world_id, user_id, current_block_id, status in_progress/completed, validated progress jsonb, started_at/completed_at/updated_at; composite PK.
   Implemented in Checkpoint 5 with two validated arrays instead of one jsonb value: `path` (parts visited, at most 300) and `answered` (questions answered correctly), plus `completion_count`. Created by a successful unlock; changed only by the play functions; readable by its owner only; signed-out users have no access. Answer attempts live in `private.world_answer_attempts` for the attempt limit, with no API access.
 - **saved_worlds**: world_id, user_id, created_at; composite PK.
+  Implemented in Checkpoint 6 (`supabase/migrations/20261121060535_create_saved_reports_moderation.sql`). Readable by its owner only; written only by `set_world_saved`. Rules in D-034.
 - **world_reports**: id, world_id, reporter_id, reason, description, status pending/reviewed/actioned/dismissed, created_at. Prevent duplicate pending reports per reporter/World.
+  Implemented in Checkpoint 6, with `resolved_at`. A partial unique index allows one pending report per reporter and World. A reporter can read their own rows but not `status` or `resolved_at` (column grants); nobody else can read any. Written only by `report_world` and the moderation functions. `reporter_id` becomes null if the account is removed. Rules in D-035.
+- **private.moderation_actions** (Checkpoint 6): one row per moderation action: World id and title, action (hide, restore, remove, dismiss_reports), who acted, why, status before and after, reports closed, time. No foreign key to the World, so the record outlives it. No API access.
 
 ## Indexes
 GIST worlds.location; B-tree worlds(status,visibility,category); B-tree worlds(creator_id,created_at desc); unique world/position; primary keys for progress, visits and saves. Add others only with query-plan evidence.
@@ -80,6 +83,43 @@ Implemented in Checkpoint 5, all `security definer`, signed-in users only (D-032
 
 Errors: 42501 not signed in; P0002 not found, unpublished, hidden or deleted; WR403 not unlocked yet; 22023 an invalid step or position.
 
+## Saved, report and profile RPCs
+Implemented in Checkpoint 6, all `security definer`:
+
+| Function | Purpose |
+| --- | --- |
+| `set_world_saved(world_id, saved)` | Signed-in only. Saves a published public World or removes any saved World; repeating either changes nothing. WR429 at 500 saved. |
+| `get_saved_worlds(page_size, page_offset, from_lat, from_lon)` | Signed-in only. The caller's saved Worlds that are published now, newest save first, with `has_more` and the number that are `unavailable`. Page size 1 to 50 (default 20). |
+| `report_world(world_id, reason, details)` | Signed-in only. Returns `already_reported` for a second report while the first is pending. 22023 for an unknown reason, long details or one's own World; P0002 if the World is not published; WR429 after ten reports in a day. |
+| `get_profile_page(profile_username, page_size, page_offset)` | Callable signed out. Username, display name, bio, `published_count` and published Worlds, newest first. `draft_count`, `discovered_count` and `completed_count` are null unless the caller owns the profile. P0002 for an unknown username. |
+
+`get_world_details` also returns `is_saved` (null when signed out).
+
+## Moderation (no API)
+Functions in the `private` schema, which the Data API does not expose and API roles cannot use. The project owner runs them in the SQL editor (D-036; runbook in `supabase/README.md`):
+
+| Function | Effect |
+| --- | --- |
+| `private.moderation_queue()` | Pending reports, oldest first, with reason, details, reporter, World, its state and its creator. |
+| `private.hide_world(world, moderator, note)` | Published or draft becomes hidden; pending reports become actioned. |
+| `private.restore_world(world, moderator, note)` | Hidden becomes published if it was published when hidden and is still complete, otherwise a draft. |
+| `private.remove_world(world, moderator, note)` | Soft delete; pending reports become actioned. |
+| `private.dismiss_reports(world, moderator, note)` | Pending reports become dismissed; the World is untouched. |
+
+Each needs a moderator name (2 to 80 characters) and a note (3 to 1,000) and writes one row to `private.moderation_actions`; without them nothing changes.
+
+## Deletion and retention (as implemented, 2026-11-21)
+What happens today. No retention periods have been decided; that is an open owner decision before public launch.
+
+- **A creator deletes a World, or a moderator removes one:** soft delete. The row, its parts, its answer hashes, its image records and its files stay. It disappears from discovery, details, play, saved lists and profile pages, and its creator can no longer open it. Nothing restores it through the app.
+- **A World is unpublished or hidden:** nothing is deleted. Players' progress, saves and reports of it stay and apply again if it comes back.
+- **Images:** an image the creator replaces or removes from a World is released and its file deleted. Files of deleted Worlds, and files whose release failed, stay in storage; there is no clean-up job.
+- **Saved Worlds:** a row is deleted when its owner removes it, and with the World or the account if either is ever hard-deleted.
+- **Reports:** never deleted by the app. They keep their text and reason after the World is soft-deleted and after moderation closes them. If the reporter's account is removed the report stays without the reporter.
+- **Moderation log:** never deleted, and kept even if the World's row is.
+- **Play records:** progress, visits and answer attempts are kept indefinitely. No coordinates are stored.
+- **Accounts:** the app has no "delete my account". Removing a user in the Supabase dashboard cascades through their profile to their Worlds (with parts, answers, image records, others' saves, progress and reports of those Worlds), their own saves, progress, visits and answer attempts. Their image files in storage are not removed by that cascade.
+
 ## RLS
 Enable RLS on every exposed table:
 - Profiles: safe public read; owner update.
@@ -87,8 +127,8 @@ Enable RLS on every exposed table:
 - Blocks: readable only if parent accessible; creator writes own. (Checkpoint 4: creator-only reads until the player exists, D-024; writes only through `save_world`.)
 - Assets: owner-scoped writes; read only when referenced by accessible World. (Checkpoint 4: owner, plus the cover of a published public World; storage objects follow the same rule. Checkpoint 5: plus, for accounts that unlocked the World, the images its parts use while it is published.)
 - Question secrets: no client access.
-- Visits/progress/saves: user-scoped. (Checkpoint 5: visits and progress are readable by their owner only and written only by the play functions.)
-- Reports: authenticated insert; reporter reads own; trusted admin reads/modifies.
+- Visits/progress/saves: user-scoped. (Checkpoint 5: visits and progress are readable by their owner only and written only by the play functions. Checkpoint 6: saves likewise, written only by `set_world_saved`.)
+- Reports: authenticated insert; reporter reads own; trusted admin reads/modifies. (Checkpoint 6: inserted only through `report_world`; the reporter reads their own rows without the moderation status; there is no admin role in the API, moderation runs in the dashboard, D-036.)
 Admin role comes from trusted process, never client-editable profile metadata.
 
 ## Important

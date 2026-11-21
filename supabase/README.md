@@ -43,6 +43,34 @@ Run them in the Supabase SQL editor or with MCP `execute_sql`, one file per run 
 - `tests/worlds_test.sql` — worlds RLS and `get_nearby_worlds` (filters, clamps, search, validation).
 - `tests/world_authoring_test.sql` — Checkpoint 4: saving, publishing, answer secrecy, assets, storage policies and World details.
 - `tests/world_play_test.sql` — Checkpoint 5: unlocking, playing, branching, answers and their limit, progress privacy, players' image access, unpublished and hidden Worlds.
+- `tests/community_test.sql` — Checkpoint 6: saving, reporting and their limits, privacy of saves and reports, every moderation action and its log, what a hide closes off, profile pages.
+
+Write tests so they need no clean-up: no `delete` statements. The Supabase connection asks for confirmation before SQL it considers destructive, the editor declines that prompt without showing it, and a test file that contained two clean-up deletes was refused whole (2026-11-21), although it could not have changed anything. Give fixtures their own rows instead, so nothing has to be removed before the next check.
+
+### Moderation runbook
+
+Moderation is done here, in the SQL editor of the Supabase dashboard, by the project owner (docs/DECISIONS.md, D-036). There is no moderator screen in the app. Every action needs your name and a reason; both are kept in `private.moderation_actions`.
+
+```sql
+-- 1. What is waiting, oldest first.
+select * from private.moderation_queue();
+
+-- 2. One of these, with the World's id from the queue.
+select private.hide_world('<world id>', '<your name>', '<why>');       -- out of sight; its creator cannot undo it
+select private.dismiss_reports('<world id>', '<your name>', '<why>');  -- nothing wrong; reports closed
+select private.remove_world('<world id>', '<your name>', '<why>');     -- deleted for good
+
+-- 3. Undo a hide.
+select private.restore_world('<world id>', '<your name>', '<why>');
+
+-- The record of what was done.
+select * from private.moderation_actions order by acted_at desc;
+```
+
+- Hiding closes a World to everyone but its creator at once: map, details, play, saved lists and their profile page. The creator sees "Hidden by moderation" and cannot edit, publish or delete it.
+- Restoring publishes it again only if it was published when hidden and is still complete; otherwise it becomes a draft the creator can publish.
+- The reporter is never shown to the creator. The queue shows it to you.
+- The live tests leave one pending report per run for a deleted `[e2e]` World, made by the test account. Close them with `dismiss_reports`.
 
 ### Development seed data
 
