@@ -68,8 +68,15 @@ Shared-AR direction, 2026-11-23:
 
 - **D-043 Shared, camera-based, location-anchored 3D experiences (owner decision):** recorded in `docs/PRODUCT_DIRECTION_AND_CLAUDE_HANDOFF.md`, reviewed against `main` at `a03209e`. WORLDS moves towards camera experiences anchored to real places, in realistic/cinematic and stylized styles, and placement must be shared: every visitor resolves the same authored scene at the same physical place. The map, accounts, creator, player and backend are kept and extended, not replaced. It supersedes D-004 for future planning. AI generation, chat, followers, feed, payments and monetization stay out. Open with it: the creator placement workflow (on-site, remote or both; on-site first is recommended, not decided). The handoff's phase gates apply: Phase 0 (audit, `docs/PHASE_0_AUDIT.md`), then a two-device proof of concept, before any production AR.
 
+- **D-044 Phase 1 approved; spike in the repository (owner decision, 2026-11-23):** asked directly after the Phase 0 report, the owner chose these options:
+  - **Phase 1:** "Approve; spike in repo". The proof of concept is a standalone native Android app in `spikes/shared-anchor-poc/` on branch `spike/shared-anchor-poc`, never merged into `main` without the owner's approval. It adds ARCore and SceneView to the spike only; the Flutter app, its tests and the database are untouched.
+  - **Privacy:** "Accept for PoC only". Google processing camera and location data for Geospatial localization is accepted for the proof of concept, with testers limited to the owner and team. The spike shows Google's required notice and asks for acknowledgement. Whether the product does this is decided again before Phase 2 (`docs/PHASE_0_AUDIT.md` C3).
+  - **"Device check":** "I'll unpublish/delete it". The owner does it in the app; the agent verifies read-only afterwards.
+  - **Field resources:** "None yet". No ARCore-certified phones, Google Cloud project or test sites. The spike is written and built now; on-site testing waits.
+  - **Restrictive default, not chosen by the owner:** no 3D model was chosen, so the spike draws a measurement pin labelled DEBUG at the anchor. It renders a GLB only when the owner supplies a licensed one.
+
 ## Pending; require evidence and rationale
-- Shared AR: test devices, Google Cloud/ARCore credentials, test site, privacy acceptance of Geospatial/VPS, where the spike lives, the first asset; and the creator placement workflow (D-043). See `docs/PHASE_0_AUDIT.md` §6.5.
+- Shared AR: two ARCore-certified test phones, a Google Cloud project with the ARCore API, candidate test sites, the first licensed 3D model and its style; and the creator placement workflow (D-043, D-044). See `docs/PHASE_0_AUDIT.md` §6.5.
 - Whether product events as built are acceptable, how long they are kept, and what testers are told (D-039).
 - The four remaining light-theme contrast shortfalls in D-041 (two status labels, one note, the `outline` edge).
 - Who operates the project during a pilot (D-042).

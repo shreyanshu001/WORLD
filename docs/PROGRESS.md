@@ -30,6 +30,7 @@
 - **Found:** the owner's phone (realme P4 5G, RMX5110) is not on Google's ARCore supported-devices list (checked 2026-11-23; to be confirmed on the phone). No qualifying AR test device is known to be available.
 - **Manual device verification:** none. No phone was attached.
 - **Approval status:** pending owner review of the audit and the Phase 1 plan.
+- **Later on 2026-11-23:** the owner wrote "continue" and, asked directly, approved Phase 1 with the spike in the repository, accepted Geospatial data processing for the proof of concept only, chose to delete "Device check" personally, and has no test phones, Cloud project or sites yet (D-044).
 
 ## Current blockers
 
