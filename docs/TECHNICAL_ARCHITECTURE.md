@@ -1,5 +1,7 @@
 # WORLDS — Technical architecture
 
+> **2026-11-23:** This is the architecture of the implemented non-AR MVP and still governs it. The next phase adds a native Android AR module behind a small typed Flutter boundary (handoff §6, D-043); nothing of it is built yet. Contracts that AR will have to change (camera permission, one-shot location, image-only assets, unversioned published content) are listed in `docs/PHASE_0_AUDIT.md` §4.
+
 ## Principles
 - Flutter feature-first, layered architecture.
 - Server owns authorization, publish validation and puzzle answers.

@@ -10,7 +10,7 @@ People can create four kinds of Worlds:
 - **Art** — visual work with supporting context.
 - **Experience** — a composed sequence of supported content blocks.
 
-The MVP is an Android-first Flutter application. It does not require AR, background location, AI generation, chat, followers or a social feed.
+The MVP is an Android-first Flutter application. It does not require AR, background location, AI generation, chat, followers or a social feed. *(2026-11-23: the "no AR" part describes the original MVP; shared camera-based AR is the approved next phase, see "Current product direction" below and D-043.)*
 
 ## Product decisions (locked)
 
@@ -23,7 +23,7 @@ The MVP is an Android-first Flutter application. It does not require AR, backgro
 | Backend | Supabase + PostgreSQL + PostGIS |
 | Maps | `maplibre_gl` behind `MapAdapter`; OpenFreeMap pilot tiles, with provider terms and reliability rechecked before public launch |
 | Location | Foreground only |
-| AR | Out of MVP |
+| AR | Out of the original MVP; the next phase (2026-11-23, D-043, `docs/PHASE_0_AUDIT.md`) |
 | Initial launch | Small, seeded geographic pilot |
 
 ## Current product direction

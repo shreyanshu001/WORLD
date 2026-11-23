@@ -3,6 +3,8 @@
 **Status:** Interaction requirements are the implementation baseline. Visual identity below is a proposed direction, not a final brand approval.  
 **Repository baseline reviewed:** `main` after Checkpoint 3 merge, 2026-11-20.
 
+> **2026-11-23:** Since this was written, World details, the editor and the player were built (Checkpoints 4–5), so the "next"/"future" labels in §5.2–5.4 and the Checkpoint 3 baseline in §2 are historical. The living-atlas direction in §3 was adopted at the owner's request by D-031 (tokens in `lib/app/theme/app_tokens.dart`; exact values still open to review) and its Motion list by D-040. The AR camera experience follows the visual-quality direction in `docs/PRODUCT_DIRECTION_AND_CLAUDE_HANDOFF.md` §7 (D-043).
+
 ## 1. Purpose and product experience
 
 WORLDS should feel like an invitation to explore the real world, not a conventional social feed with a map bolted on. The map is the home surface; each World should feel like a small, intentional experience worth travelling to.

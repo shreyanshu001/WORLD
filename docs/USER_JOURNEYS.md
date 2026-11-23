@@ -2,6 +2,8 @@
 
 **Status:** Functional journey contract for MVP. Account requirement for unlocking/playing remains a product decision (see D-019 and audit gap G3).
 
+> **2026-11-23:** The account requirement was decided on 2026-11-20 by D-032: unlocking and playing need an account; browsing does not. The "D-022" referred to below is that decision (D-022 was left unused). These journeys describe the implemented non-AR flows; camera/AR journeys are defined in `docs/PRODUCT_DIRECTION_AND_CLAUDE_HANDOFF.md` §8 (D-043).
+
 ## 1. Actors and rules
 
 - **Visitor:** can open Explore and browse public published Worlds without an account.

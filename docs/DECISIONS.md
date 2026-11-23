@@ -4,7 +4,7 @@
 - **D-001 Map-first discovery:** location is the product differentiator.
 - **D-002 Four launch categories:** Story, Puzzle, Art, Experience.
 - **D-003 Open creation:** any authenticated user can create/publish subject to validation, rate limits and moderation.
-- **D-004 No AR in MVP:** GPS-based experiences first; prove demand before device-specific complexity.
+- **D-004 No AR in MVP:** GPS-based experiences first; prove demand before device-specific complexity. *Superseded for the next phase by D-043 (2026-11-23); it remains the record of how the MVP was built.*
 - **D-005 Supabase/Postgres/PostGIS:** minimize solo-operator burden while supporting spatial queries.
 - **D-006 Foreground location only:** privacy, battery and permission simplicity.
 - **D-007 Structured blocks:** safe rendering and schema evolution.
@@ -64,7 +64,12 @@ Checkpoint 7 decisions, 2026-11-21. The owner wrote "pushed continue further" af
 - **D-041, the owner's answer (2026-11-21):** asked directly, the owner chose "Apply both". In the light theme Puzzle's name is now drawn in `#8E5500` (6.1:1 on white) and the distance label in `#885010` on its tint (5.1:1), the second as a new token, `accentText`; the ochre `accent` and its tints are unchanged. Icons, badges, markers and panels keep their colours. The dark-theme change made earlier was in the same report and drew no objection; it was not asked about separately. Still short in the light theme, measured by hand while applying these and not yet put to the owner: the "Published" label (green on its tint, 4.2:1), the "Unpublished" label (ochre on its tint, 4.1:1 on the canvas), the small note inside the amber "not there yet" panel on the canvas (4.47:1), and the `outline` edge above. The automated walks did not flag any of the four.
 - **D-042 Free plan for now (owner decision, 2026-11-21):** asked directly what the pilot should run on, the owner chose to stay on Supabase's Free plan for now. Accepted with it: no backups, so a mistake in the SQL editor or a lost project cannot be undone; and the project pauses after about a week with little activity until someone restores it in the dashboard. Who watches the project, restores it and moderates is still unnamed.
 
+Shared-AR direction, 2026-11-23:
+
+- **D-043 Shared, camera-based, location-anchored 3D experiences (owner decision):** recorded in `docs/PRODUCT_DIRECTION_AND_CLAUDE_HANDOFF.md`, reviewed against `main` at `a03209e`. WORLDS moves towards camera experiences anchored to real places, in realistic/cinematic and stylized styles, and placement must be shared: every visitor resolves the same authored scene at the same physical place. The map, accounts, creator, player and backend are kept and extended, not replaced. It supersedes D-004 for future planning. AI generation, chat, followers, feed, payments and monetization stay out. Open with it: the creator placement workflow (on-site, remote or both; on-site first is recommended, not decided). The handoff's phase gates apply: Phase 0 (audit, `docs/PHASE_0_AUDIT.md`), then a two-device proof of concept, before any production AR.
+
 ## Pending; require evidence and rationale
+- Shared AR: test devices, Google Cloud/ARCore credentials, test site, privacy acceptance of Geospatial/VPS, where the spike lives, the first asset; and the creator placement workflow (D-043). See `docs/PHASE_0_AUDIT.md` §6.5.
 - Whether product events as built are acceptable, how long they are kept, and what testers are told (D-039).
 - The four remaining light-theme contrast shortfalls in D-041 (two status labels, one note, the `outline` edge).
 - Who operates the project during a pilot (D-042).

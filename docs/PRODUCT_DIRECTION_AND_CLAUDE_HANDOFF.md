@@ -145,6 +145,8 @@ The latest progress record reports the following results on 2026-11-21:
 
 These are **repository-recorded historical results**, not fresh test executions by the author of this handoff. Claude Code must rerun relevant commands on its actual checkout before relying on them.
 
+> **Phase 0 correction, 2026-11-23:** a later record (`f26bb8e`, on `checkpoint-7-pilot-readiness`, not on `main` at the time of review) re-ran at `93aafa4`: 182 files, 0 changed; analyze clean; 341 of 341 (the 4 extra are the 360 dp regression tests). Phase 0 re-ran them again on 2026-11-23 with the same result and a passing debug APK build. See `docs/PHASE_0_AUDIT.md` §1.
+
 ### 2.4 What the first device pass did and did not prove
 
 The recorded device pass confirmed that the app launched, the map rendered, the existing creator flow could save a draft, large text and dark theme were inspected, and screen-reader control names were inspected. Four narrow-phone issues were found and fixed in commit `f57b9d8`.
@@ -152,6 +154,8 @@ The recorded device pass confirmed that the app launched, the map rendered, the 
 It did **not** complete the full creator-to-explorer journey. In particular, on-device unlocking and playing, permission denial, GPS edge cases, TalkBack spoken flow, slow/offline network behavior, profile-build frame-rate measurement and several Checkpoint 4–6 flows remain unverified.
 
 The progress record also says a temporary test World named “Device check” was published without the agent pressing Publish. The owner chose to delete it personally, but the deletion was not verified by the agent against the live database. Treat this as an unresolved verification item until checked safely.
+
+> **Phase 0 correction, 2026-11-23:** checked read-only against the live development database. "Device check" was **not** deleted: it is still `published` and `public`, unchanged since 11:46:49 UTC on 2026-11-21. It is an open owner decision in `docs/PHASE_0_AUDIT.md` §6.5.
 
 ### 2.5 Known documentation conflicts to reconcile
 
