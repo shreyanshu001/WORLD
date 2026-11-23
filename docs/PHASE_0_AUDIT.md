@@ -155,6 +155,7 @@ That makes the pose stored on our server (Phase 3) the "shared anchor identity" 
 
 **Renderer, in order:**
 1. **SceneView `arsceneview`** (Filament + ARCore, Kotlin, Apache-2.0). Its GitHub README shows 4.31.0, while Maven Central and the docs site show older versions; the current version is unverified. Check before use: release cadence; access to the underlying ARCore `Session`/`Earth`; GLB/PBR loading; lifecycle; 16 KB page-size alignment; minSdk, Kotlin and AGP needs against the app's toolchain (C7); APK size.
+   *Phase 1 finding (2026-11-23):* 4.x is built with Kotlin 2.3–2.4 and cannot be read by this toolchain's Kotlin 2.2.20, so the spike uses the maintained 2.x line, **2.3.4** (2026-10-10, Kotlin 2.2.21, ARCore 1.52.0, Filament 1.68.2). It compiles with the app's AGP/Kotlin/Gradle and its arm64 libraries are 16 KB-aligned. See `spikes/shared-anchor-poc/README.md`.
 2. **Fallback:** Google's official Geospatial sample (its own GL renderer) plus Filament `gltfio` for the GLB. More code, fewer unknown layers.
 3. **Watch, do not adopt:** Jetpack XR ARCore (`androidx.xr.arcore`, 1.0.0-rc02, 2026-10-07) has Geospatial pieces, but is aimed at Android XR. Its phone support is unverified.
 4. **Not candidates:** Flutter AR plugins, including the old `flutter_sceneview` bridge (handoff §6). The PoC is native-only.

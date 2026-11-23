@@ -98,3 +98,18 @@ Terms were read on 2026-11-19; see the audit for quotations and the cost estimat
 | MapTiler Flex ($30/month) | Alternative fallback | Free tier is described as non-commercial and pauses at quota. |
 | Self-hosted Protomaps (PMTiles) | Deferred to before public launch | Removes the third-party dependency but adds hosting work. |
 | Public OpenStreetMap tile server | **Rejected for production** | No SLA; access can be blocked without notice; offline use prohibited. |
+
+### Shared-AR spike only (Phase 1, 2026-11-23, D-044)
+
+These are in `spikes/shared-anchor-poc/` only. None is in the WORLDS app's `pubspec.yaml` or `android/`. Versions were read from Google Maven and Maven Central on 2026-11-23.
+
+| Package | Version | Why this version |
+| --- | --- | --- |
+| `io.github.sceneview:arsceneview` | 2.3.4 (2026-10-10), Apache-2.0 | Built with Kotlin 2.2.21, readable by the app's Kotlin 2.2.20. The 4.x line (4.72.0, released 2026-11-23) is built with Kotlin 2.3–2.4 and cannot be used without upgrading Kotlin. Pulls Filament/gltfio 1.68.2, Compose 1.10.0 and `fuel` 3.0.0-alpha04 (an alpha HTTP library, unused by the spike) |
+| `com.google.ar:core` | 1.52.0 | What SceneView 2.3.4 was built against; latest is 1.57.0 (2026-10-15) |
+| `com.google.android.gms:play-services-location` | 21.3.0 | Geospatial needs fused location |
+| `com.google.android.gms:play-services-auth` | 21.3.0 | ARCore keyless authorization |
+| `androidx.activity:activity-compose` / `androidx.compose.material3:material3` / `androidx.lifecycle:lifecycle-runtime-compose` | 1.11.0 / 1.4.0 / 2.9.4 | Same period as SceneView's Compose 1.10 |
+| `junit` / `org.json:json` (tests) | 4.13.2 / 20250517 | JVM unit tests; real `org.json` instead of android.jar stubs |
+
+Adopting any of these in the app is a Phase 2 decision, after the proof of concept is accepted.

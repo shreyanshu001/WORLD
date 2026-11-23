@@ -32,6 +32,29 @@
 - **Approval status:** pending owner review of the audit and the Phase 1 plan.
 - **Later on 2026-11-23:** the owner wrote "continue" and, asked directly, approved Phase 1 with the spike in the repository, accepted Geospatial data processing for the proof of concept only, chose to delete "Device check" personally, and has no test phones, Cloud project or sites yet (D-044).
 
+## Shared AR Phase 1 record (in progress)
+
+- **Date:** 2026-11-23. Approved by the owner (D-044).
+- **Branch:** `spike/shared-anchor-poc` (local, not pushed), from `phase-0-shared-ar-audit`. Commit `d82c330`.
+- **Built:** `spikes/shared-anchor-poc/`, a standalone native Android app (see its `README.md`). It:
+  - shows Google's ARCore notice and the safety prompt;
+  - checks ARCore availability; an unsupported phone is told so and the result is logged;
+  - asks for camera and fine location in the foreground;
+  - runs ARCore Geospatial, captures a ground mark as a pose file, and rebuilds it as a Terrain or WGS84 anchor;
+  - checks VPS coverage of candidate sites;
+  - gates display on accuracy with hysteresis;
+  - draws a DEBUG measurement pin (a GLB only if the owner imports a licensed one);
+  - writes a measurement log without the phone's own position.
+- **Not touched:** the Flutter app, its tests, the Android project under `android/`, migrations, live data.
+- **Renderer finding (evidence for C7):** SceneView 4.x (4.72.0 released on 2026-11-23; about 50 releases since May 2026) is built with Kotlin 2.3–2.4, which the WORLDS toolchain (Kotlin 2.2.20) cannot read. The spike uses SceneView 2.3.4 (2026-10-10, Kotlin 2.2.21, ARCore 1.52.0, Filament 1.68.2). Moving to 4.x later means upgrading Kotlin and probably Flutter (D-008).
+- **Tests and results:**
+  - `./gradlew testDebugUnitTest assembleDebug` in `spikes/shared-anchor-poc`: BUILD SUCCESSFUL. Unit tests 20 of 20: pose file 6, orientation maths 5, quality gate 9. The first build failed on one compile error of the spike's own (a function clashing with a property setter), fixed before the commit.
+  - Debug APK: 39.4 MB (23.6 MB of native libraries for four ABIs). Permissions: CAMERA, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, INTERNET, plus AndroidX's internal receiver permission. minSdk 24, targetSdk 36.
+  - 16 KB pages: `zipalign -c -P 16` verifies, and every arm64 library has 16 KB LOAD alignment.
+  - The WORLDS app afterwards: `dart format` 182 files, 0 changed; `flutter analyze` no issues; `flutter test --timeout 90s` 341 of 341.
+- **Manual device verification:** none. No ARCore-certified phone is available and none was attached. Nothing about real localization, accuracy, the capture's facing direction or performance is known yet.
+- **Waiting for:** two ARCore-certified phones, a Google Cloud project with the ARCore API and an Android OAuth client for `com.example.worlds.arspike`, candidate sites, and optionally a licensed GLB. The field protocol and measurement sheet are in the spike's README.
+
 ## Current blockers
 
 - **Shared AR Phase 1** needs: two ARCore Geospatial-capable phones, a Google Cloud project with the ARCore API, candidate test sites with VPS coverage, the owner's acceptance of Geospatial/VPS data going to Google, and a decision on where the spike lives and which asset it uses (`docs/PHASE_0_AUDIT.md` §6.5).
