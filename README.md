@@ -26,9 +26,13 @@ The MVP is an Android-first Flutter application. It does not require AR, backgro
 | AR | Out of MVP |
 | Initial launch | Small, seeded geographic pilot |
 
+## Current product direction
+
+WORLDS is moving toward shared, camera-based, location-anchored 3D experiences, with realistic/cinematic and stylized visual directions. The authoritative product and Claude Code execution brief is [`docs/PRODUCT_DIRECTION_AND_CLAUDE_HANDOFF.md`](docs/PRODUCT_DIRECTION_AND_CLAUDE_HANDOFF.md). It supersedes older statements in this README and historical MVP docs that AR is excluded. The existing map, creator, player and backend foundations remain the baseline and must be preserved.
+
 ## Start here
 
-1. Give the coding agent [`AGENTS.md`](AGENTS.md) and require it to read every document in `docs/`.
+1. Give the coding agent [`AGENTS.md`](AGENTS.md) and [`docs/PRODUCT_DIRECTION_AND_CLAUDE_HANDOFF.md`](docs/PRODUCT_DIRECTION_AND_CLAUDE_HANDOFF.md); require it to read every document in `docs/`.
 2. For product behavior, use [`docs/USER_JOURNEYS.md`](docs/USER_JOURNEYS.md).
 3. For screens and interaction, use [`docs/UI_UX_SPECIFICATION.md`](docs/UI_UX_SPECIFICATION.md).
 4. For measurable completion gates, use [`docs/FEATURE_ACCEPTANCE_CRITERIA.md`](docs/FEATURE_ACCEPTANCE_CRITERIA.md).
