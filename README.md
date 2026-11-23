@@ -37,7 +37,7 @@ WORLDS is moving toward shared, camera-based, location-anchored 3D experiences, 
 3. For screens and interaction, use [`docs/UI_UX_SPECIFICATION.md`](docs/UI_UX_SPECIFICATION.md).
 4. For measurable completion gates, use [`docs/FEATURE_ACCEPTANCE_CRITERIA.md`](docs/FEATURE_ACCEPTANCE_CRITERIA.md).
 5. For architecture, schema and scope, use `TECHNICAL_ARCHITECTURE.md`, `DATABASE.md`, `PRODUCT_SPEC.md` and `IMPLEMENTATION_PLAN.md`.
-6. Check [`docs/PROGRESS.md`](docs/PROGRESS.md) before starting; Checkpoints 0–3 are already implemented and merged. Do not repeat the initial audit.
+6. Check [`docs/PROGRESS.md`](docs/PROGRESS.md) before starting; Checkpoints 0–7 are implemented and merged into `main`; their device checks and the pilot itself are still open. Do not repeat the initial audit.
 
 ## MVP definition
 
@@ -71,7 +71,7 @@ Generated files (`*.freezed.dart`, `*.g.dart`) are committed. Regenerate them wh
 
 Gradle is pinned to Java 21 by `android/gradle/gradle-daemon-jvm.properties`, so a JDK 21 must be installed (Android Studio ships one).
 
-The app currently has its foundation, email/password accounts and profiles, the Explore map of nearby published Worlds, World details, the World creator (Checkpoint 4), on-site unlocking with the World player (Checkpoint 5), and saved Worlds, reporting, creator pages and profile counts (Checkpoint 6). Checkpoint 7 so far adds what a pilot needs from the code: four product events with no trail of where anyone went, layouts that hold at 200% text, motion whose own animations stop when the device is set to remove animations, and the operations notes. The pilot itself has not been run. Checkpoints 4, 5 and 6 are merged into `main`; Checkpoint 7 is on its branch. Their database migrations are applied to the development project. Moderation and reading the pilot's numbers are done in the Supabase dashboard (see [`supabase/README.md`](supabase/README.md)); share links are not implemented. Real-device verification gates remain open. See [`docs/PROGRESS.md`](docs/PROGRESS.md) for status.
+The app currently has its foundation, email/password accounts and profiles, the Explore map of nearby published Worlds, World details, the World creator (Checkpoint 4), on-site unlocking with the World player (Checkpoint 5), and saved Worlds, reporting, creator pages and profile counts (Checkpoint 6). Checkpoint 7 adds what a pilot needs from the code: four product events with no trail of where anyone went, layouts that hold at 200% text and on a 360 dp phone, motion whose own animations stop when the device is set to remove animations, and the operations notes. The pilot itself has not been run. Checkpoints 4 to 7 are merged into `main`. Their database migrations are applied to the development project. Moderation and reading the pilot's numbers are done in the Supabase dashboard (see [`supabase/README.md`](supabase/README.md)); share links are not implemented. One partial pass has been made on a real phone (2026-11-21); most real-device verification gates remain open. See [`docs/PROGRESS.md`](docs/PROGRESS.md) for status.
 
 Before testing sign-up, read the email-confirmation note in [`supabase/README.md`](supabase/README.md). Email confirmation is currently off on the development project, so new accounts are signed in at once.
 
