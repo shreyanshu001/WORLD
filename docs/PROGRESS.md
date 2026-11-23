@@ -1,10 +1,10 @@
 # WORLDS — Implementation progress
 
 **Phase:** MVP implementation  
-**Current checkpoint:** 7 (Beta and pilot): the code and records a pilot needs are on its branch; the pilot itself has not been run. Checkpoint 6 was merged into `main` by the owner with no recorded answer to its moderation and privacy review, and Checkpoints 4 and 5 are still awaiting their device checks  
+**Current checkpoint:** 7 (Beta and pilot): the code and records a pilot needs are merged into `main` (pull requests #9 and #10, 2026-11-21); the pilot itself has not been run. One partial device pass has been made on the owner's phone (2026-11-21). Checkpoint 6 was merged into `main` by the owner with no recorded answer to its moderation and privacy review, and the device checks of Checkpoints 4 to 6 are still mostly open  
 **Product direction:** Approved  
 **Documentation handoff:** Core product, journey, UX and acceptance specifications published to GitHub  
-**App implementation:** Foundation, accounts and profiles, the Explore map, World details, the World creator, on-site unlocking, the World player, saved Worlds, reporting, creator pages and profile counts. Moderation is done in the Supabase dashboard, not in the app. Share links are not built. The Checkpoint 4, 5, 6 and 7 database migrations are applied to the development project and verified. The owner merged Checkpoints 4, 5 and 6 into `main` on GitHub on 2026-11-21 (pull requests #6, #7 and #8), so `main` holds Checkpoints 0–6; Checkpoint 7 is on its branch.
+**App implementation:** Foundation, accounts and profiles, the Explore map, World details, the World creator, on-site unlocking, the World player, saved Worlds, reporting, creator pages and profile counts. Moderation is done in the Supabase dashboard, not in the app. Share links are not built. The Checkpoint 4, 5, 6 and 7 database migrations are applied to the development project and verified. The owner merged Checkpoints 4, 5 and 6 into `main` on GitHub on 2026-11-21 (pull requests #6, #7 and #8), and Checkpoint 7 the same day (pull request #9 at 17:14 IST, bringing `f57b9d8`, and #10 at 17:29 IST, bringing `93aafa4`), so `main` holds Checkpoints 0–7. The merges are not approval of wider release.
 
 | Checkpoint | Status | Evidence |
 |---|---|---|
@@ -13,27 +13,28 @@
 | 1. Project foundation | Implemented; device test deferred by owner; continued to Checkpoint 2 at owner's request | See "Checkpoint 1 record" below |
 | 2. Backend and identity | Implemented; device test and security review pending | See "Checkpoint 2 record" below |
 | 3. Explore map | Implemented; real-device map check pending | See "Checkpoint 3 record" below |
-| 4. World details and creator | Implemented (4A–4G); migration applied and tested; two-account API check passed; owner device check pending | See "Checkpoint 4 record" below |
-| 5. Experience player | Implemented; migration applied and tested; account A to account B check passed through the app's own data layer; no device verification | See "Checkpoint 5 record" below |
-| 6. Saved/profile/moderation | Implemented; migration applied; saving, reporting and profile pages checked against the real backend; merged into `main` by the owner (pull request #8); no answer on record to the moderation and privacy review; no device verification | See "Checkpoint 6 record" below |
-| 7. Beta and pilot | Pilot tooling implemented on its branch (product events, large text, contrast, motion, operations notes); events migration applied and tested. The pilot itself has not been run; no device verification | See "Checkpoint 7 record" below |
+| 4. World details and creator | Implemented (4A–4G); migration applied and tested; two-account API check passed; the editor's five steps and the place picker seen on the owner's phone on 2026-11-21; photo picker, editing a published World and unpublishing not checked on a phone | See "Checkpoint 4 record" and the Checkpoint 7 device pass below |
+| 5. Experience player | Implemented; migration applied and tested; account A to account B check passed through the app's own data layer; no second-account check on a phone (the only on-device unlock on record is the creator's own, unobserved; see the Checkpoint 7 device pass) | See "Checkpoint 5 record" below |
+| 6. Saved/profile/moderation | Implemented; migration applied; saving, reporting and profile pages checked against the real backend; merged into `main` by the owner (pull request #8); no answer on record to the moderation and privacy review; on a phone only the Saved and Profile screens have been seen (at 200% text) | See "Checkpoint 6 record" below |
+| 7. Beta and pilot | Pilot tooling implemented (product events, large text, contrast, motion, operations notes); events migration applied and tested; merged into `main` (pull requests #9 and #10). First partial device pass on 2026-11-21, four layout and screen-reader defects found and fixed. The test World "Device check" from that pass is still published (checked 2026-11-23). The pilot itself has not been run | See "Checkpoint 7 record" below |
 
 ## Current blockers
 
-- On-device: the app has been installed and launched on the owner's phone and runs without crashing, but its screen has not been seen. Sign-up through real Supabase Auth, sign-in, sign-out, session restore and the map are untested on a device.
+- **The test World "Device check" is still published and public** (checked 2026-11-23: status `published`, unchanged since 11:46:49 UTC on 2026-11-21). It sits at the owner's phone's position from the device pass and anyone can find it in Explore. The owner chose to delete it personally; it has not been deleted. See the Checkpoint 7 device pass.
+- On-device: the first device pass (2026-11-21) saw the app start signed in with the session from an earlier install, the live map draw and move, and the nearby search answer. Sign-up through real Supabase Auth, sign-in and sign-out are still untested on a device.
 - Email confirmation was turned off in the dashboard by the owner on 2026-11-20 for development, so new accounts are signed in at once and any address can register, including ones the user does not own. Before the pilot: set up custom SMTP and turn confirmation back on (see `supabase/README.md`).
 - The Checkpoint 2 gate is a security review by the owner.
 - The Checkpoint 2 security review has not been explicitly given.
 - Checkpoint 3's map package and tile provider were adopted on recommendation when the owner said "continue" (D-016, D-017); the owner has not chosen them explicitly.
 - The pilot area, and so the Explore default centre, is undecided (D-021).
 - Schema changes through the Supabase connection: in Checkpoint 4 its approval prompt was declined by the editor, so the owner ran prepared files in the Supabase SQL editor. In Checkpoint 5 the connection ran single statements again (dry run, apply and tests all went through it); requests made of several statements were still refused. The prepared files are now one statement each (see `supabase/README.md`).
-- Checkpoint 4 has not been checked on a phone by the owner: the creator, place picker, photo picker and details screen are unseen on a real screen.
-- Checkpoint 5 has not run on a phone at all: unlocking with a real GPS reading, the permission prompt from the details screen and the player are untested on a device. No phone was attached on 2026-11-21.
-- Checkpoint 6 has not run on a phone, and no moderation action has been run for real: the moderation functions have only run inside rolled-back tests, and the runbook in `supabase/README.md` has not been followed by a person.
+- Checkpoint 4 on a phone: the five editor steps, the place picker and the publish checks were seen on 2026-11-21. The photo picker, editing a published World and unpublishing were not, and Publish was not pressed under observation.
+- Checkpoint 5 on a phone: no second account has unlocked or played a World on a device. The database holds one unlock and completion of "Device check" by its creator's own account on 2026-11-21, which nobody recorded watching; it does not meet the account A to account B gate. Refusing permission from the details screen, "too far away" and a poor indoor reading are untested on a device.
+- Checkpoint 6 on a phone: only the Saved and Profile screens have been seen. Saving, reporting and a creator page have not, and no moderation action has been run for real: the moderation functions have only run inside rolled-back tests, and the runbook in `supabase/README.md` has not been followed by a person.
 - The Checkpoint 6 gate is the owner's moderation and privacy review. Five decisions taken for it are proposals (D-034 to D-038).
 - Checkpoint 6 was merged into `main` by the owner on 2026-11-21 (pull request #8, 14:01 IST) while Checkpoint 7 was in progress. No answer to its moderation and privacy review, or to D-034 to D-038, is on record.
 - Before a pilot (Checkpoint 7): the owner chose to stay on the Free plan for now (D-042), so there are no backups and a quiet project pauses; no one is named to operate the project and moderate; testers have not been told what is measured; there is no fallback map and no crash reporting (see `supabase/README.md` and D-039). The pilot area is still undecided (asked on 2026-11-21).
-- Checkpoints 4 and 5 were merged into `main` by the owner on 2026-11-21 (pull requests #6 and #7) with their device checks still open. `AGENTS.md` still describes the state before Checkpoint 4 under "Before coding" and "Current task"; a correction is proposed in the Checkpoint 5 report and left to the owner.
+- Checkpoints 4, 5 and 7 were merged into `main` by the owner on 2026-11-21 (pull requests #6, #7, #9 and #10) with their device checks still open. `AGENTS.md` still describes the state before Checkpoint 4 under "Before coding" and "Current task"; a correction is proposed in the Checkpoint 5 report and left to the owner.
 - Gap G1 (unlisted Worlds by direct link) is still open; the creator does not offer "unlisted" (D-029).
 - The application ID is the placeholder `com.example.worlds`. It must be replaced before any release build.
 - Supabase region and plan are unverified. Verified: Postgres 17.12; sign-up enabled; email confirmation **off** since 2026-11-20 (`mailer_autoconfirm: true` from the public auth settings; it was `false` before).
@@ -427,7 +428,7 @@ Pending the owner's device check and approval. Checkpoint 6 has not been started
 | Deletion and retention behaviour documented | Documented as implemented | `docs/DATABASE.md`. Retention periods and account deletion are undecided |
 
 ### Manual device verification
-None. No phone was attached on 2026-11-21. The last build on the owner's phone is Checkpoint 4's.
+None. No phone was attached on 2026-11-21. The last build on the owner's phone is Checkpoint 4's. (Later the same day the Saved and Profile screens were seen on the owner's phone; see the Checkpoint 7 device pass.)
 
 ### Known issues
 - Nothing in this checkpoint has run on a phone. Large text was checked in widget tests only (Saved, details, the report form, a creator page and the own profile lay out without overflow at 200%); TalkBack is unchecked.
@@ -448,7 +449,7 @@ Pending the owner's moderation and privacy review. Checkpoint 7 has not been sta
 ## Checkpoint 7 record
 
 - **Date:** 2026-11-21.
-- **Branch:** `checkpoint-7-pilot-readiness`, from `checkpoint-6-saved-profile-moderation` at `ea76409`. Commits: `495233f` (events migration), `514c774` (the four events in the app), `01d15a4` (migration applied, live check), `7858e89` and `4bb5890` (large text), `7410ec4`, `221056b` and `6a3be5f` (motion and its tests), `5d15c2b` (dark-theme contrast), `12aff72` (tap targets and the accessibility guideline checks), `b8389c0` (the two text colours the owner approved), and the commits with this record. The owner pushed the branch to GitHub more than once while the work was in progress. The agent pushed nothing.
+- **Branch:** `checkpoint-7-pilot-readiness`, from `checkpoint-6-saved-profile-moderation` at `ea76409`. Commits: `495233f` (events migration), `514c774` (the four events in the app), `01d15a4` (migration applied, live check), `7858e89` and `4bb5890` (large text), `7410ec4`, `221056b` and `6a3be5f` (motion and its tests), `5d15c2b` (dark-theme contrast), `12aff72` (tap targets and the accessibility guideline checks), `b8389c0` (the two text colours the owner approved), `f57b9d8` (the four defects the first device pass found), and the commits with this record. The owner pushed the branch to GitHub more than once while the work was in progress and merged it into `main` on 2026-11-21: pull request #9 (17:14 IST, up to `f57b9d8`) and #10 (17:29 IST, up to `93aafa4`). The agent pushed nothing.
 - **What this checkpoint is, and is not:** it is the part of "Beta and pilot" that is code and records: measuring the funnel, layouts at large text, contrast, motion, what the app logs, and what the providers promise. The pilot itself needs phones, testers, a chosen area and 15 to 20 curated Worlds, and has not been run. Nothing here should be read as "the pilot is ready".
 - **Started:** the owner wrote "pushed continue further" after the Checkpoint 6 report, having pushed that branch, and merged it into `main` later the same day (pull request #8). The moderation and privacy review that report asked for was not given, and D-034 to D-038 were not answered. Restrictive defaults were taken again: D-039 (product events).
 - **Asked for during the checkpoint:** the owner wrote "use good animation and transition and smothness". Taken as approval of the Motion list in `docs/UI_UX_SPECIFICATION.md` and nothing more of that section (D-040).
@@ -494,19 +495,25 @@ Pending the owner's moderation and privacy review. Checkpoint 7 has not been sta
 - `flutter build apk --debug --dart-define-from-file=.env` — passed. Permissions unchanged: INTERNET, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE and AndroidX's app-internal `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. No background location. Built again at `b8389c0`, after the tap-target fixes and the two colour changes.
 - Database: six test files against the applied schema: 32, 36, 74, 52, 47 and 18 checks, as above.
 
+**Re-run on 2026-11-23 at `93aafa4`** (the merged `main` content, after the device-pass fixes):
+- `dart format --output=none --set-exit-if-changed .` — 182 files, 0 changed.
+- `flutter analyze` — no issues.
+- `flutter test --timeout 90s` — 341 of 341 passed (the 4 added since the count above are the 360 by 797 dp regression tests in `test/features/world_creation/narrow_phone_test.dart`).
+- Live tests, golden renders, the APK build and the SQL test files were not re-run.
+
 ### Acceptance criteria (docs/FEATURE_ACCEPTANCE_CRITERIA.md, section 9)
 | Criterion | Status | Evidence |
 | --- | --- | --- |
-| Physical-device testing on low and mid-range Android and varied networks | Not done | No phone was attached |
+| Physical-device testing on low and mid-range Android and varied networks | Partly | One mid-range phone (Realme RMX5110, Android 16, 360 dp) on its usual network, 2026-11-21; see "Manual device verification". No low-end phone, no slow or missing connection |
 | Permission denial, GPS accuracy, services off and stale readings tested | In widget tests only | Every case is covered with a fake location service, at ordinary and 200% text. Never on a phone |
 | Map tile provider terms, attribution, volume and fallback rechecked | Rechecked; no fallback | `supabase/README.md`. The attribution shown is the text asked for. No second provider is configured |
 | Supabase free-tier limits understood; backup and operational owner identified | Limits written down; no backup, no owner named | `supabase/README.md`. Both are owner decisions |
 | Crash and error reporting reviewed for personal data and location | Reviewed | Two local log lines with the kind of error only; nothing leaves the phone. It also means crashes on testers' phones go unseen |
-| Text scaling, TalkBack and contrast verified | Partly | 200% text in widget tests (no overflow); contrast measured, the dark-theme defect fixed, two light-theme labels corrected by the owner's choice, four smaller shortfalls recorded (D-041); tap-target size, control names and rendered text contrast checked on every main screen in both themes. TalkBack itself not listened to |
+| Text scaling, TalkBack and contrast verified | Partly | 200% text in widget tests (no overflow) and on the owner's phone for the editor, Explore, Saved and Profile (three defects found and fixed in `f57b9d8`); the screen reader's view of those screens read through `uiautomator`; contrast measured, the dark-theme defect fixed, two light-theme labels corrected by the owner's choice, four smaller shortfalls recorded (D-041); tap-target size, control names and rendered text contrast checked on every main screen in both themes. TalkBack itself not listened to |
 | 15 to 20 curated Worlds in one walkable pilot area | Not done | The area is undecided (D-021) |
 | Testers complete the creator-to-explorer flow independently | Not done | No testers yet |
 | Funnel measured: map, details, start, completion; first publish; second discovery; repeat creators | Can be measured; nothing measured | `private.pilot_funnel`, `pilot_summary`, `pilot_worlds`; tested in SQL and against the real backend. The only data is test launches |
-| No critical crash, authorization flaw or unsafe seeded content | Not established | No device use and no seeded content. Database authorization is covered by 259 SQL checks |
+| No critical crash, authorization flaw or unsafe seeded content | Not established | No crash in the one partial device pass; no tester use and no seeded content. Database authorization is covered by 259 SQL checks |
 | Product owner explicitly approves wider release | Not given | — |
 
 ### Manual device verification
@@ -528,9 +535,14 @@ Found on the phone and fixed in `f57b9d8`, each with a regression test at 360 by
 - A category badge next to the category's written name made the screen reader say the name twice ("Story / Story").
 The first one was checked on the phone after the fix only in part: the fixed build was installed, but by the time the place step was opened the World had been published (below) and the screen showed its details instead.
 
-**The test World was published without the agent pressing Publish.** The owner had agreed to one temporary World at the phone's position, to be deleted straight after unlocking it. The agent's attempt to tick "This place is public and safe to reach" was blocked by its permission system. The World "Device check" was nevertheless published at 11:46:49 UTC, in the same seconds as an agent tap meant for the editor's "3. Place" step, which cannot publish; the owner was also using the phone around then. Which of the two published it is not established. When asked, the owner chose to delete it personally; the agent stopped sending input. Its deletion is recorded below.
+**The test World was published without the agent pressing Publish.** The owner had agreed to one temporary World at the phone's position, to be deleted straight after unlocking it. The agent's attempt to tick "This place is public and safe to reach" was blocked by its permission system. The World "Device check" was nevertheless published at 11:46:49 UTC, in the same seconds as an agent tap meant for the editor's "3. Place" step, which cannot publish; the owner was also using the phone around then. Which of the two published it is not established. When asked, the owner chose to delete it personally; the agent stopped sending input. (Corrected 2026-11-23: this paragraph said "Its deletion is recorded below", but no deletion was recorded.)
 
-Not done on the phone: unlocking and playing a World on site; saving, reporting, a creator page; refusing or blocking location, location turned off; Android's "Remove animations"; a slow or missing connection; TalkBack spoken aloud; any frame-rate measurement (a debug build says nothing about smoothness, and no profile build was installed); the moderation runbook. The full list still to do is below.
+**Checked in the database on 2026-11-23** (read-only queries; nothing was changed):
+- "Device check" is still `published` and `public`. Its `updated_at` equals its `published_at` (11:46:49 UTC, 2026-11-21), so nothing has changed it since. It has not been deleted, and anyone near the phone's position at the time can find it in Explore.
+- The creator's own account has one visit to it at 11:47:11 UTC and finished it at 11:47:18 UTC (status `completed`, a path through both of its parts), 22 and 29 seconds after it was published. One `world_unlock_attempted` is counted for it that day. No other account has visited, saved or reported it.
+- Who unlocked and played it, the agent or the owner, is not established, as with the publish. Nobody recorded watching it, and it was the creator's account, so it is not the Checkpoint 5 account A to account B check.
+
+Not done on the phone, as far as anyone watched (see the unlock above): unlocking and playing a World on site as a second account; saving, reporting, a creator page; refusing or blocking location, location turned off; Android's "Remove animations"; a slow or missing connection; TalkBack spoken aloud; any frame-rate measurement (a debug build says nothing about smoothness, and no profile build was installed); the moderation runbook. The full list still to do is below.
 
 What has to be done on a phone before any tester is invited, in one pass:
 
@@ -543,7 +555,8 @@ What has to be done on a phone before any tester is invited, in one pass:
 7. **This checkpoint:** Android's font size at its largest on every screen above; TalkBack through Explore, details and the player; the dark theme; "Remove animations" on and off; the motion watched for dropped frames in a profile build (`flutter run --profile` with the performance overlay) on the slowest phone available, above all the card rising over the live map; a slow connection and none; and afterwards `select * from private.pilot_funnel();` showing the session.
 
 ### Known issues
-- Nothing in Checkpoints 5, 6 or 7 has run on a phone. Whether the new motion is smooth on a real device is not known: it was tested for behaviour (it happens, it ends, it disappears when animations are removed), not for frame rate.
+- "Device check", the test World from the device pass, is still published at the phone's position (checked 2026-11-23). The owner is to delete it.
+- On a phone, only part of Checkpoints 5, 6 and 7 has run (one partial pass, 2026-11-21; see "Manual device verification"): no observed unlock, no second account, no saving or reporting, no "Remove animations", no slow connection. Whether the new motion is smooth on a real device is not known: it was tested for behaviour (it happens, it ends, it disappears when animations are removed), not for frame rate.
 - Anyone holding the app's public key can send product events. A flood can use up a day's 20,000 or inflate a day's launch counts, and a launch is not a person. The steps counted from other tables cannot be forged this way.
 - No account is stored with an event, but a launch that unlocked a World can be matched to an account by time (D-039). The first description of D-039 claimed more than that and was corrected.
 - Removing animations on the device stops the app's own animations only. Page transitions, button ripples, sheets and dialogs are drawn by Flutter and still move.
