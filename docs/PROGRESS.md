@@ -22,7 +22,7 @@
 
 - **Date:** 2026-11-23.
 - **Direction:** the owner moved WORLDS towards shared, camera-based, location-anchored 3D experiences (`docs/PRODUCT_DIRECTION_AND_CLAUDE_HANDOFF.md`, D-043). That handoff exists on `origin/docs/shared-ar-product-direction-handoff`, not on `main`.
-- **Branch:** `phase-0-shared-ar-audit` (local, not pushed), from the handoff branch, with `f26bb8e` from `checkpoint-7-pilot-readiness` cherry-picked so the newer device-pass record comes along.
+- **Branch:** `phase-0-shared-ar-audit` (on GitHub since 2026-11-23), from the handoff branch, with `f26bb8e` from `checkpoint-7-pilot-readiness` cherry-picked so the newer device-pass record comes along.
 - **Delivered:** `docs/PHASE_0_AUDIT.md`. It covers what `main` implements, what AR can reuse, eight existing contracts that AR will collide with, stale documents, and the Phase 1 proof-of-concept plan with its blockers. Dated reconciliation notes were added to `AGENTS.md` (Current task), `README.md`, `PRODUCT_SPEC.md`, `TECHNICAL_ARCHITECTURE.md`, `DECISIONS.md` (D-004 superseded, D-043 added), `USER_JOURNEYS.md`, `UI_UX_SPECIFICATION.md`, `FEATURE_ACCEPTANCE_CRITERIA.md` and the handoff (§2.3, §2.4). No history was removed.
 - **Not changed:** app code, dependencies, Android configuration, migrations, live data.
 - **Tests (at `f26bb8e`, code identical to `main`):** `dart format --output=none --set-exit-if-changed .` 182 files, 0 changed; `flutter analyze` no issues; `flutter test --timeout 90s` 341 of 341; `flutter build apk --debug --dart-define-from-file=.env` built. Not run: `test_live` (publishes on the live project, handoff rule 13), golden renders, SQL tests.
