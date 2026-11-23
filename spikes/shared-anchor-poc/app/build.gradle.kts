@@ -53,8 +53,8 @@ kotlin {
 
 dependencies {
     // SceneView 2.3.4 (2026-10-10): built with Kotlin 2.2.21, ARCore 1.52.0 and
-    // Filament 1.68.2. The 4.x line needs Kotlin 2.3-2.4, which the WORLDS
-    // toolchain (Kotlin 2.2.20) cannot read. See README.md.
+    // Filament 1.68.2. 4.72.0 was build-tested on 2026-11-23 and fails Gradle's
+    // AAR-metadata check here: it needs compileSdk 37 and AGP 9.1+. See README.md.
     implementation("io.github.sceneview:arsceneview:2.3.4")
     // Pinned to what SceneView 2.3.4 was built against (latest is 1.57.0).
     implementation("com.google.ar:core:1.52.0")

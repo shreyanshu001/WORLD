@@ -72,6 +72,13 @@ class SpikeController(
         private set
 
     private var anchorNode: AnchorNode? = null
+
+    /** The only node the gate shows or hides; everything drawn hangs from it. */
+    private var content: Node? = null
+    private var pendingTerrain: com.google.ar.core.ResolveAnchorOnTerrainFuture? = null
+
+    /** Increases on every resolve or clear, so a late Terrain callback cannot attach. */
+    private var resolveRequest = 0
     private var anchorKind: AnchorKind? = null
     private var anchorStatus = AnchorStatus.NONE
     private var resolveStartMs = 0L
@@ -136,7 +143,7 @@ class SpikeController(
                 anchorTracking = anchor?.trackingState == TrackingState.TRACKING,
             ),
         )
-        anchorNode?.isVisible = out.showContent
+        content?.isVisible = out.showContent
 
         if (out.localized && !firstLocalizedLogged && cameraPose != null) {
             firstLocalizedLogged = true
@@ -255,11 +262,19 @@ class SpikeController(
             }
             AnchorKind.TERRAIN -> {
                 anchorStatus = AnchorStatus.RESOLVING
-                earth.resolveAnchorOnTerrainAsync(
+                val request = resolveRequest
+                pendingTerrain = earth.resolveAnchorOnTerrainAsync(
                     p.latitude, p.longitude, p.altitudeAboveTerrainM,
                     q.x.toFloat(), q.y.toFloat(), q.z.toFloat(), q.w.toFloat(),
                 ) { anchor, state ->
                     main.post {
+                        if (request != resolveRequest) {
+                            // Cleared or replaced while resolving: never attach it.
+                            anchor?.detach()
+                            log.event("resolve_stale_ignored", mapOf("kind" to kind.name, "result" to state.name))
+                            return@post
+                        }
+                        pendingTerrain = null
                         val ms = log.elapsedMs - resolveStartMs
                         log.event("resolve_done", mapOf("kind" to kind.name, "result" to state.name, "ms" to ms))
                         if (anchor != null && state == Anchor.TerrainAnchorState.SUCCESS) {
@@ -275,6 +290,10 @@ class SpikeController(
     }
 
     fun clearAnchor(logIt: Boolean = true) {
+        resolveRequest++
+        pendingTerrain?.cancel()
+        pendingTerrain = null
+        content = null
         anchorNode?.let { node ->
             childNodes.remove(node)
             node.anchor.detach()
@@ -323,11 +342,13 @@ class SpikeController(
     }
 
     private fun attach(anchor: Anchor) {
-        val node = AnchorNode(engine, anchor).apply {
+        val gated = Node(engine).apply {
             addChildNode(DebugPin.build(engine, materialLoader))
             loadModel()?.let { addChildNode(it) }
             isVisible = false
         }
+        val node = AnchorNode(engine, anchor).apply { addChildNode(gated) }
+        content = gated
         anchorNode = node
         anchorStatus = AnchorStatus.RESOLVED
         childNodes.add(node)

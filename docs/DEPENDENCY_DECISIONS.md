@@ -105,7 +105,7 @@ These are in `spikes/shared-anchor-poc/` only. None is in the WORLDS app's `pubs
 
 | Package | Version | Why this version |
 | --- | --- | --- |
-| `io.github.sceneview:arsceneview` | 2.3.4 (2026-10-10), Apache-2.0 | Built with Kotlin 2.2.21, readable by the app's Kotlin 2.2.20. The 4.x line (4.72.0, released 2026-11-23) is built with Kotlin 2.3–2.4 and cannot be used without upgrading Kotlin. Pulls Filament/gltfio 1.68.2, Compose 1.10.0 and `fuel` 3.0.0-alpha04 (an alpha HTTP library, unused by the spike) |
+| `io.github.sceneview:arsceneview` | 2.3.4 (2026-10-10), Apache-2.0 | Built with Kotlin 2.2.21, readable by the app's Kotlin 2.2.20, and it builds with the app's AGP 8.11.1 / compileSdk 36. The 4.x line (4.72.0, released 2026-11-23) was build-tested once and fails Gradle's AAR-metadata check: it needs compileSdk 37 and AGP 9.1+ (its POM also names Kotlin 2.4.21). Pulls Filament/gltfio 1.68.2, Compose 1.10.0 and `fuel` 3.0.0-alpha04 (an alpha HTTP library, unused by the spike) |
 | `com.google.ar:core` | 1.52.0 | What SceneView 2.3.4 was built against; latest is 1.57.0 (2026-10-15) |
 | `com.google.android.gms:play-services-location` | 21.3.0 | Geospatial needs fused location |
 | `com.google.android.gms:play-services-auth` | 21.3.0 | ARCore keyless authorization |

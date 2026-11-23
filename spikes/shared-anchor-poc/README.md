@@ -18,7 +18,7 @@ A standalone native Android app that answers one question before WORLDS builds a
 1. **Shows Google's required notice and the safety prompt.** Testers must acknowledge Google processing camera and location data (accepted for the PoC only, D-044).
 2. **Checks ARCore availability.** An unsupported phone is told so and the result is logged. This is the AR-001/AR-009 test for the realme P4 5G.
 3. **Asks for the camera and precise location,** in the foreground only.
-4. **Runs an ARCore session with Geospatial,** showing the state (`CHECKING`, `LOCALIZING`, `RESOLVING`, `TRACKING`, `DEGRADED`, `TEMPORARILY_UNAVAILABLE`, `FAILED`) and the horizontal, vertical and yaw accuracy.
+4. **Runs an ARCore session with Geospatial,** showing the state (`CHECKING`, `LOCALIZING`, `LOCALIZED` (no anchor yet), `RESOLVING`, `TRACKING`, `DEGRADED`, `TEMPORARILY_UNAVAILABLE`, `FAILED`) and the horizontal, vertical and yaw accuracy.
 5. **Capture:** aim the cross-hair at a ground mark and press Capture. This turns the hit point into latitude, longitude, WGS84 altitude, an offset above terrain (0) and an upright rotation facing the person capturing. The pose is saved as a JSON file and placed at once as a WGS84 anchor.
 6. **Terrain / WGS84:** rebuilds the anchor from the loaded pose.
    - Terrain: resolved by Google's service, altitude from Google Maps.
@@ -43,7 +43,7 @@ Not in the spike: Flutter, Supabase, creator UI, several objects, interactions, 
 | Item | Version | Reason |
 |---|---|---|
 | Gradle / AGP / Kotlin / JDK | 8.14 / 8.11.1 / 2.2.20 / 21 (target 17) | Same as `android/` in WORLDS, so whatever builds here can be added to the app in Phase 2 |
-| SceneView `arsceneview` | 2.3.4 (2026-10-10, Apache-2.0) | Built with Kotlin 2.2.21, which the WORLDS toolchain can read. The 4.x line (4.72.0 on 2026-11-23, about 50 releases since May 2026) needs Kotlin 2.3-2.4, which it cannot. |
+| SceneView `arsceneview` | 2.3.4 (2026-10-10, Apache-2.0) | Built with Kotlin 2.2.21 and builds with the WORLDS toolchain. The 4.x line (4.72.0 on 2026-11-23, about 50 releases since May 2026) was build-tested once: Gradle's AAR-metadata check fails because it needs compileSdk 37 and AGP 9.1+. Its POM also names Kotlin 2.4.21. |
 | ARCore SDK `com.google.ar:core` | 1.52.0 | What SceneView 2.3.4 was built against (latest is 1.57.0, 2026-10-15) |
 | Filament | 1.68.2 | Through SceneView |
 | `play-services-location` / `-auth` | 21.3.0 / 21.3.0 | Geospatial needs fused location; keyless authorization needs auth |
@@ -73,7 +73,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 3. **Candidate sites.** Check each with "VPS check" before going. Each site needs to be:
    - public, safe and lawful, with no traffic;
    - marked by something fixed and exact, e.g. a paving-slab corner or a bollard's base;
-   - free of a clear facing direction to note down.
+   - with a clear facing direction to note down.
 4. A tape measure, a compass reference (or the HUD heading), and a way to take a photo from a fixed spot.
 
 ## Field protocol

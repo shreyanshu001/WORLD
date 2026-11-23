@@ -3,6 +3,7 @@
 **Date:** 2026-11-23
 **Phase:** 0 of `docs/PRODUCT_DIRECTION_AND_CLAUDE_HANDOFF.md` (repository truth and handoff reconciliation)
 **Status:** Delivered for owner review. Not approved. Phase 1 has not started.
+*(2026-11-23, later: the owner approved Phase 1 and decided items 4 and 5 of §6.5 (D-044). The spike is built in `spikes/shared-anchor-poc/` and waits for phones, a Cloud project and sites; see `docs/PROGRESS.md`.)*
 **Scope kept:** documentation only. No app code, dependencies, migrations, AR code or live data changed.
 
 ---
@@ -155,7 +156,7 @@ That makes the pose stored on our server (Phase 3) the "shared anchor identity" 
 
 **Renderer, in order:**
 1. **SceneView `arsceneview`** (Filament + ARCore, Kotlin, Apache-2.0). Its GitHub README shows 4.31.0, while Maven Central and the docs site show older versions; the current version is unverified. Check before use: release cadence; access to the underlying ARCore `Session`/`Earth`; GLB/PBR loading; lifecycle; 16 KB page-size alignment; minSdk, Kotlin and AGP needs against the app's toolchain (C7); APK size.
-   *Phase 1 finding (2026-11-23):* 4.x is built with Kotlin 2.3–2.4 and cannot be read by this toolchain's Kotlin 2.2.20, so the spike uses the maintained 2.x line, **2.3.4** (2026-10-10, Kotlin 2.2.21, ARCore 1.52.0, Filament 1.68.2). It compiles with the app's AGP/Kotlin/Gradle and its arm64 libraries are 16 KB-aligned. See `spikes/shared-anchor-poc/README.md`.
+   *Phase 1 finding (2026-11-23, build-tested):* 4.72.0 fails Gradle's AAR-metadata check with this toolchain. It needs compileSdk 37 and AGP 9.1+ (the app has 36 and 8.11.1), and its POM names Kotlin 2.4.21. So the spike uses the maintained 2.x line, **2.3.4** (2026-10-10, Kotlin 2.2.21, ARCore 1.52.0, Filament 1.68.2). It compiles with the app's AGP/Kotlin/Gradle and its arm64 libraries are 16 KB-aligned. See `spikes/shared-anchor-poc/README.md`.
 2. **Fallback:** Google's official Geospatial sample (its own GL renderer) plus Filament `gltfio` for the GLB. More code, fewer unknown layers.
 3. **Watch, do not adopt:** Jetpack XR ARCore (`androidx.xr.arcore`, 1.0.0-rc02, 2026-10-07) has Geospatial pieces, but is aimed at Android XR. Its phone support is unverified.
 4. **Not candidates:** Flutter AR plugins, including the old `flutter_sceneview` bridge (handoff §6). The PoC is native-only.
@@ -214,8 +215,8 @@ Explicitly not in the PoC: Flutter integration, Supabase tables, creator UI, mul
 1. **Devices:** two ARCore Geospatial-capable phones (see 6.3). The realme P4 5G appears unsupported.
 2. **Google Cloud project** with the ARCore API, and the owner's choice of spike application ID and keystore handling.
 3. **Test site candidates** (and whether they double as the pilot area, D-021).
-4. **Privacy acceptance (C3):** VPS sends visual and location data to Google during the PoC. Testers are the owner and team only.
-5. **Where the spike lives:** recommended `spikes/shared-anchor-poc/` on its own branch, never merged to `main` without approval. The alternative is a separate repository.
+4. *(Decided 2026-11-23, D-044: accepted for the PoC only.)* **Privacy acceptance (C3):** VPS sends visual and location data to Google during the PoC. Testers are the owner and team only.
+5. *(Decided 2026-11-23, D-044: in the repository.)* **Where the spike lives:** recommended `spikes/shared-anchor-poc/` on its own branch, never merged to `main` without approval. The alternative is a separate repository.
 6. **Asset:** which licensed GLB and which style (cinematic or stylized) for the first object.
 
 **Not blocking Phase 1, but open:**
