@@ -2,6 +2,8 @@
 
 **Version:** 1.0 · **Status:** Approved product direction; technical choices remain subject to audit.
 
+> **2026-11-23:** This specification describes the original non-AR MVP, which is implemented (Checkpoints 0–7). Its statements that WORLDS is "not initially an AR platform" and that AR/3D/spatial anchors are excluded are superseded for the next phase by `docs/PRODUCT_DIRECTION_AND_CLAUDE_HANDOFF.md` (D-043). Everything else here still governs existing behaviour. Current state: `docs/PHASE_0_AUDIT.md`.
+
 ## 1. Product definition
 WORLDS lets people create and discover digital experiences attached to real-world places. A World is a structured user-created experience associated with a geographic point and a proximity rule. The map is the primary discovery surface. People can preview a World remotely, visit its location, unlock it and experience its content.
 

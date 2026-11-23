@@ -4,7 +4,7 @@
 - **D-001 Map-first discovery:** location is the product differentiator.
 - **D-002 Four launch categories:** Story, Puzzle, Art, Experience.
 - **D-003 Open creation:** any authenticated user can create/publish subject to validation, rate limits and moderation.
-- **D-004 No AR in MVP:** GPS-based experiences first; prove demand before device-specific complexity.
+- **D-004 No AR in MVP:** GPS-based experiences first; prove demand before device-specific complexity. *Superseded for the next phase by D-043 (2026-11-23); it remains the record of how the MVP was built.*
 - **D-005 Supabase/Postgres/PostGIS:** minimize solo-operator burden while supporting spatial queries.
 - **D-006 Foreground location only:** privacy, battery and permission simplicity.
 - **D-007 Structured blocks:** safe rendering and schema evolution.
@@ -64,7 +64,19 @@ Checkpoint 7 decisions, 2026-11-21. The owner wrote "pushed continue further" af
 - **D-041, the owner's answer (2026-11-21):** asked directly, the owner chose "Apply both". In the light theme Puzzle's name is now drawn in `#8E5500` (6.1:1 on white) and the distance label in `#885010` on its tint (5.1:1), the second as a new token, `accentText`; the ochre `accent` and its tints are unchanged. Icons, badges, markers and panels keep their colours. The dark-theme change made earlier was in the same report and drew no objection; it was not asked about separately. Still short in the light theme, measured by hand while applying these and not yet put to the owner: the "Published" label (green on its tint, 4.2:1), the "Unpublished" label (ochre on its tint, 4.1:1 on the canvas), the small note inside the amber "not there yet" panel on the canvas (4.47:1), and the `outline` edge above. The automated walks did not flag any of the four.
 - **D-042 Free plan for now (owner decision, 2026-11-21):** asked directly what the pilot should run on, the owner chose to stay on Supabase's Free plan for now. Accepted with it: no backups, so a mistake in the SQL editor or a lost project cannot be undone; and the project pauses after about a week with little activity until someone restores it in the dashboard. Who watches the project, restores it and moderates is still unnamed.
 
+Shared-AR direction, 2026-11-23:
+
+- **D-043 Shared, camera-based, location-anchored 3D experiences (owner decision):** recorded in `docs/PRODUCT_DIRECTION_AND_CLAUDE_HANDOFF.md`, reviewed against `main` at `a03209e`. WORLDS moves towards camera experiences anchored to real places, in realistic/cinematic and stylized styles, and placement must be shared: every visitor resolves the same authored scene at the same physical place. The map, accounts, creator, player and backend are kept and extended, not replaced. It supersedes D-004 for future planning. AI generation, chat, followers, feed, payments and monetization stay out. Open with it: the creator placement workflow (on-site, remote or both; on-site first is recommended, not decided). The handoff's phase gates apply: Phase 0 (audit, `docs/PHASE_0_AUDIT.md`), then a two-device proof of concept, before any production AR.
+
+- **D-044 Phase 1 approved; spike in the repository (owner decision, 2026-11-23):** asked directly after the Phase 0 report, the owner chose these options:
+  - **Phase 1:** "Approve; spike in repo". The proof of concept is a standalone native Android app in `spikes/shared-anchor-poc/` on branch `spike/shared-anchor-poc`, never merged into `main` without the owner's approval. It adds ARCore and SceneView to the spike only; the Flutter app, its tests and the database are untouched.
+  - **Privacy:** "Accept for PoC only". Google processing camera and location data for Geospatial localization is accepted for the proof of concept, with testers limited to the owner and team. The spike shows Google's required notice and asks for acknowledgement. Whether the product does this is decided again before Phase 2 (`docs/PHASE_0_AUDIT.md` C3).
+  - **"Device check":** "I'll unpublish/delete it". The owner does it in the app; the agent verifies read-only afterwards.
+  - **Field resources:** "None yet". No ARCore-certified phones, Google Cloud project or test sites. The spike is written and built now; on-site testing waits.
+  - **Restrictive default, not chosen by the owner:** no 3D model was chosen, so the spike draws a measurement pin labelled DEBUG at the anchor. It renders a GLB only when the owner supplies a licensed one.
+
 ## Pending; require evidence and rationale
+- Shared AR: two ARCore-certified test phones, a Google Cloud project with the ARCore API, candidate test sites, the first licensed 3D model and its style; and the creator placement workflow (D-043, D-044). See `docs/PHASE_0_AUDIT.md` §6.5.
 - Whether product events as built are acceptable, how long they are kept, and what testers are told (D-039).
 - The four remaining light-theme contrast shortfalls in D-041 (two status labels, one note, the `outline` edge).
 - Who operates the project during a pilot (D-042).

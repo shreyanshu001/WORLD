@@ -61,4 +61,6 @@ At each checkpoint:
 ### Next checkpoint proposal
 
 ## Current task
-Review the latest merged implementation against the three UX/product documents and the open gates in `docs/PROGRESS.md`. Do not start a new feature until the owner approves Checkpoint 4. Return the required checkpoint report with exact evidence.
+*(Updated 2026-11-23, Phase 0. The earlier text, "review before Checkpoint 4", was stale: Checkpoints 0–7 are merged.)*
+
+Phase 0 of `docs/PRODUCT_DIRECTION_AND_CLAUDE_HANDOFF.md` is delivered in `docs/PHASE_0_AUDIT.md` and awaits owner review. Do not start Phase 1 (the two-device shared-anchor proof of concept) until the owner approves it and resolves the blocking items in section 6.5 of that audit. Do not add AR dependencies, migrations or production AR code before then. Use the report structure in section 12 of the handoff.

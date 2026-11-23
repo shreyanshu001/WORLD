@@ -20,6 +20,8 @@ Every feature must satisfy all relevant items:
 
 ## 2. Checkpoint status at document creation
 
+*(Historical. Current status: `docs/PROGRESS.md`; as of 2026-11-23 Checkpoints 0–7 are merged with device gates open. Acceptance criteria for shared AR are the AR-xxx requirements in `docs/PRODUCT_DIRECTION_AND_CLAUDE_HANDOFF.md` §3.)*
+
 - Checkpoint 0 audit and app scaffold: delivered/merged; audit and owner decisions recorded.
 - Checkpoint 1 foundation: implemented/merged; device test deferred.
 - Checkpoint 2 identity/profile: implemented/merged; device auth verification and owner security review pending.

@@ -1,7 +1,7 @@
 # WORLDS — Implementation progress
 
-**Phase:** MVP implementation  
-**Current checkpoint:** 7 (Beta and pilot): the code and records a pilot needs are merged into `main` (pull requests #9 and #10, 2026-11-21); the pilot itself has not been run. One partial device pass has been made on the owner's phone (2026-11-21). Checkpoint 6 was merged into `main` by the owner with no recorded answer to its moderation and privacy review, and the device checks of Checkpoints 4 to 6 are still mostly open  
+**Phase:** Shared AR, Phase 0 (repository truth and handoff reconciliation) delivered on 2026-11-23 and awaiting owner review; see "Shared AR Phase 0 record" below and `docs/PHASE_0_AUDIT.md`. Phase 1 (two-device shared-anchor proof of concept) not started. The MVP checkpoints below are complete in code, with their device gates still open.  
+**MVP checkpoint:** 7 (Beta and pilot): the code and records a pilot needs are merged into `main` (pull requests #9 and #10, 2026-11-21); the pilot itself has not been run. One partial device pass has been made on the owner's phone (2026-11-21). Checkpoint 6 was merged into `main` by the owner with no recorded answer to its moderation and privacy review, and the device checks of Checkpoints 4 to 6 are still mostly open  
 **Product direction:** Approved  
 **Documentation handoff:** Core product, journey, UX and acceptance specifications published to GitHub  
 **App implementation:** Foundation, accounts and profiles, the Explore map, World details, the World creator, on-site unlocking, the World player, saved Worlds, reporting, creator pages and profile counts. Moderation is done in the Supabase dashboard, not in the app. Share links are not built. The Checkpoint 4, 5, 6 and 7 database migrations are applied to the development project and verified. The owner merged Checkpoints 4, 5 and 6 into `main` on GitHub on 2026-11-21 (pull requests #6, #7 and #8), and Checkpoint 7 the same day (pull request #9 at 17:14 IST, bringing `f57b9d8`, and #10 at 17:29 IST, bringing `93aafa4`), so `main` holds Checkpoints 0–7. The merges are not approval of wider release.
@@ -18,7 +18,23 @@
 | 6. Saved/profile/moderation | Implemented; migration applied; saving, reporting and profile pages checked against the real backend; merged into `main` by the owner (pull request #8); no answer on record to the moderation and privacy review; on a phone only the Saved and Profile screens have been seen (at 200% text) | See "Checkpoint 6 record" below |
 | 7. Beta and pilot | Pilot tooling implemented (product events, large text, contrast, motion, operations notes); events migration applied and tested; merged into `main` (pull requests #9 and #10). First partial device pass on 2026-11-21, four layout and screen-reader defects found and fixed. The test World "Device check" from that pass is still published (checked 2026-11-23). The pilot itself has not been run | See "Checkpoint 7 record" below |
 
+## Shared AR Phase 0 record
+
+- **Date:** 2026-11-23.
+- **Direction:** the owner moved WORLDS towards shared, camera-based, location-anchored 3D experiences (`docs/PRODUCT_DIRECTION_AND_CLAUDE_HANDOFF.md`, D-043). That handoff exists on `origin/docs/shared-ar-product-direction-handoff`, not on `main`.
+- **Branch:** `phase-0-shared-ar-audit` (on GitHub since 2026-11-23), from the handoff branch, with `f26bb8e` from `checkpoint-7-pilot-readiness` cherry-picked so the newer device-pass record comes along.
+- **Delivered:** `docs/PHASE_0_AUDIT.md`. It covers what `main` implements, what AR can reuse, eight existing contracts that AR will collide with, stale documents, and the Phase 1 proof-of-concept plan with its blockers. Dated reconciliation notes were added to `AGENTS.md` (Current task), `README.md`, `PRODUCT_SPEC.md`, `TECHNICAL_ARCHITECTURE.md`, `DECISIONS.md` (D-004 superseded, D-043 added), `USER_JOURNEYS.md`, `UI_UX_SPECIFICATION.md`, `FEATURE_ACCEPTANCE_CRITERIA.md` and the handoff (§2.3, §2.4). No history was removed.
+- **Not changed:** app code, dependencies, Android configuration, migrations, live data.
+- **Tests (at `f26bb8e`, code identical to `main`):** `dart format --output=none --set-exit-if-changed .` 182 files, 0 changed; `flutter analyze` no issues; `flutter test --timeout 90s` 341 of 341; `flutter build apk --debug --dart-define-from-file=.env` built. Not run: `test_live` (publishes on the live project, handoff rule 13), golden renders, SQL tests.
+- **Live database (read-only):** seven migrations applied, matching the repository; RLS on all 13 tables; one image-only bucket; "Device check" still published and public.
+- **Found:** the owner's phone (realme P4 5G, RMX5110) is not on Google's ARCore supported-devices list (checked 2026-11-23; to be confirmed on the phone). No qualifying AR test device is known to be available.
+- **Manual device verification:** none. No phone was attached.
+- **Approval status:** pending owner review of the audit and the Phase 1 plan.
+- **Later on 2026-11-23:** the owner wrote "continue" and, asked directly, approved Phase 1 with the spike in the repository, accepted Geospatial data processing for the proof of concept only, chose to delete "Device check" personally, and has no test phones, Cloud project or sites yet (D-044).
+
 ## Current blockers
+
+- **Shared AR Phase 1** needs: two ARCore Geospatial-capable phones, a Google Cloud project with the ARCore API, candidate test sites with VPS coverage, the owner's acceptance of Geospatial/VPS data going to Google, and a decision on where the spike lives and which asset it uses (`docs/PHASE_0_AUDIT.md` §6.5).
 
 - **The test World "Device check" is still published and public** (checked 2026-11-23: status `published`, unchanged since 11:46:49 UTC on 2026-11-21). It sits at the owner's phone's position from the device pass and anyone can find it in Explore. The owner chose to delete it personally; it has not been deleted. See the Checkpoint 7 device pass.
 - On-device: the first device pass (2026-11-21) saw the app start signed in with the session from an earlier install, the live map draw and move, and the nearby search answer. Sign-up through real Supabase Auth, sign-in and sign-out are still untested on a device.
