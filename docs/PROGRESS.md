@@ -1,6 +1,6 @@
 # WORLDS — Implementation progress
 
-**Phase:** Shared AR, Phase 0 (repository truth and handoff reconciliation) delivered on 2026-11-23 and awaiting owner review; see "Shared AR Phase 0 record" below and `docs/PHASE_0_AUDIT.md`. Phase 1 (two-device shared-anchor proof of concept) approved the same day (D-044): the spike app is built and unit-tested, has not run on an ARCore phone, and waits for phones, a Google Cloud project and sites; see "Shared AR Phase 1 record". The MVP checkpoints below are complete in code, with their device gates still open.  
+**Phase:** Shared AR, Phase 0 (repository truth and handoff reconciliation) delivered on 2026-11-23 and awaiting owner review; see "Shared AR Phase 0 record" below and `docs/PHASE_0_AUDIT.md`. Phase 1 (two-device shared-anchor proof of concept) approved the same day (D-044): the spike app is built and unit-tested, has not run on an ARCore phone, and waits for phones, a Google Cloud project and sites; see "Shared AR Phase 1 record". The MVP checkpoints below are complete in code, with their device gates still open.   *(2026-11-23, later: the owner merged the handoff, the Checkpoint 7 record, Phase 0 and the spike into `main` (pull requests #11, #12, #13 and #14) and deleted those branches. The spike is in `main` as a separate app; the Flutter app does not use it. Work continues on `phase-1-field-test`.)*
 **MVP checkpoint:** 7 (Beta and pilot): the code and records a pilot needs are merged into `main` (pull requests #9 and #10, 2026-11-21); the pilot itself has not been run. One partial device pass has been made on the owner's phone (2026-11-21). Checkpoint 6 was merged into `main` by the owner with no recorded answer to its moderation and privacy review, and the device checks of Checkpoints 4 to 6 are still mostly open  
 **Product direction:** Approved  
 **Documentation handoff:** Core product, journey, UX and acceptance specifications published to GitHub  
@@ -22,7 +22,7 @@
 
 - **Date:** 2026-11-23.
 - **Direction:** the owner moved WORLDS towards shared, camera-based, location-anchored 3D experiences (`docs/PRODUCT_DIRECTION_AND_CLAUDE_HANDOFF.md`, D-043). That handoff exists on `origin/docs/shared-ar-product-direction-handoff`, not on `main`.
-- **Branch:** `phase-0-shared-ar-audit` (on GitHub since 2026-11-23), from the handoff branch, with `f26bb8e` from `checkpoint-7-pilot-readiness` cherry-picked so the newer device-pass record comes along.
+- **Branch:** `phase-0-shared-ar-audit` (merged into `main` by the owner on 2026-11-23, pull request #13; branch deleted), from the handoff branch, with `f26bb8e` from `checkpoint-7-pilot-readiness` cherry-picked so the newer device-pass record comes along.
 - **Delivered:** `docs/PHASE_0_AUDIT.md`. It covers what `main` implements, what AR can reuse, eight existing contracts that AR will collide with, stale documents, and the Phase 1 proof-of-concept plan with its blockers. Dated reconciliation notes were added to `AGENTS.md` (Current task), `README.md`, `PRODUCT_SPEC.md`, `TECHNICAL_ARCHITECTURE.md`, `DECISIONS.md` (D-004 superseded, D-043 added), `USER_JOURNEYS.md`, `UI_UX_SPECIFICATION.md`, `FEATURE_ACCEPTANCE_CRITERIA.md` and the handoff (§2.3, §2.4). No history was removed.
 - **Not changed:** app code, dependencies, Android configuration, migrations, live data.
 - **Tests (at `f26bb8e`, code identical to `main`):** `dart format --output=none --set-exit-if-changed .` 182 files, 0 changed; `flutter analyze` no issues; `flutter test --timeout 90s` 341 of 341; `flutter build apk --debug --dart-define-from-file=.env` built. Not run: `test_live` (publishes on the live project, handoff rule 13), golden renders, SQL tests.
@@ -35,7 +35,7 @@
 ## Shared AR Phase 1 record (in progress)
 
 - **Date:** 2026-11-23. Approved by the owner (D-044).
-- **Branch:** `spike/shared-anchor-poc` (on GitHub since 2026-11-23; draft pull request, not to be merged before the field results are accepted), from `phase-0-shared-ar-audit`. Commit `d82c330`.
+- **Branch:** `spike/shared-anchor-poc` (merged into `main` by the owner on 2026-11-23, pull request #14, before any field test; branch deleted; the field-test work continues on `phase-1-field-test`), from `phase-0-shared-ar-audit`. Commit `d82c330`.
 - **Built:** `spikes/shared-anchor-poc/`, a standalone native Android app (see its `README.md`). It:
   - shows Google's ARCore notice and the safety prompt;
   - checks ARCore availability; an unsupported phone is told so and the result is logged;

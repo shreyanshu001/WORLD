@@ -4,13 +4,13 @@ A standalone native Android app that answers one question before WORLDS builds a
 
 > Can two different phones, with no shared session, rebuild the same anchor from a stored pose and show it at the same physical spot? How far off is each, and how far apart are they?
 
-**Status:** written and built on 2026-11-23. **Not yet tested on any phone or at any site.** It needs the resources in "Before the field day".
+**Status:** written and built on 2026-11-23. **Not yet tested on any phone or at any site.** Google Cloud is ready (owner confirmed: ARCore API enabled, Android client matches, no billing account). It still needs two ARCore-certified phones and a site.
 
 | | |
 |---|---|
 | Plan | `docs/PHASE_0_AUDIT.md` section 6 |
 | Approval | D-044 |
-| Branch | `spike/shared-anchor-poc`; never merged into `main` without the owner's approval |
+| Branch | In `main` since 2026-11-23 (owner merged pull request #14). Field-test work: `phase-1-field-test`. Still a separate app; the Flutter app does not use it |
 | Relationship to WORLDS | None at runtime. It does not touch the Flutter app, its tests or the database. Poses move between phones as files, not through Supabase. |
 
 ## What it does
