@@ -1,5 +1,7 @@
 # Coding-agent operating instructions
 
+> **Current direction:** Read [`docs/PRODUCT_DIRECTION_AND_CLAUDE_HANDOFF.md`](docs/PRODUCT_DIRECTION_AND_CLAUDE_HANDOFF.md) first. It supersedes the older statements below that AR is excluded, Checkpoint 4 is next, or the current task is only the pre-Checkpoint-4 audit. WORLDS is now moving toward shared, camera-based, location-anchored 3D experiences. Preserve the existing Flutter/map/World/player foundation. The first task is Phase 0 (repository truth and handoff reconciliation), then stop for owner review. Do not implement production AR in Phase 0.
+
 You are implementing WORLDS. These rules are mandatory.
 
 ## Source of truth
@@ -12,10 +14,10 @@ Read README.md and **all** documents in docs/ before implementation. In particul
 - Flutter Android-first.
 - Supabase, PostgreSQL and PostGIS.
 - Foreground location only.
-- No AR, AI generation, chat, followers, feed, payments or monetization in MVP.
+- Shared camera-based AR is now the approved product direction for the next phase. See the handoff for scope, proof-of-concept gates and non-goals. AI generation, chat, followers, feed, payments and monetization remain out of scope.
 
 ## Before coding
-Checkpoint 0 (repository audit), Checkpoint 1 (foundation), Checkpoint 2 (identity/profile) and Checkpoint 3 (Explore map) are already implemented and merged into `main`. Do not redo them. First inspect the current `main` tree and `docs/PROGRESS.md`, verify the working tree and latest tests locally, then propose the next approved checkpoint. The immediate product work is Checkpoint 4 (World details and creator), but do not begin it until the product owner explicitly approves it and resolves the listed gate decisions. Do not assume versions or overwrite existing work.
+Checkpoints 0–7 have been merged into `main` according to the reviewed 2026-11-23 GitHub history; the pilot and several device gates remain incomplete. Do not replay completed checkpoints. Follow Phase 0 of `docs/PRODUCT_DIRECTION_AND_CLAUDE_HANDOFF.md` first. Do not begin production AR implementation until the two-device shared-anchor proof of concept is accepted by the owner.
 
 ## Engineering rules
 - Feature-first architecture with presentation, application, domain and data boundaries.
@@ -30,7 +32,7 @@ Checkpoint 0 (repository audit), Checkpoint 1 (foundation), Checkpoint 2 (identi
 - Do not use public OSM tile servers as production infrastructure without checking their policy.
 - Never add background location permission.
 - Implement loading, empty, error, permission-denied and retry states.
-- Do not invent a brand system or perform a wholesale visual redesign. The living-atlas/field-journal direction in `docs/UI_UX_SPECIFICATION.md` is proposed, not approved; keep existing Material 3 behavior until the owner approves visual tokens.
+- Do not perform a wholesale visual redesign during the AR foundation work. The existing UI specification remains relevant for existing screens; the AR experience must follow the approved visual-quality direction in `docs/PRODUCT_DIRECTION_AND_CLAUDE_HANDOFF.md`. Propose and validate new AR visual tokens before broad UI changes.
 - Do not present placeholders, fake data, local-only persistence or inert buttons as completed product functionality.
 - Preserve existing passing tests and add regression tests for every behavior change.
 - No scope expansion without product-owner approval.
