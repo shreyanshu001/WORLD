@@ -18,6 +18,8 @@
 | Working tree before work | Clean |
 | Toolchain | Flutter 3.38.3 / Dart 3.10.1 (D-008), AGP 8.11.1, Kotlin 2.2.20, Gradle 8.14, JDK 21 toolchain, Java/Kotlin target 17, `minSdk`/`targetSdk` from Flutter (24 / 36 per earlier APK inspection), application ID placeholder `com.example.worlds` (D-009) |
 | Native Android code | `MainActivity : FlutterActivity()` only. No platform channels, no PlatformViews of our own. |
+| Packages (resolved, `pubspec.lock`) | `flutter_riverpod` 3.3.2, `go_router` 17.5.0, `supabase_flutter` 2.18.3, `maplibre_gl` 0.27.1, `geolocator` 14.1.2, `image_picker` 1.2.3, `freezed_annotation` 3.1.0, `json_annotation` 4.9.0, `http` 1.6.0; dev: `freezed`, `json_serializable`, `build_runner`, `mocktail`, `flutter_lints` |
+| Routes (`lib/app/router/`) | Shell tabs `/explore` (+ `worlds/:id`), `/saved`, `/create` (+ `new`, `worlds/:id`), `/profile` (+ `edit`); full-screen `/play/:id`, `/worlds/:id`, `/creators/:username`, `/report/:id`, `/sign-in`, `/register`. Auth redirects in `authRedirect` |
 
 ### Fresh results (2026-11-23, at `f26bb8e`; its code is identical to `main`, it differs only in `README.md` and `docs/PROGRESS.md`)
 
@@ -37,7 +39,7 @@ Not re-run, deliberately:
 ### Live development database (read-only queries, 2026-11-23)
 
 - Applied migrations: the same seven as `supabase/migrations/` (`20261119190312` … `20261121081022`). No drift.
-- Tables: 9 in `public`, 4 in `private`; RLS enabled on all 13.
+- Tables: 8 in `public`, 5 in `private`; RLS enabled on all 13.
 - Policies: 10 table policies (all `SELECT` except the profile `UPDATE`) and 3 on `storage.objects` (`world-media` insert/select/delete).
 - API functions (`public`): 20, all `security definer` except `get_nearby_worlds` (invoker).
 - Storage: one private bucket `world-media`, 5 MB, `image/jpeg`, `image/png`, `image/webp`.
@@ -48,7 +50,7 @@ Not re-run, deliberately:
 
 ## 2. What is implemented on `main` (answers Q1)
 
-Evidence is code, migrations and tests. "Device" means seen on a physical phone.
+Evidence is code, migrations and tests. "Device" means seen on a physical phone. Widget tests were re-run today; the SQL check counts and "live" runs are as recorded in `PROGRESS.md` on 2026-11-21 and were not re-run.
 
 | Area | Implemented | Tested | On a device |
 |---|---|---|---|
@@ -92,8 +94,8 @@ Partially implemented / only documented: share links and unlisted Worlds (D-038,
 Each needs an explicit owner-approved change in a later phase; none is changed now.
 
 - **C1 Camera permission.** `test/architecture/android_manifest_test.dart` asserts "needs no photo, storage or camera permission". AR needs `CAMERA`.
-- **C2 Location model.** D-021 and `LocationService` allow one reading per tap. An ARCore Geospatial session uses fine location continuously while the session is in the foreground. Still foreground-only (no background permission), but "one-shot only" no longer holds. `SECURITY_AND_PRIVACY.md` says "stream only while visible and explicitly needed", which fits if bounded to the camera screen.
-- **C3 Data leaving the device.** Geospatial/VPS sends camera-derived visual data and location to Google for localization. The privacy docs have no such third party today (only the tile provider, D-017). Needs owner acceptance and a disclosure.
+- **C2 Location model.** `SECURITY_AND_PRIVACY.md` says "Foreground permission only; no background permission or continuous tracking" and "Request location only when user chooses locate/unlock"; D-021 and `LocationService` take one reading per tap. Google's Geospatial "enable" page requires runtime `ACCESS_FINE_LOCATION` (coarse alone is refused) and says the API works "as long as the device is able to determine its location", i.e. location is used for the whole camera session. Google does not say how often it reads; the PoC should observe it. This stays foreground-only, but it is a direct conflict with "no continuous tracking" unless the owner accepts a reading scoped to the open camera screen. (`TECHNICAL_ARCHITECTURE.md` already allows "stream only while visible and explicitly needed".)
+- **C3 Data leaving the device.** Google's ARCore privacy requirements: "To power this session, Google will process sensor data (e.g., camera and location)". Apps must show that notice with a "Learn more" link, plus an ARCore/Google Privacy Policy disclosure, and Geospatial apps must get the user's acknowledgement before use. The privacy docs have no such third party today (only the tile provider, D-017). Needs owner acceptance and the notice.
 - **C4 Assets.** `world_assets` and `world-media` accept only JPEG/PNG/WebP ≤ 5 MB. GLB is excluded.
 - **C5 Versioning.** `save_world` edits a published World in place (D-027). The handoff requires immutable scene versions; progress has no version column.
 - **C6 Unlock persistence.** D-033: once unlocked, a World stays unlocked anywhere. Camera entry needs a fresh on-site check or the AR gate itself, otherwise users can open the camera kilometres away.
@@ -105,6 +107,11 @@ Each needs an explicit owner-approved change in a later phase; none is changed n
 ## 5. Stale or contradictory documentation (answers Q3)
 
 Reconciled on this branch with dated notes; no historical record deleted.
+
+Coverage:
+- **Read in full:** the handoff, `AGENTS.md`, `README.md`, `PRODUCT_SPEC.md`, `TECHNICAL_ARCHITECTURE.md`, `DECISIONS.md`, `SECURITY_AND_PRIVACY.md`, `IMPLEMENTATION_PLAN.md`, and the status sections of `PROGRESS.md`.
+- **Read by section:** `USER_JOURNEYS.md`, `UI_UX_SPECIFICATION.md`, `FEATURE_ACCEPTANCE_CRITERIA.md`, `DATABASE.md`.
+- **Only scanned** (headings plus a search for AR, camera, 3D and checkpoint status): `DEPENDENCY_DECISIONS.md`, `REPOSITORY_AUDIT.md`, `supabase/README.md`. Nothing AR-related was found in them; they are Checkpoint 0 and operations records. This table may not be exhaustive for them.
 
 | Where | Statement | Reality | Action on this branch |
 |---|---|---|---|
@@ -128,17 +135,21 @@ Reconciled on this branch with dated notes; no historical record deleted.
 
 ### 6.1 What "shared" means with Geospatial anchors
 
-A Geospatial anchor is **not hosted** by Google. There is no anchor ID to share. Each device creates a local anchor from the same stored pose (latitude, longitude, altitude or terrain/rooftop offset, orientation quaternion), and "the same place" is only as good as each device's own VPS localization. So the PoC must measure:
+Geospatial anchors have **no shareable anchor ID**. The app stores the pose (latitude, longitude, altitude or terrain/rooftop offset, orientation quaternion), and each device rebuilds the anchor from it:
+- **WGS84** anchors are created on the device from app-supplied coordinates ("Your app is responsible for providing these coordinates").
+- **Terrain** and **Rooftop** anchors are "server-resolved" by Google's ARCore API service, which takes their altitude from Google Maps. Google recommends them over WGS84 for that reason.
+
+Either way, "the same place" is only as good as each device's own VPS localization. Google quotes VPS accuracy of "approximately 5 meters" and 5 degrees in typical conditions. That figure is the realistic starting assumption for scene scale until we measure our own. So the PoC must measure:
 
 1. how far each device's rendered object lands from a physical ground-truth mark; and
 2. how far the two devices land from each other.
 
-That makes the server's stored pose (Phase 3) the "shared anchor identity" for AR-003. Persistent Cloud Anchors work differently (hosted, with a TTL, and visual scanning by the creator). Under the handoff they are only a comparison, evaluated only if Geospatial fails the use case.
+That makes the pose stored on our server (Phase 3) the "shared anchor identity" for AR-003. Persistent Cloud Anchors work differently (hosted, with a TTL, and visual scanning by the creator). Under the handoff they are only a comparison, evaluated only if Geospatial fails the use case.
 
 ### 6.2 Candidates and what decides (answers Q5)
 
 **Anchor provider: ARCore Geospatial API (`com.google.ar:core`) — the only provider in the first PoC.**
-- Variable inside it: Terrain anchor (altitude relative to terrain) as the primary candidate for ground-level scenes; WGS84 (absolute altitude) as the comparison. Rooftop anchors only if a site needs them.
+- Variable inside it: Terrain anchor (altitude relative to terrain) as the primary candidate for ground-level scenes, as Google recommends; WGS84 (absolute altitude) as the comparison. Rooftop anchors only if a site needs them.
 - Decides: localization success rate and time; reported horizontal and yaw accuracy; measured offset to the mark per device and between devices; repeatability across sessions and days; behaviour on tracking loss.
 - Fallback trigger: if VPS is unavailable at every candidate site, or measured offsets are too large for any useful scene scale, propose a Cloud Anchors comparison to the owner. Do not build it unasked.
 
@@ -188,7 +199,7 @@ A standalone native Android (Kotlin) spike app with its own application ID, e.g.
    - behaviour after the camera is covered for 5 s (hide, re-show, drift?);
    - frame time, memory, battery drop over 10 min, Android thermal status.
    - Minimum: 5 sessions per device per visit, 2 visits.
-6. **Quality gate (AR-004):** the object stays hidden until reported accuracy is under a threshold. Start from Google's sample values and tune from data. When quality degrades, hide the object and show a "localizing" state; never let it drift silently.
+6. **Quality gate (AR-004):** the object stays hidden until reported accuracy is under a threshold. Start from the quickstart sample's values (10 m horizontal, 15° heading; sample code, not Google recommendations) and tune from data. When quality degrades, hide the object and show a "localizing" state; never let it drift silently.
 7. **Asset:** one optimized, licensed GLB (owner picks the art direction or the source), plus a clearly labelled DEBUG measurement pin at the pivot.
 8. **Deliverable:** a decision record with device matrix, tables of measurements (median and worst case, no invented thresholds), screen recordings and photos, selected anchor type and renderer, the realme result, and a recommended creator placement workflow.
 
@@ -207,7 +218,11 @@ Explicitly not in the PoC: Flutter integration, Supabase tables, creator UI, mul
 6. **Asset:** which licensed GLB and which style (cinematic or stylized) for the first object.
 
 **Not blocking Phase 1, but open:**
-- **"Device check" is still public at the owner's phone position from 2026-11-21** (privacy). Authorize the agent to unpublish it through the app's own `unpublish_world` as its creator, or delete it yourself.
+- **"Device check" is still public at the owner's phone position from 2026-11-21** (privacy). Two routes exist:
+  - the owner unpublishes or deletes it in the app, signed in as its creator (Create tab → the World); or
+  - a logged moderation action from the runbook in `supabase/README.md` (`private.hide_world` or `private.remove_world` with a name and reason), run by the owner in the SQL editor, or by the agent only on explicit authorization.
+  
+  The agent has no session as the creator, so it cannot call `unpublish_world`.
 - Creator placement workflow (on-site / remote / both). Phase 1 produces the evidence; recommendation stays on-site first.
 - Final application ID (D-009, C8). Changing it later means a new OAuth client, so it is cheap for the spike and needed before Phase 2.
 - Whether to move off Flutter 3.38.3 if the chosen renderer needs a newer Kotlin/AGP (C7, D-008).
@@ -224,6 +239,11 @@ Explicitly not in the PoC: Flutter integration, Supabase tables, creator UI, mul
 ### 6.6 Sources checked 2026-11-23
 
 - ARCore supported devices: https://developers.google.com/ar/devices
+- Geospatial anchors (Java): https://developers.google.com/ar/develop/java/geospatial/anchors
+- Enable Geospatial (permissions, VPS accuracy, user acknowledgement): https://developers.google.com/ar/develop/java/geospatial/enable
+- Geospatial quickstart (sample thresholds): https://developers.google.com/ar/develop/java/geospatial/quickstart
+- ARCore privacy requirements: https://developers.google.com/ar/develop/privacy-requirements
+- SceneView licence (Apache-2.0): https://github.com/sceneview/sceneview/blob/main/LICENSE
 - Geospatial API usage quota: https://developers.google.com/ar/develop/java/geospatial/api-usage-quota
 - ARCore authorization (keyless / API key): https://developers.google.com/ar/develop/authorization?platform=android
 - ARCore what's new: https://developers.google.com/ar/whatsnew-arcore
