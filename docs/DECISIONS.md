@@ -75,6 +75,8 @@ Shared-AR direction, 2026-11-23:
   - **Field resources:** "None yet". No ARCore-certified phones, Google Cloud project or test sites. The spike is written and built now; on-site testing waits.
   - **Restrictive default, not chosen by the owner:** no 3D model was chosen, so the spike draws a measurement pin labelled DEBUG at the anchor. It renders a GLB only when the owner supplies a licensed one.
 
+- **D-045 Google Cloud project for the spike (owner decision, 2026-11-23):** the owner reached the Google Cloud project-creation limit. The spike's Android OAuth client lives in one of the owner's existing projects, a Firebase project of an earlier app that is not live and that the owner is retiring. The owner has no budget (no billing account wanted). Accepted with it: if that project ever has a billing account linked, ARCore usage would be billed there, so its billing status must be checked. Its old Firebase credentials are not used by WORLDS. Project and client ids are kept out of this public repository.
+
 ## Pending; require evidence and rationale
 - Shared AR: two ARCore-certified test phones, a Google Cloud project with the ARCore API, candidate test sites, the first licensed 3D model and its style; and the creator placement workflow (D-043, D-044). See `docs/PHASE_0_AUDIT.md` §6.5.
 - Whether product events as built are acceptable, how long they are kept, and what testers are told (D-039).
