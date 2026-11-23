@@ -35,7 +35,7 @@
 ## Shared AR Phase 1 record (in progress)
 
 - **Date:** 2026-11-23. Approved by the owner (D-044).
-- **Branch:** `spike/shared-anchor-poc` (local, not pushed), from `phase-0-shared-ar-audit`. Commit `d82c330`.
+- **Branch:** `spike/shared-anchor-poc` (on GitHub since 2026-11-23; draft pull request, not to be merged before the field results are accepted), from `phase-0-shared-ar-audit`. Commit `d82c330`.
 - **Built:** `spikes/shared-anchor-poc/`, a standalone native Android app (see its `README.md`). It:
   - shows Google's ARCore notice and the safety prompt;
   - checks ARCore availability; an unsupported phone is told so and the result is logged;
