@@ -58,6 +58,31 @@
 - **2026-11-23, Google Cloud:** the owner created an Android OAuth client for the spike in an existing Google Cloud project. The owner chose to keep it there (D-045): the project-creation limit is reached, and that project's app is not live. Billing: the owner confirmed on 2026-11-23 that the project has no billing account, so nothing can be charged. The owner confirmed the same day that the ARCore API is enabled in that project and that the Android client's package name and SHA-1 match the spike. Google Cloud is ready; not yet exercised by a phone. The owner has no budget (no billing account wanted); Google's ARCore pages list no pricing or billing step, only quotas. Project and client ids are kept out of this public repository; nothing from the client file goes into the app.
 - **Waiting for:** two ARCore-certified phones (borrowing is fine), candidate sites, and optionally a licensed GLB. The field protocol and measurement sheet are in the spike's README.
 
+## Emulator pass of the map app (2026-11-24)
+
+Run by the agent on the Android emulator (Pixel 9a image, Android 16, 16 KB memory pages, x86_64), because no phone was available. **An emulator is not a phone:** GPS was simulated, speed and smoothness say nothing about real devices, and nothing here meets a "physical device" gate.
+
+- **Builds:** `flutter build apk --debug --split-per-abi --dart-define-from-file=.env` and, for the first time, `flutter build apk --release --split-per-abi --dart-define-from-file=.env`. Both passed. The release build (arm64 30.1 MB, against 100 MB for debug) starts and works, so code shrinking broke nothing that this pass touched. It is still signed with the debug key.
+- **On 16 KB pages:** MapLibre's native library loads, and the app runs.
+- **Explore and location (debug build):**
+  - The map, OpenFreeMap tiles and the attribution draw.
+  - The app's explanation appears before Android's prompt. Android offered only "While using the app", "Only this time" and "Don't allow"; no background location.
+  - Refused: "Location was not allowed. You can still explore by moving the map."
+  - Google Location Accuracy declined: "We couldn't get your location." with Try again.
+  - Allowed: "No Worlds within 5 km here yet."
+  - The app ended with foreground-only fine and coarse location.
+- **Creator to explorer (release build), on the live development project, with the owner's permission** ("yes go ahead, test it"), using the two labelled test accounts:
+  - A signed in and created a Story, `[e2e] Emulator check`, at sea (10.0 N, 65.0 E, the simulated GPS): the five steps, draft saved to the server, "Use my location" with the pin and 50 m circle, a Text part and an Ending (each "Incomplete" until filled), the public-and-safe confirmation required before Publish, then "Your World is live".
+  - B signed in and found its marker with "Find Worlds near me". The preview showed category, title, creator and "10 m away". Details showed it Locked, with the content hidden. "Check my location" unlocked it through the server, and the player showed Part 1 of 2, then the Ending, then "World complete".
+  - The database afterwards: the World was published and public, B's progress `completed` (completion count 1, both parts), one visit.
+  - Clean-up: A deleted the World in the app after its confirmation dialog. The database shows `deleted`.
+- **Emulator artifacts, not app defects:**
+  - The emulator was very slow; the debug build took 10 s or more per tap.
+  - A first headless boot hung in software graphics; the host GPU worked.
+  - Simulated GPS had to be sent continuously while the app waited for a reading.
+- **Also seen:** during a short period when the emulator window was visible, the owner created an account of their own (`@shrey`, non-test email) on the development project. It was left as it is.
+- **Not covered:** the photo picker, editing and unpublishing a published World, saving and reporting, TalkBack, large text on a device, a slow or missing network, and any real-device measurement.
+
 ## Current blockers
 
 - **Shared AR Phase 1 field test** needs two ARCore Geospatial-capable phones, a Google Cloud project with the ARCore API (and an Android OAuth client for `com.example.worlds.arspike`), and candidate test sites with VPS coverage. A licensed GLB is optional. Privacy acceptance and the spike's location were decided on 2026-11-23 (D-044); the spike is built and waits for these.
