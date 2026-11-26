@@ -4,7 +4,7 @@ A standalone native Android app that answers one question before WORLDS builds a
 
 > Can two different phones, with no shared session, rebuild the same anchor from a stored pose and show it at the same physical spot? How far off is each, and how far apart are they?
 
-**Status:** written and built on 2026-11-23. **Not yet tested on any phone or at any site.** Google Cloud is ready (owner confirmed: ARCore API enabled, Android client matches, no billing account). It still needs two ARCore-certified phones and a site.
+**Status:** written and built on 2026-11-23. **Not yet tested on any phone or at any site.** Google Cloud is ready (owner confirmed: ARCore API enabled, Android client matches, no billing account). It still needs two ARCore-certified phones and a site. *(2026-11-26: tried on the Android emulator with Google's emulator build of Play Services for AR. The notice, the availability check and the permissions work, but the AR session cannot start there: the emulator's back camera is device `10`, and ARCore looks for `0`. An emulator cannot stand in for the phones; see `docs/PROGRESS.md`.)*
 
 | | |
 |---|---|
@@ -28,6 +28,7 @@ A standalone native Android app that answers one question before WORLDS builds a
 9. **Measurement log:** one JSON object per line.
    - Recorded: state changes, Earth state, first localization, resolve times and results, camera-tracking failures, pauses and resumes; every 5 s the camera frame rate, the worst frame, memory, battery and thermal status.
    - Never recorded: the phone's own position.
+   - Recorded, and close to it: a capture writes the mark's latitude, longitude and altitude (the `capture` event holds the whole pose), and the person capturing stands about 3 m from the mark. A VPS check writes the coordinates typed in. So a log with a capture in it shows roughly where the tester stood, and should be handled as location data.
 
 What is drawn is a **DEBUG measurement pin**, labelled DEBUG on screen:
 - a 0.30 m disc on the ground at the anchor point,

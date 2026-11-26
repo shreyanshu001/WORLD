@@ -16,7 +16,7 @@
 | 4. World details and creator | Implemented (4A–4G); migration applied and tested; two-account API check passed; the editor's five steps and the place picker seen on the owner's phone on 2026-11-21; photo picker, editing a published World and unpublishing not checked on a phone | See "Checkpoint 4 record" and the Checkpoint 7 device pass below |
 | 5. Experience player | Implemented; migration applied and tested; account A to account B check passed through the app's own data layer; no second-account check on a phone (the only on-device unlock on record is the creator's own, unobserved; see the Checkpoint 7 device pass) | See "Checkpoint 5 record" below |
 | 6. Saved/profile/moderation | Implemented; migration applied; saving, reporting and profile pages checked against the real backend; merged into `main` by the owner (pull request #8); no answer on record to the moderation and privacy review; on a phone only the Saved and Profile screens have been seen (at 200% text) | See "Checkpoint 6 record" below |
-| 7. Beta and pilot | Pilot tooling implemented (product events, large text, contrast, motion, operations notes); events migration applied and tested; merged into `main` (pull requests #9 and #10). First partial device pass on 2026-11-21, four layout and screen-reader defects found and fixed. The test World "Device check" from that pass is still published (checked 2026-11-23). The pilot itself has not been run | See "Checkpoint 7 record" below |
+| 7. Beta and pilot | Pilot tooling implemented (product events, large text, contrast, motion, operations notes); events migration applied and tested; merged into `main` (pull requests #9 and #10). First partial device pass on 2026-11-21, four layout and screen-reader defects found and fixed. The test World "Device check" from that pass was deleted on 2026-11-26 at the owner's request. The pilot itself has not been run | See "Checkpoint 7 record" below |
 
 ## Shared AR Phase 0 record
 
@@ -83,11 +83,36 @@ Run by the agent on the Android emulator (Pixel 9a image, Android 16, 16 KB memo
 - **Also seen:** during a short period when the emulator window was visible, the owner created an account of their own (`@shrey`, non-test email) on the development project. It was left as it is.
 - **Not covered:** the photo picker, editing and unpublishing a published World, saving and reporting, TalkBack, large text on a device, a slow or missing network, and any real-device measurement.
 
+## Emulator attempt of the Phase 1 spike (2026-11-26)
+
+Run by the agent, because no ARCore phone is available. **It moves nothing towards the Phase 1 gate**, which needs two real certified phones at a site.
+
+- **Set-up:**
+  - Google's emulator build of Play Services for AR, `Google_Play_Services_for_AR_1.57.0_x86_for_emulator.apk`, from Google's GitHub release (98,799,255 bytes; Google's emulator page describes sideloading it, with no Play sign-in). It installed as `com.google.ar.core` 1.57.262640093, x86_64.
+  - The spike's debug APK, rebuilt: `./gradlew testDebugUnitTest assembleDebug` passed, unit tests 20 of 20.
+  - Back camera set to VirtualScene; host GPU; simulated GPS at sea (0.5 N, 70.5 E).
+- **Images tried:**
+  - Pixel_9a: Android 16, 16 KB pages, emulator 36.1.9.
+  - A temporary Android 35 AVD (4 KB pages), deleted afterwards.
+- **What worked on both images:**
+  - The spike starts on x86_64.
+  - The Google notice and the safety prompt show; "I understand, continue" is logged.
+  - ARCore availability reports `SUPPORTED_INSTALLED`.
+  - The permission screen asks for the camera, then location, each "While using the app"; precise location can be chosen. All three are granted, and there is no background option.
+  - The AR screen opens with the DEBUG label, state `CHECKING`, and the controls.
+- **What failed, on both images:** creating the ARCore session (`session_failed`, `FatalException`), so the state never leaves `CHECKING`. ARCore's log says "No default camera 0 found" and "Unable to retrieve camera characteristics for unknown device 0". The emulator's only back camera is device `10` (`dumpsys media.camera`). This is the emulator renumbering its camera; it is not a fault in the spike. The spike showed the failure on screen ("AR session failed: FatalException") rather than crashing, and logged it.
+- **Not reached as a result:**
+  - Earth state and Geospatial support.
+  - The VPS check. It runs on the spike's session, so this pass says nothing about whether the Cloud authorization (D-045) works.
+  - Capture, Terrain, WGS84, the quality gate, frame rate.
+- **The log:** no position of any kind is in it, but only because nothing was captured; the session never started. A code reading of the privacy claim is recorded in the spike README: a capture logs the mark's coordinates, and the mark is about 3 m from the person.
+- **Also seen:** during the Pixel_9a run the app recorded taps the agent did not send: the notice acknowledged twice, a refused permission request and then a granted one. The emulator window was on the owner's screen, as on 2026-11-24. The Android 35 run was driven only by the agent.
+
 ## Current blockers
 
 - **Shared AR Phase 1 field test** needs two ARCore Geospatial-capable phones, a Google Cloud project with the ARCore API (and an Android OAuth client for `com.example.worlds.arspike`), and candidate test sites with VPS coverage. A licensed GLB is optional. Privacy acceptance and the spike's location were decided on 2026-11-23 (D-044); the spike is built and waits for these. *(2026-11-25: the Google Cloud part is done (D-045: ARCore API enabled, Android client matches, no billing account). Still missing: the two phones and the sites.)*
 
-- **The test World "Device check" is still published and public** (checked 2026-11-23: status `published`, unchanged since 11:46:49 UTC on 2026-11-21). It sits at the owner's phone's position from the device pass and anyone can find it in Explore. The owner chose to delete it personally; it has not been deleted. See the Checkpoint 7 device pass.
+- ~~**The test World "Device check" is still published and public**~~ (checked 2026-11-23: status `published`, unchanged since 11:46:49 UTC on 2026-11-21). *(Resolved 2026-11-26: asked directly, the owner chose "Delete it now". The agent set its status to `deleted`, the same single change the app's `delete_world` makes, and read it back at 05:38:02 UTC. Another World by the same account, "Stepu" (Puzzle), published at 11:53:40 UTC on 2026-11-21 during the same device pass, is still published with no visits. It was left alone; whether it should stay is the owner's call.)*
 - On-device: the first device pass (2026-11-21) saw the app start signed in with the session from an earlier install, the live map draw and move, and the nearby search answer. Sign-up through real Supabase Auth, sign-in and sign-out are still untested on a device.
 - Email confirmation was turned off in the dashboard by the owner on 2026-11-20 for development, so new accounts are signed in at once and any address can register, including ones the user does not own. Before the pilot: set up custom SMTP and turn confirmation back on (see `supabase/README.md`).
 - The Checkpoint 2 gate is a security review by the owner.
@@ -622,7 +647,7 @@ What has to be done on a phone before any tester is invited, in one pass:
 7. **This checkpoint:** Android's font size at its largest on every screen above; TalkBack through Explore, details and the player; the dark theme; "Remove animations" on and off; the motion watched for dropped frames in a profile build (`flutter run --profile` with the performance overlay) on the slowest phone available, above all the card rising over the live map; a slow connection and none; and afterwards `select * from private.pilot_funnel();` showing the session.
 
 ### Known issues
-- "Device check", the test World from the device pass, is still published at the phone's position (checked 2026-11-23). The owner is to delete it.
+- "Device check", the test World from the device pass, is still published at the phone's position (checked 2026-11-23). The owner is to delete it. *(Deleted 2026-11-26 at the owner's request; see "Current blockers".)*
 - On a phone, only part of Checkpoints 5, 6 and 7 has run (one partial pass, 2026-11-21; see "Manual device verification"): no observed unlock, no second account, no saving or reporting, no "Remove animations", no slow connection. Whether the new motion is smooth on a real device is not known: it was tested for behaviour (it happens, it ends, it disappears when animations are removed), not for frame rate.
 - Anyone holding the app's public key can send product events. A flood can use up a day's 20,000 or inflate a day's launch counts, and a launch is not a person. The steps counted from other tables cannot be forged this way.
 - No account is stored with an event, but a launch that unlocked a World can be matched to an account by time (D-039). The first description of D-039 claimed more than that and was corrected.
