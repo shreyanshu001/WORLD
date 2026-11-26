@@ -50,6 +50,17 @@ Not in the spike: Flutter, Supabase, creator UI, several objects, interactions, 
 | `play-services-location` / `-auth` | 21.3.0 / 21.3.0 | Geospatial needs fused location; keyless authorization needs auth |
 | Compose | activity-compose 1.11.0, material3 1.4.0, lifecycle 2.9.4 | Same period as SceneView's Compose 1.10 |
 
+**Licences** (checked 2026-11-26 against each project's LICENSE page and Google's terms page; the pages read were the current ones, not the exact version tags):
+
+| Item | Licence | What it asks of WORLDS |
+|---|---|---|
+| ARCore SDK (`com.google.ar:core` .aar) | Not open source: the ARCore Additional Terms of Service (developers.google.com/ar/develop/terms) plus the Google APIs Terms of Service. Only the SDK's sample sources are Apache-2.0 | Tell users the app includes ARCore functionality provided by Google, and that its use is subject to the Google Terms of Service and Privacy Policy (the spike's notice says this since 2026-11-26). No use in child-directed apps for Cloud Anchors and Geospatial |
+| Filament | Apache-2.0 | Keep its licence and notices |
+| SceneView `arsceneview` | Apache-2.0. The project now calls 2.x and 3.x outdated | Keep its licence and notices |
+| `fuel` | MIT | Keep its copyright notice |
+
+**Google's notice** (developers.google.com/ar/develop/privacy-requirements, read 2026-11-26): the spike's two sentences match Google's required wording exactly, and "Learn more" opens the URL Google requires.
+
 SceneView 2.3.4 also pulls `fuel` 3.0.0-alpha04, an HTTP library for loading remote models. The spike does not use it. It is an alpha dependency, which matters for Phase 2.
 
 ## Build

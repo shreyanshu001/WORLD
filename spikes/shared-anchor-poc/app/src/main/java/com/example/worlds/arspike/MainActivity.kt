@@ -116,6 +116,16 @@ private fun NoticeScreen(onAccept: () -> Unit) {
         OutlinedButton(onClick = { uri.openUri("https://policies.google.com/privacy") }) {
             Text("Google Privacy Policy")
         }
+        // ARCore Additional Terms of Service: users must be told that ARCore functionality
+        // is provided by Google and that its use is subject to Google's Terms of Service
+        // and Privacy Policy.
+        Text(
+            "This build includes ARCore functionality provided by Google. Use of it is subject " +
+                "to the Google Terms of Service and the Google Privacy Policy.",
+        )
+        OutlinedButton(onClick = { uri.openUri("https://policies.google.com/terms") }) {
+            Text("Google Terms of Service")
+        }
         Text("Safety", style = MaterialTheme.typography.titleMedium)
         Text(
             "Stop in a safe public place before you look at the screen. Do not walk while using the " +
